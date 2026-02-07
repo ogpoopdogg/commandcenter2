@@ -140,6 +140,9 @@
         }
         @keyframes text-shine { to { background-position: 200% center; } }
 
+        details > summary { list-style: none; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
+
         .note-highlight { border: 2px solid var(--note-blue) !important; animation: note-glow 1.5s infinite; }
         .note-text-glow { color: var(--note-blue) !important; font-weight: 900; animation: text-pulse 1.5s infinite; cursor: pointer; }
         @keyframes note-glow {
@@ -246,7 +249,12 @@
         <div id="user-display"></div>
         <div style="display: flex; align-items: center;">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <h1 class="shiny-text" style="margin:0; font-size: 16px;">E&C DELIVERY COMMAND CENTER</h1>
+            <details style="position: relative;">
+                <summary class="shiny-text" style="margin:0; font-size: 16px; cursor: pointer;">E&C DELIVERY COMMAND CENTER &#9662;</summary>
+                <div style="position: absolute; top: 100%; left: 0; background: #000; border: 1px solid var(--accent); padding: 10px; width: max-content; z-index: 10000; margin-top: 5px;">
+                    <div class="shiny-text" style="cursor: pointer; font-size: 16px;" onclick="location.href='https://ogpoopdogg.github.io/commandcenter/'">GOTO E&C PICKUP COMMAND</div>
+                </div>
+            </details>
         </div>
     </div>
     <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent);"></div>
