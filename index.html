@@ -300,10 +300,6 @@
     <select id="f-driver" class="driver-select" style="margin-bottom: 8px; border: 1px solid var(--accent);">
         <option value="Unassigned" selected disabled hidden>Assign Driver</option>
         <option value="Unassigned">UNASSIGNED</option>
-        <option value="Matt">Matt</option>
-        <option value="Touch">Touch</option>
-        <option value="Julian">Julian</option>
-        <option value="Jess">Jess</option>
     </select>
     <div style="display: flex; gap: 8px;">
         <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
@@ -363,6 +359,7 @@
     let lastKnownCompletedId = null;
     let editingId = null; 
     let currentUser = localStorage.getItem('ec_command_user');
+    let availableDrivers = [];
 
     function attemptLogin() {
         const user = document.getElementById('login-user').value.trim();
@@ -527,6 +524,19 @@
     };
 
     firebase.auth().signInAnonymously().then(() => {
+        db.ref("driver_secrets").on("value", snap => {
+            availableDrivers = Object.keys(snap.val() || {});
+            const sel = document.getElementById('f-driver');
+            sel.innerHTML = '<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>';
+            availableDrivers.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.innerText = d;
+                sel.appendChild(opt);
+            });
+            renderData();
+        });
+
         db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
         db.ref("delivery_lookup").on("value", snap => { deliveryData = snap.val() || {}; });
 
@@ -924,7 +934,7 @@
                     </div>
                     <div class="card-ctrl">
                         ${isUnassigned ? 
-                            `<select class="driver-select" onchange="assignDriver('${id}', this.value)"><option value="Unassigned" selected disabled hidden>ASSIGN DRIVER</option><option value="Matt">Matt</option><option value="Touch">Touch</option><option value="Julian">Julian</option><option value="Jess">Jess</option></select>` : 
+                            `<select class="driver-select" onchange="assignDriver('${id}', this.value)"><option value="Unassigned" selected disabled hidden>ASSIGN DRIVER</option>${availableDrivers.map(d => `<option value="${d}">${d}</option>`).join('')}</select>` : 
                             `<div style="color:var(--active-green); font-weight:900; font-size:16px; text-transform:uppercase; letter-spacing:1px;">${p.assigned_to}</div>
                              <div class="flex-row">
                                 <button class="edit-btn" onclick="startEditing('${id}')">Edit</button>
