@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>E&C COMMAND CENTER</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffcc00">
+    
+    <style>
+        :root { --accent: #ffcc00; --bg: #0a0a0a; --card: #161616; --text: #eee; --wpg: #2196f3; --brdn: #9c27b0; --active-green: #00ff41; --archive-orange: #ff6600; --note-blue: #00d4ff; --pro-blue: #007bff; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
+        
+        header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        
+        .header-logo {
+            height: 22px;
+            width: auto;
+            margin-right: 10px;
+            vertical-align: middle;
+            filter: drop-shadow(0 0 5px var(--accent));
+            animation: logo-glow 2s infinite alternate;
+        }
+
+        @keyframes logo-glow {
+            from { filter: drop-shadow(0 0 2px var(--accent)); transform: scale(1); }
+            to { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.05); }
+        }
+
+        /* GREEN DOT PULSING ANIMATION */
+        @keyframes dot-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pulsing-dot {
+            animation: dot-pulse 2s infinite ease-in-out;
+        }
+
+        /* LOCATE DRIVERS BUTTON */
+        #locate-btn {
+            background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
+            color: #000080;
+            border: none;
+            border-radius: 4px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 0;
+            width: 100%;
+            height: 42px;
+            cursor: pointer;
+            font-size: 11px;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite;
+        }
+
+        /* MAP MODAL */
+        #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
+        #map { width: 100%; height: 100%; }
+        .close-map { position: absolute; top: 20px; right: 20px; z-index: 3001; background: red; color: white; border: none; padding: 10px 20px; font-weight: 900; border-radius: 5px; cursor: pointer; }
+
+        #install-btn { 
+            display: none; 
+            background: var(--pro-blue); 
+            color: #fff; 
+            border: none; 
+            padding: 8px 14px; 
+            font-size: 11px; 
+            font-weight: 900; 
+            border-radius: 4px; 
+            cursor: pointer;
+            text-transform: uppercase;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite, fadeIn 0.5s ease-in;
+            z-index: 1002;
+        }
+
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes subtle-glow {
+            0% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
+            50% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); border-color: var(--accent); }
+            100% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
+        }
+        .glow-field { border: 1px solid #444; }
+
+        .stats-bar { display: flex; background: #111; padding: 5px; border-bottom: 1px solid #333; justify-content: space-around; align-items: center; }
+        #entry-panel { background: #0f0f0f; border-bottom: 2px solid #333; padding: 12px 15px; }
+        #board-panel { padding: 15px; flex: 1; }
+        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0 5px; transition: all 0.3s; }
+        .stat-label { display: block; font-size: 11px; color: #888; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-number { font-family: 'Courier New', monospace; font-weight: 900; line-height: 1; }
+        #stat-pending { font-size: 24px; color: var(--accent); }
+        #stat-assigned { font-size: 24px; color: var(--active-green); }
+        #stat-note { font-size: 24px; color: var(--note-blue); }
+        
+        .high-alert { background: #1a1a00 !important; border: 2px solid var(--active-green); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); animation: alert-glow 0.6s infinite alternate; }
+        @keyframes alert-glow { from { border-color: #333; } to { border-color: var(--active-green); } }
+        
+        .unassigned-glow { border: 2px solid var(--accent) !important; z-index: 10; animation: pro-glow 1.2s infinite ease-in-out; }
+        @keyframes pro-glow {
+            0% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
+            50% { box-shadow: 0 0 25px var(--accent), inset 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.01); border-color: var(--accent); }
+            100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
+        }
+
+        .assigned-glow { border: 2px solid var(--active-green) !important; z-index: 10; }
+        @keyframes green-glow {
+            0% { box-shadow: 0 0 5px var(--active-green), inset 0 0 5px rgba(0, 255, 65, 0.2); transform: scale(1); border-color: #555; }
+            50% { box-shadow: 0 0 25px var(--active-green), inset 0 0 15px rgba(0, 255, 65, 0.4); transform: scale(1.01); border-color: var(--active-green); }
+            100% { box-shadow: 0 0 5px var(--active-green), inset 0 0 5px rgba(0, 255, 65, 0.2); transform: scale(1); border-color: #555; }
+        }
+        
+        @keyframes inner-pulse {
+            0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+            50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
+            100% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+        }
+
+        .shiny-text {
+            background: linear-gradient(to right, var(--accent) 20%, #fff 50%, var(--accent) 80%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: text-shine 3s linear infinite;
+        }
+        @keyframes text-shine { to { background-position: 200% center; } }
+
+        .note-highlight { border: 2px solid var(--note-blue) !important; animation: note-glow 1.5s infinite; }
+        .note-text-glow { color: var(--note-blue) !important; font-weight: 900; animation: text-pulse 1.5s infinite; cursor: pointer; }
+        @keyframes note-glow {
+            0% { box-shadow: 0 0 5px var(--note-blue); }
+            50% { box-shadow: 0 0 20px var(--note-blue); }
+            100% { box-shadow: 0 0 5px var(--note-blue); }
+        }
+        @keyframes text-pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        input, select, textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 16px; margin-bottom: 6px; box-sizing: border-box; }
+        .flex-row { display: flex; gap: 8px; }
+        .driver-select { width: 100%; background: #000; color: var(--accent); border: 1px solid #555; font-weight: bold; padding: 10px; border-radius: 4px; }
+        button.primary { width: 100%; padding: 18px; background: var(--accent); color: #000; font-weight: 900; border: none; cursor: pointer; border-radius: 4px; text-transform: uppercase; font-size: 18px; animation: inner-pulse 2s infinite; }
+        
+        .dispatch-card { background: #111; border: 1px solid #444; border-left: 6px solid var(--accent); margin-bottom: 30px; border-radius: 4px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.7); overflow: hidden; position: relative; }
+        .card-body { padding: 15px; }
+        .card-ctrl { background: #1c1c1c; padding: 12px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 0 0 8px 8px; }
+        .addr { font-weight: 800; font-size: 17px; margin: 6px 0; }
+        .loc-tag { font-size: 16px; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; background: #333; color: #fff; border: 1px solid #555; display: inline-block; margin-bottom: 8px; }
+        .pkg-badge { font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 5px; border-radius: 3px; margin-left: 10px; vertical-align: middle; }
+        .reset-btn { background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        
+        .edit-btn { background: #444; color: var(--accent); border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .save-btn { background: var(--active-green); color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .edit-input { animation: subtle-glow 3s infinite ease-in-out; }
+
+        .history-box { margin-top: 30px; border-top: 2px dashed #333; padding: 15px; background: #080808; }
+        .date-divider { color: var(--archive-orange); font-size: 16px; font-weight: 900; margin: 25px 0 12px 0; padding: 5px 10px; border-left: 4px solid var(--archive-orange); text-transform: uppercase; background: linear-gradient(90deg, #1a0a00, transparent); }
+        .history-item { display: flex; flex-direction: column; background: #111; padding: 12px; border-radius: 4px; margin-bottom: 8px; font-size: 15px; border-left: 4px solid var(--active-green); cursor: pointer; transition: transform 0.2s; }
+
+        .new-entry-pop { animation: archive-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; z-index: 10; }
+        @keyframes archive-pop {
+            0% { transform: scale(0.5) translateY(-20px); opacity: 0; background: var(--active-green); box-shadow: 0 0 50px var(--active-green); }
+            50% { transform: scale(1.05); background: #333; box-shadow: 0 0 20px var(--active-green); }
+            100% { transform: scale(1); opacity: 1; background: #111; box-shadow: none; }
+        }
+
+        .hist-driver { background: var(--active-green); color: #000; font-weight: 900; padding: 3px 8px; border-radius: 3px; font-size: 13px; text-transform: uppercase; }
+        .hist-time { font-size: 11px; color: var(--accent); margin-top: 8px; font-family: monospace; font-weight: bold; }
+        .hist-city { font-size: 14px; font-weight: 900; background: #2a2a2a; color: #fff; padding: 3px 8px; border-radius: 4px; margin-right: 10px; vertical-align: middle; text-transform: uppercase; border: 1px solid #444; }
+        .hist-name { font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
+        
+        /* UPDATED MAP LABEL STYLING */
+        .driver-map-label {
+            color: #ffff00 !important;
+            font-weight: 900;
+            font-size: 14px;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+
+        .card-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; font-size: 18px; }
+        .detail-label { color: #888; text-transform: uppercase; font-size: 14px; font-weight: 900; margin-bottom: 2px; }
+        .detail-value { color: #fff; margin-bottom: 5px; font-weight: 500; }
+
+        .more-btn { width: 100%; padding: 15px; background: #222; color: var(--accent); border: 1px solid #444; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        
+        #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 2px solid var(--accent); padding: 10px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
+        #archive-search { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: var(--accent); font-weight: bold; border-radius: 4px; font-size: 16px; }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: #161616; margin: 15% auto; padding: 20px; width: 85%; max-width: 500px; border: 2px solid var(--accent); color: #eee; border-radius: 8px; }
+
+        /* LOGIN OVERLAY */
+        #login-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        .login-box { width: 100%; max-width: 350px; background: #111; padding: 30px; border-radius: 15px; border: 1px solid #333; text-align: center; }
+        .login-input { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 18px; outline: none; }
+        .login-submit { width: 100%; padding: 15px; margin-top: 15px; background: var(--accent); border: none; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        #user-display { color: var(--active-green); font-size: 12px; font-weight: 900; text-transform: uppercase; animation: fadeIn 1s ease-out; margin-bottom: 5px; }
+
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: #1a1a1a; border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; color: #eee; font-weight: bold; }
+        .suggestion-item:hover { background: var(--accent); color: #000; }
+
+        @keyframes voice-glow {
+            0% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
+            50% { filter: drop-shadow(0 0 8px var(--active-green)); transform: scale(1.1); fill: #fff; }
+            100% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
+        }
+        .voice-active { animation: voice-glow 1.5s infinite; fill: var(--active-green) !important; }
+        
+        .done-slash {
+            background: rgba(255, 152, 0, 0.25) !important;
+            border-left-color: #888 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-overlay">
+    <div class="login-box">
+        <h2 style="color: var(--accent); font-weight: 900;">COMMAND LOGIN</h2>
+        <input type="text" id="login-user" class="login-input" placeholder="Username" autofocus>
+        <input type="password" id="login-pin" class="login-input" placeholder="Pin">
+        <button class="login-submit" onclick="attemptLogin()">Authorize</button>
+    </div>
+</div>
+
+<header>
+    <div style="display: flex; flex-direction: column;">
+        <div id="user-display"></div>
+        <div style="display: flex; align-items: center;">
+            <img src="icon-512.png" class="header-logo" alt="E&C Logo">
+            <h1 class="shiny-text" style="margin:0; font-size: 16px;">E&C COMMAND CENTER</h1>
+        </div>
+    </div>
+    <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent);"></div>
+</header>
+
+<div class="stats-bar">
+    <div id="pending-box" class="stat-box" onclick="requestNotifyPermission()" style="cursor:pointer;">
+        <span class="stat-label">Pending</span>
+        <div id="stat-pending" class="stat-number">0</div>
+    </div>
+
+    <div class="stat-box">
+        <button id="locate-btn" onclick="openMap()">Driver Map</button>
+    </div>
+
+    <div id="assigned-box" class="stat-box">
+        <span class="stat-label">Assigned</span>
+        <div id="stat-assigned" class="stat-number">0</div>
+    </div>
+    <div id="note-box" class="stat-box" style="display:none;"><span class="stat-label">Note</span><div id="stat-note" class="stat-number">0</div></div>
+</div>
+
+<div id="entry-panel">
+    <div style="position:relative; margin-bottom: 8px;">
+        <div style="position:absolute; right:10px; top:12px; z-index:10; font-size:11px; font-weight:bold; cursor:pointer; color: #757575;" onclick="resetFormFields()">RESET</div>
+        <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
+        <div id="drop-suggestions" class="suggestions-box"></div>
+    </div>
+
+    <div class="flex-row">
+        <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
+        <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+    </div>
+
+    <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
+
+    <div class="flex-row">
+        <input type="text" id="f-po" placeholder="PO / Reference" style="flex: 1;">
+        <input type="text" id="f-info" placeholder="Driver Notes..." style="flex: 1.5;">
+    </div>
+
+    <div style="position:relative;">
+        <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
+        <div id="suggestions" class="suggestions-box"></div>
+    </div>
+    <div class="flex-row">
+        <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
+        <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+    </div>
+
+    <select id="f-driver" class="driver-select" style="margin-bottom: 8px; border: 1px solid var(--accent);">
+        <option value="Unassigned" selected disabled hidden>Assign Driver</option>
+        <option value="Unassigned">UNASSIGNED</option>
+        <option value="Matt">Matt</option>
+        <option value="Touch">Touch</option>
+        <option value="Julian">Julian</option>
+        <option value="Jess">Jess</option>
+    </select>
+    <div style="display: flex; gap: 8px;">
+        <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
+        <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #000; border: 1px solid #fff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: inner-pulse 2s infinite;"><svg id="mic-icon" viewBox="0 0 24 24" width="28" height="28" style="fill: #fff; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+    </div>
+</div>
+
+<div id="board-panel">
+    <div id="job-list"></div>
+    <div class="history-box">
+        <h3 id="archive-header" style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 15px;">Drop-off Archive</h3>
+        <div id="history-list"></div>
+        <button id="load-more-btn" class="more-btn" onclick="showMore()" style="display:none;">SHOW 20 MORE</button>
+    </div>
+</div>
+
+<div id="search-footer">
+    <input type="text" id="archive-search" placeholder="SEARCH ARCHIVE" onkeyup="renderData()" onkeydown="handleSearchKey(event)">
+    <button id="install-btn">Install App</button>
+</div>
+
+<div id="map-modal">
+    <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
+    <div id="map"></div>
+</div>
+
+<div id="detailsModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h2 id="m-title" style="color:var(--accent); margin-top:0;">Job Details</h2>
+        <div id="m-body"></div>
+        <div id="m-note-section" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+            <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px;"></textarea>
+            <button class="save-btn" id="m-note-save" style="width: 100%; padding: 12px; font-size: 14px;">Add Note to Job</button>
+        </div>
+        <button class="primary" style="margin-top:20px; padding:10px;" onclick="document.getElementById('detailsModal').style.display='none'">Close</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ"></script>
+
+<script>
+    firebase.initializeApp({
+        apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
+        authDomain: "eandccourier-36fcc.firebaseapp.com",
+        databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
+        projectId: "eandccourier-36fcc"
+    });
+
+    const db = firebase.database();
+    let archiveLimit = 10;
+    let rawData = {};
+    let addressData = {};
+    let deliveryData = {};
+    let lastKnownCompletedId = null;
+    let editingId = null; 
+    let currentUser = localStorage.getItem('ec_command_user');
+
+    function attemptLogin() {
+        const user = document.getElementById('login-user').value.trim();
+        const pin = document.getElementById('login-pin').value.trim();
+        if(!user || !pin) return;
+        db.ref("command_secrets").child(user).once('value', s => {
+            if(s.exists() && s.val().toString() === pin) {
+                localStorage.setItem('ec_command_user', user);
+                currentUser = user;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('user-display').innerText = `Logged in as: ${user}`;
+            } else {
+                alert("Invalid Credentials");
+            }
+        });
+    }
+
+    if(currentUser) {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
+    }
+
+    // Enhanced timestamp formatter for robust parsing
+    function formatTime12(ts) {
+        if (!ts) return '--:--';
+        const parsedTs = isNaN(ts) ? ts : Number(ts);
+        const d = new Date(parsedTs);
+        if (isNaN(d.getTime())) return '--:--';
+        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    // MAP LOGIC
+    let mainMap;
+    let mapMarkers = {};
+
+    function openMap() {
+        document.getElementById('map-modal').style.display = 'block';
+        if (!mainMap) {
+            mainMap = new google.maps.Map(document.getElementById("map"), {
+                gestureHandling: "greedy", // ENABLE SINGLE FINGER PANNING
+                styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
+            });
+        }
+        
+        db.ref('driver_locations').on('value', (snapshot) => {
+            const drivers = snapshot.val();
+            const bounds = new google.maps.LatLngBounds();
+            let hasDrivers = false;
+
+            for (let name in drivers) {
+                const driver = drivers[name];
+                const pos = { lat: driver.lat, lng: driver.lng };
+                
+                const updateTS = driver.gps_timestamp || driver.timestamp || driver.last_seen;
+                const timeStr = formatTime12(updateTS);
+                
+                // DATE FORMAT: Month/Day/Year (MM/DD/YYYY)
+                const d = new Date(updateTS);
+                const dateStr = (d.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                                d.getDate().toString().padStart(2, '0') + '/' + 
+                                d.getFullYear();
+
+                const markerLabelText = `${name}\n${timeStr} | ${dateStr}`;
+                
+                bounds.extend(pos);
+                hasDrivers = true;
+
+                if (mapMarkers[name]) {
+                    mapMarkers[name].setPosition(pos);
+                    mapMarkers[name].setLabel({
+                        text: markerLabelText,
+                        className: "pulsing-dot driver-map-label"
+                    });
+                } else {
+                    mapMarkers[name] = new google.maps.Marker({
+                        position: pos,
+                        map: mainMap,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            fillColor: '#00ff41',
+                            fillOpacity: 1,
+                            strokeWeight: 2,
+                            strokeColor: '#ffffff',
+                            scale: 7,
+                            labelOrigin: new google.maps.Point(0, -2)
+                        },
+                        label: {
+                            text: markerLabelText,
+                            className: "pulsing-dot driver-map-label"
+                        },
+                        title: name
+                    });
+                }
+            }
+
+            if (hasDrivers) {
+                mainMap.fitBounds(bounds);
+                google.maps.event.addListenerOnce(mainMap, 'idle', () => {
+                    if (mainMap.getZoom() > 16) mainMap.setZoom(16);
+                });
+            }
+        });
+    }
+
+    function closeMap() {
+        document.getElementById('map-modal').style.display = 'none';
+        db.ref('driver_locations').off();
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("Service Worker Registered"))
+        .catch(err => console.log("SW Error:", err));
+    }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!localStorage.getItem('appInstalled')) {
+            installBtn.style.display = 'block';
+        }
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                installBtn.style.display = 'none';
+                localStorage.setItem('appInstalled', 'true');
+            }
+            deferredPrompt = null;
+        }
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        installBtn.style.display = 'none';
+        localStorage.setItem('appInstalled', 'true');
+    }
+
+    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+    function requestNotifyPermission() {
+        if ("Notification" in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") alert("Notifications Enabled!");
+            });
+        }
+    }
+
+    function updateClock() { document.getElementById('clock').innerText = formatTime12(new Date()); }
+    setInterval(updateClock, 1000); updateClock();
+
+    window.onscroll = function() {
+        if (window.scrollY === 0 && archiveLimit > 10) {
+            archiveLimit = 10;
+            renderData();
+        }
+    };
+
+    firebase.auth().signInAnonymously().then(() => {
+        db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
+        db.ref("delivery_lookup").on("value", snap => { deliveryData = snap.val() || {}; });
+
+        db.ref("dropoffs").limitToLast(1).on("child_added", snapshot => {
+            const newJob = snapshot.val();
+            const isFresh = (Date.now() - newJob.timestamp) < 10000;
+
+            if (isFresh && newJob.status === 'pending') {
+                alertSound.play();
+                if (Notification.permission === "granted") {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification("🚨 NEW JOB DISPATCHED", {
+                            body: `${newJob.destination}`,
+                            icon: 'icon-512.png',
+                            vibrate: [200, 100, 200],
+                            tag: 'new-job'
+                        });
+                    });
+                }
+            }
+        });
+
+        db.ref("dropoffs").on("value", snapshot => {
+            rawData = snapshot.val() || {};
+            renderData();
+        });
+    });
+
+    function showMore() { archiveLimit += 20; renderData(); }
+
+    function handleSearchKey(e) {
+        if (e.key === "Enter") {
+            e.target.blur();
+            document.getElementById('archive-header').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function resetFormFields() {
+        ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.value = "";
+        });
+    }
+
+    function startVoiceEntry() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) return alert("Voice API not supported");
+        
+        const rec = new Speech();
+        rec.lang = 'en-US';
+        rec.start();
+        
+        const icon = document.getElementById('mic-icon');
+        icon.classList.add('voice-active');
+        
+        rec.onresult = (e) => {
+            let cmdStr = e.results[0][0].transcript.toLowerCase();
+            
+            if (cmdStr.trim() === "dispatch") {
+                createJob();
+                return;
+            }
+
+            // Speech-to-Text Collision Guard
+            cmdStr = cmdStr.replace(/\b(format|four mat|fore matt|for mat)\b/g, "for matt");
+            
+            // 1. Number Conversion
+            const numWords = {
+                'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10,
+                'eleven':11, 'twelve':12, 'thirteen':13, 'fourteen':14, 'fifteen':15, 'sixteen':16, 'seventeen':17, 'eighteen':18, 'nineteen':19,
+                'twenty':20, 'thirty':30, 'forty':40, 'fifty':50, 'sixty':60, 'seventy':70, 'eighty':80, 'ninety':90
+            };
+            Object.keys(numWords).forEach(word => {
+                const reg = new RegExp(`\\b${word}\\b`, 'g');
+                cmdStr = cmdStr.replace(reg, numWords[word]);
+            });
+
+            let globalAndMatch = cmdStr.match(/\band\b\s+(.*)/);
+            if (globalAndMatch) {
+                let extraText = globalAndMatch[1].trim();
+                let curExtra = document.getElementById('f-pkg-details').value;
+                document.getElementById('f-pkg-details').value = curExtra ? curExtra + " " + extraText : extraText;
+                cmdStr = cmdStr.substring(0, globalAndMatch.index).trim();
+            }
+
+            // PRIORITY 1: DRIVER NOTES
+            let driverNoteMatch = cmdStr.match(/\bdriver note\b(.*)/);
+            if (driverNoteMatch) {
+                document.getElementById('f-info').value = driverNoteMatch[1].trim();
+                cmdStr = cmdStr.substring(0, driverNoteMatch.index).trim();
+            }
+
+            // PRIORITY 2: PO / REFERENCE
+            let poMatch = cmdStr.match(/\b(po|p o|pee oh|reference)\b(.*)/);
+            if (poMatch) {
+                document.getElementById('f-po').value = poMatch[2].trim();
+                cmdStr = cmdStr.substring(0, poMatch.index).trim();
+            }
+
+            // PRIORITY 4: DRIVER ASSIGNMENT
+            let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess)\b/);
+            if (drvMatch) {
+                let dName = drvMatch[1].charAt(0).toUpperCase() + drvMatch[1].slice(1);
+                document.getElementById('f-driver').value = dName;
+                cmdStr = cmdStr.replace(drvMatch[0], "").trim();
+            }
+
+            // PRIORITY 7: NAMES
+            cmdStr = cmdStr.replace(/[.,]/g, "").trim();
+            
+            const cleanName = (s) => {
+                // Rule 40: Stop at any package/dim/keyword
+                let stopper = new RegExp(`\\b(?:\\d+|by|for|x|and)\\b`, 'i');
+                let m = s.match(stopper);
+                let text = m ? s.substring(0, m.index).trim() : s.trim();
+                return text.replace(/[^a-zA-Z\s]+$/, "").trim();
+            };
+
+            let splitMatch = cmdStr.match(/\s+(to|for)\s+/);
+            if (splitMatch) {
+                let pName = cmdStr.substring(0, splitMatch.index).trim();
+                let dName = cmdStr.substring(splitMatch.index + splitMatch[0].length).trim();
+                
+                pName = cleanName(pName);
+                dName = cleanName(dName);
+                
+                const pMatch = pName.length > 0 ? Object.keys(addressData).find(k => k.toLowerCase().startsWith(pName)) : null;
+                document.getElementById('f-name').value = pMatch || pName;
+                if(pMatch) selectClient(pMatch);
+                
+                const dMatch = dName.length > 0 ? Object.keys(addressData).find(k => k.toLowerCase().startsWith(dName)) : null;
+                document.getElementById('f-drop-name').value = dMatch || dName;
+                if(dMatch) selectDropClient(dMatch);
+            } else if(cmdStr.length > 0) {
+                let pName = cleanName(cmdStr);
+                const pMatch = pName.length > 0 ? Object.keys(addressData).find(k => k.toLowerCase().startsWith(pName)) : null;
+                document.getElementById('f-name').value = pMatch || pName;
+                if(pMatch) selectClient(pMatch);
+            }
+        };
+        
+        rec.onend = () => { icon.classList.remove('voice-active'); };
+    }
+
+    function handleNameInput(val) {
+        const box = document.getElementById('suggestions');
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectClient('${k}')">${k}</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function selectClient(name) {
+        const data = addressData[name];
+        if(!data) return;
+        document.getElementById('f-name').value = name;
+        document.getElementById('f-pickup').value = data.address || "";
+        document.getElementById('f-city').value = data.city || "";
+        document.getElementById('suggestions').style.display = 'none';
+    }
+
+    function handleDropNameInput(val) {
+        const box = document.getElementById('drop-suggestions');
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectDropClient('${k}')">${k}</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function selectDropClient(name) {
+        const data = addressData[name];
+        if(!data) return;
+        document.getElementById('f-drop-name').value = name;
+        document.getElementById('f-drop-address').value = data.address || "";
+        document.getElementById('f-drop-city').value = data.city || "";
+        document.getElementById('drop-suggestions').style.display = 'none';
+    }
+
+    function createJob() {
+        const pickup = document.getElementById('f-pickup').value;
+        const drop = document.getElementById('f-drop-address').value + (document.getElementById('f-drop-city').value ? ", " + document.getElementById('f-drop-city').value : "");
+        const city = document.getElementById('f-city').value;
+        const name = document.getElementById('f-name').value;
+        const dropName = document.getElementById('f-drop-name').value;
+        const assigned = document.getElementById('f-driver').value;
+        const infoRaw = document.getElementById('f-info').value;
+        
+        if(!pickup || !city || !name) return alert("Enter Pickup Name, Address and City");
+
+        const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
+        
+        const safeName = name.replace(/[.#$\[\]\/]/g, "").trim();
+        if(safeName) {
+            db.ref("address_lookup").child(safeName).set({
+                address: pickup,
+                city: city
+            }).catch(e => console.warn("Address Save Error:", e));
+        }
+
+        const safeDropName = dropName.replace(/[.#$\[\]\/]/g, "").trim();
+        if(safeDropName) {
+            db.ref("address_lookup").child(safeDropName).set({
+                address: document.getElementById('f-drop-address').value,
+                city: document.getElementById('f-drop-city').value
+            }).catch(e => console.warn("Drop Save Error:", e));
+        }
+
+        db.ref("dropoffs").push({
+            city: city, pickup_location: pickup, destination: drop,
+            delivery_name: dropName,
+            package_details: document.getElementById('f-pkg-details').value,
+            po_number: document.getElementById('f-po').value,
+            name: document.getElementById('f-name').value,
+            other_info: info,
+            status: 'pending', 
+            assigned_to: assigned, 
+            timestamp: Date.now()
+        });
+        
+        resetFormFields();
+        document.getElementById('f-driver').value = "Unassigned";
+    }
+
+    function startEditing(id) {
+        editingId = id;
+        renderData();
+    }
+
+    function saveEdit(id) {
+        const card = document.querySelector(`[data-id="${id}"]`);
+        const updates = {
+            pickup_location: card.querySelector('.edit-pickup').value,
+            destination: card.querySelector('.edit-drop').value,
+            delivery_name: card.querySelector('.edit-drop-name').value,
+            city: card.querySelector('.edit-city').value,
+            name: card.querySelector('.edit-name').value,
+            po_number: card.querySelector('.edit-po').value,
+            package_details: card.querySelector('.edit-pkg-details').value
+        };
+
+        const newCommandNote = card.querySelector('.edit-info').value.trim();
+        if(newCommandNote && !newCommandNote.includes(`[${currentUser}]`)) {
+            db.ref("dropoffs").child(id).child("other_info").once('value', snap => {
+                let existing = snap.val() || "";
+                let combined = existing + (existing ? " | " : "") + `[${currentUser}]: ${newCommandNote}`;
+                updates.other_info = combined;
+                db.ref("dropoffs").child(id).update(updates).then(() => {
+                    editingId = null;
+                    renderData();
+                });
+            });
+        } else {
+            updates.other_info = newCommandNote;
+            db.ref("dropoffs").child(id).update(updates).then(() => {
+                editingId = null;
+                renderData();
+            });
+        }
+    }
+
+    function clearNoteAlert(id) {
+        db.ref("dropoffs").child(id).update({ driver_edited_note: false });
+    }
+
+    function viewDetails(p, id) {
+        const created = p.timestamp ? new Date(p.timestamp).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "N/A";
+        const finishTS = p.completed_at || p.finished_at;
+        const finished = finishTS ? new Date(finishTS).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "N/A";
+        
+        document.getElementById('m-body').innerHTML = `
+            <p><strong>Pickup:</strong> ${p.pickup_location} (${p.city})</p>
+            <p><strong>Drop:</strong> ${p.destination}</p>
+            <p><strong>Driver:</strong> ${p.assigned_to}</p>
+            <hr style="border:0; border-top:1px solid #333">
+            <p><strong>Details:</strong> ${p.package_details || "-"}</p>
+            <p><strong>PO:</strong> ${p.po_number || "-"}</p>
+            <p><strong>Contact:</strong> ${p.name || "-"}</p>
+            <p id="m-display-notes"><strong>Notes:</strong> ${p.other_info || "None"}</p>
+            <p class="hist-time">Created: ${created}</p>
+            <p class="hist-time">Finished: ${finished}</p>`;
+        
+        // Setup Note Save Button
+        const saveBtn = document.getElementById('m-note-save');
+        saveBtn.onclick = () => {
+            const noteInput = document.getElementById('m-note-input');
+            const newNote = noteInput.value.trim();
+            if(!newNote) return;
+
+            const updatedNotes = (p.other_info ? p.other_info + " | " : "") + `[${currentUser}]: ` + newNote;
+            db.ref("dropoffs").child(id).update({ other_info: updatedNotes }).then(() => {
+                document.getElementById('m-display-notes').innerHTML = `<strong>Notes:</strong> ${updatedNotes}`;
+                noteInput.value = "";
+                alert("Note added to archive.");
+            });
+        };
+
+        document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function assignDriver(id, driver) {
+        db.ref("dropoffs").child(id).update({ assigned_to: driver });
+    }
+
+    function unassign(id) {
+        db.ref("dropoffs").child(id).update({ assigned_to: 'Unassigned' });
+    }
+
+    function deleteJob(id) {
+        if(confirm("Delete this dispatch?")) db.ref("dropoffs").child(id).remove();
+    }
+
+    function renderData() {
+        const list = document.getElementById("job-list"); 
+        const histList = document.getElementById("history-list");
+        const searchTerm = document.getElementById("archive-search").value.toLowerCase();
+        
+        list.innerHTML = ""; histList.innerHTML = "";
+        
+        let pending = 0, assignedCount = 0, noteCount = 0;
+        const now = Date.now();
+
+        const allJobs = Object.entries(rawData).reverse();
+        let archivedJobs = [];
+
+        allJobs.forEach(([id, p]) => {
+            if(p.status === 'completed') { 
+                archivedJobs.push({id, ...p}); 
+                return; 
+            }
+            const activeCity = p.city || "";
+            const isUnassigned = !p.assigned_to || p.assigned_to.toLowerCase() === 'unassigned';
+            const hasDriverNote = p.driver_edited_note === true;
+
+            if(isUnassigned) pending++; else assignedCount++;
+            if(hasDriverNote) noteCount++;
+
+            const card = document.createElement("div");
+            
+            card.className = "dispatch-card" + (isUnassigned ? " unassigned-glow" : "") + (hasDriverNote ? " note-highlight" : "");
+            card.setAttribute('data-id', id);
+
+            if (editingId === id) {
+                card.innerHTML = `
+                    <div class="card-body">
+                        <input type="text" class="edit-input edit-name" value="${p.name || ""}" placeholder="Pickup Business/Contact Name">
+                        <div class="flex-row">
+                            <input type="text" class="edit-input edit-pickup" value="${p.pickup_location}" placeholder="Pickup Address" style="flex: 2;">
+                            <input type="text" class="edit-input edit-city" value="${activeCity}" placeholder="City/Town" style="flex: 1;">
+                        </div>
+                        <input type="text" class="edit-input edit-pkg-details" value="${p.package_details || ""}" placeholder="Packages/Items/Dimensions">
+                        <div class="flex-row">
+                            <input type="text" class="edit-input edit-po" value="${p.po_number || ""}" placeholder="PO / Reference" style="flex: 1;">
+                            <input type="text" class="edit-input edit-info" value="${p.other_info || ""}" placeholder="Driver Notes..." style="flex: 1.5;">
+                        </div>
+                        <input type="text" class="edit-input edit-drop-name" value="${p.delivery_name || ""}" placeholder="Delivery Contact/Business Name">
+                        <input type="text" class="edit-input edit-drop" value="${p.destination}" placeholder="Delivery Address & City/Town">
+                    </div>
+                    <div class="card-ctrl">
+                        <button class="save-btn" onclick="saveEdit('${id}')">Done</button>
+                        <button onclick="editingId=null; renderData();" style="color:#888; border:none; background:none; font-weight:bold; cursor:pointer;">Cancel</button>
+                    </div>`;
+            } else {
+                const showDetails = p.package_details ? `<div style="border: 1px solid #444; background: #111; margin: 6px 0; padding: 10px; font-family: 'Courier New', monospace; font-size: 16px; font-weight: 900; color: #ffcc00; border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); text-align: center; border-left: 4px solid #ffcc00;">${p.package_details}</div>` : '';
+                
+                const showPickupName = p.name ? `<div class="addr"><span style="color:orange; font-weight:900;">Contact:</span> <span style="text-transform:uppercase; color:#fff;">${p.name}</span></div>` : '';
+                const showPickupAddr = p.pickup_location ? `<div class="addr"><span style="color:var(--archive-orange)">Address:</span> <span style="color:#eee;">${p.pickup_location}</span></div>` : '';
+                const showCity = activeCity ? `<div class="addr"><span style="color:var(--archive-orange)">City:</span> <span style="text-transform:uppercase; color:#eee;">${activeCity}</span></div>` : '';
+                
+                const showDropName = p.delivery_name ? `<div class="addr"><span style="color:#ccc; font-weight:900;">Deliver to:</span> <span style="text-transform:uppercase; color:#fff;">${p.delivery_name}</span></div>` : '';
+                const showDropAddr = p.destination ? `<div class="addr"><span style="color:#888">Address:</span> <span style="color:#eee;">${p.destination}</span></div>` : '';
+
+                const showPO = p.po_number ? `<div><div class="detail-label">PO / REF</div><div class="detail-value" style="font-family:'Courier New', monospace;">${p.po_number}</div></div>` : '';
+                
+                const showNotes = p.other_info ? `
+                    <div onclick="${hasDriverNote ? `clearNoteAlert('${id}')` : ''}">
+                        <div class="detail-label ${hasDriverNote ? 'note-text-glow' : ''}">NOTES ${hasDriverNote ? ' (NEW)' : ''}</div>
+                        <div class="detail-value ${hasDriverNote ? 'note-text-glow' : ''}">${p.other_info}</div>
+                    </div>` : '';
+
+                card.innerHTML = `
+                    <div class="card-body">
+                        <div style="border-left: 4px solid #00ff41; background: rgba(0, 255, 65, 0.05); padding: 8px 12px; margin-bottom: 8px; border-radius: 0 4px 4px 0;">
+                            ${showDropName}
+                            ${showDropAddr}
+                        </div>
+                        ${showDetails}
+                        <div style="border-left: 4px solid #007bff; background: rgba(0, 123, 255, 0.05); padding: 8px 12px; margin-bottom: 2px; border-radius: 0 4px 4px 0;">
+                            ${showPickupName}
+                            ${showPickupAddr}
+                            ${showCity}
+                        </div>
+                        ${(showPO || showNotes) ? `<div class="card-details-grid" style="margin-top:5px;">${showPO}${showNotes}</div>` : ''}
+                    </div>
+                    <div class="card-ctrl">
+                        ${isUnassigned ? 
+                            `<select class="driver-select" onchange="assignDriver('${id}', this.value)"><option value="Unassigned" selected disabled hidden>ASSIGN DRIVER</option><option value="Matt">Matt</option><option value="Touch">Touch</option><option value="Julian">Julian</option><option value="Jess">Jess</option></select>` : 
+                            `<div style="color:var(--active-green); font-weight:900; font-size:16px; text-transform:uppercase; letter-spacing:1px;">${p.assigned_to}</div>
+                             <div class="flex-row">
+                                <button class="edit-btn" onclick="startEditing('${id}')">Edit</button>
+                                <button class="reset-btn" onclick="unassign('${id}')">RESET</button>
+                             </div>`
+                        }
+                        <button onclick="deleteJob('${id}')" style="color:red; border:none; background:none; font-weight:bold; cursor:pointer; font-size:16px;">&times;</button>
+                    </div>`;
+            }
+            list.appendChild(card);
+        });
+
+        lastKnownCompletedId = currentTopArchivedId;
+        document.getElementById("stat-pending").innerText = pending;
+        document.getElementById("stat-assigned").innerText = assignedCount;
+        document.getElementById("stat-note").innerText = noteCount;
+        document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
+        document.getElementById("load-more-btn").style.display = "none";
+        document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
+        document.getElementById("assigned-box").className = "stat-box";
+    }
+</script>
+</body>
+</html>
