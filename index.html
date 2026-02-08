@@ -230,6 +230,16 @@
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         }
 
+        .driver-route-label {
+            color: #00ff41 !important;
+            font-weight: 900;
+            font-size: 15px;
+            font-family: system-ui, -apple-system, sans-serif;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(0,0,0,0.9);
+            letter-spacing: 0.5px;
+        }
+
         .card-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; font-size: 18px; }
         .detail-label { color: #888; text-transform: uppercase; font-size: 14px; font-weight: 900; margin-bottom: 2px; }
         .detail-value { color: #fff; margin-bottom: 5px; font-weight: 500; }
@@ -594,8 +604,16 @@
             } else {
                  const marker = new google.maps.Marker({
                     position: pos, map: mainMap,
-                    icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00ff41', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7 },
-                    label: { text: `${name} ${timeStr}`, className: "pulsing-dot driver-map-label" }
+                    icon: { 
+                        path: google.maps.SymbolPath.CIRCLE, 
+                        fillColor: '#00ff41', 
+                        fillOpacity: 1, 
+                        strokeWeight: 2, 
+                        strokeColor: '#ffffff', 
+                        scale: 7,
+                        labelOrigin: new google.maps.Point(0, -15)
+                    },
+                    label: { text: `${name} ${timeStr}`, className: "pulsing-dot driver-route-label" }
                  });
                  mapMarkers[name] = marker;
             }
@@ -634,7 +652,7 @@
                                 position: results[0].geometry.location,
                                 label: { 
                                     text: label, 
-                                    color: "white", 
+                                    color: "#00ff41", 
                                     fontWeight: "bold",
                                     fontSize: "12px",
                                     className: "driver-map-label"
@@ -642,7 +660,7 @@
                                 icon: {
                                     path: google.maps.SymbolPath.CIRCLE,
                                     scale: 5,
-                                    fillColor: '#00ff41',
+                                    fillColor: job.type === 'pickup' ? '#ff9800' : '#00ff41',
                                     fillOpacity: 1,
                                     strokeWeight: 1,
                                     strokeColor: 'white'
