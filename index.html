@@ -1,1033 +1,1060 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>E&C Dispatch | Driver Portal</title>
-  <style>
-    :root {
-      --accent: #ffcc00;
-      --queue-orange: #ff9800;
-      --card-bg: #1e1e1e;
-      --active-green: #4caf50;
-      --review-blue: #2196f3;
-      --decline-red: #f44336;
-      --text-main: #ffffff;
-      --update-blue: #00d4ff;
-    }
-    * { box-sizing: border-box; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>E&C COMMAND CENTER</title>
     
-    html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background: #050505; color: #e0e0e0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; }
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffcc00">
     
-    /* NEW INFO ANIMATIONS */
-    .has-update {
-      border: 2px solid var(--update-blue) !important;
-      animation: update-glow 1.5s infinite alternate !important;
-    }
+    <style>
+        :root { --accent: #ffcc00; --bg: #0a0a0a; --card: #161616; --text: #eee; --wpg: #2196f3; --brdn: #9c27b0; --active-green: #00ff41; --archive-orange: #ff6600; --note-blue: #00d4ff; --pro-blue: #007bff; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
+        
+        header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        
+        .header-logo {
+            height: 24px;
+            width: auto;
+            margin-right: 10px;
+            vertical-align: middle;
+            filter: drop-shadow(0 0 5px var(--accent));
+            animation: logo-glow 2s infinite alternate;
+        }
 
-    /* SPECIFIC FIELD HIGHLIGHTING */
-    .field-highlight {
-      color: var(--update-blue) !important;
-      text-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
-      font-weight: bold;
-      animation: field-pulse 1s infinite alternate;
-      display: inline-block;
-    }
+        @keyframes logo-glow {
+            from { filter: drop-shadow(0 0 2px var(--accent)); transform: scale(1); }
+            to { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.05); }
+        }
 
-    /* INFO BUTTON ANIMATION */
-    .info-btn-animate {
-      animation: field-pulse 1s infinite alternate !important;
-      background: rgba(0, 212, 255, 0.1) !important;
-      box-shadow: 0 0 15px var(--update-blue) !important;
-    }
+        /* GREEN DOT PULSING ANIMATION */
+        @keyframes dot-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pulsing-dot {
+            animation: dot-pulse 2s infinite ease-in-out;
+        }
 
-    @keyframes field-pulse {
-      from { opacity: 0.8; transform: scale(1); }
-      to { opacity: 1; transform: scale(1.05); }
-    }
+        /* LOCATE DRIVERS BUTTON */
+        #locate-btn {
+            background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
+            color: #000080;
+            border: none;
+            border-radius: 4px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 0;
+            width: 100%;
+            height: 42px;
+            cursor: pointer;
+            font-size: 11px;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite;
+        }
+        
+        .route-btn {
+            background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
+            color: #000080;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 8px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite;
+            white-space: nowrap;
+        }
 
-    .update-badge {
-      background: var(--update-blue);
-      color: #000; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; margin-left: 8px;
-      animation: pulse-update 0.5s infinite alternate; letter-spacing: 0.5px;
-    }
+        /* MAP MODAL */
+        #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
+        #map { width: 100%; height: 100%; }
+        .close-map { position: absolute; top: 20px; right: 20px; z-index: 3001; background: red; color: white; border: none; padding: 10px 20px; font-weight: 900; border-radius: 5px; cursor: pointer; }
 
-    @keyframes update-glow {
-      from { box-shadow: 0 0 5px var(--update-blue); }
-      to { box-shadow: 0 0 15px var(--update-blue); }
-    }
+        #install-btn { 
+            display: none; 
+            background: var(--pro-blue); 
+            color: #fff; 
+            border: none; 
+            padding: 8px 14px; 
+            font-size: 11px; 
+            font-weight: 900; 
+            border-radius: 4px; 
+            cursor: pointer;
+            text-transform: uppercase;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite, fadeIn 0.5s ease-in;
+            z-index: 1002;
+        }
 
-    @keyframes pulse-update {
-      from { opacity: 0.7; }
-      to { opacity: 1; }
-    }
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+        }
 
-    .header-logo {
-      height: 28px; 
-      width: auto;
-      margin-right: 12px;
-      vertical-align: middle;
-      filter: drop-shadow(0 0 5px var(--accent));
-      animation: logo-glow 2s infinite alternate;
-    }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    @keyframes logo-glow {
-      from { filter: drop-shadow(0 0 2px var(--accent)); transform: scale(1); }
-      to { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.05); }
-    }
+        @keyframes subtle-glow {
+            0% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
+            50% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); border-color: var(--accent); }
+            100% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
+        }
+        .glow-field { border: 1px solid #444; }
 
-    .stop-badge {
-      background: rgba(0, 212, 255, 0.1);
-      color: var(--update-blue);
-      border: 1px solid var(--update-blue);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      margin-left: 10px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
-      text-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
-      animation: pro-pulse-blue 3s infinite ease-in-out;
-      display: inline-block;
-      vertical-align: middle;
-    }
+        .stats-bar { display: flex; background: #111; padding: 5px; border-bottom: 1px solid #333; justify-content: space-around; align-items: center; }
+        #entry-panel { background: #0f0f0f; border-bottom: 2px solid #333; padding: 12px 15px; }
+        #board-panel { padding: 15px; flex: 1; }
+        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0 5px; transition: all 0.3s; }
+        .stat-label { display: block; font-size: 11px; color: #888; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-number { font-family: 'Courier New', monospace; font-weight: 900; line-height: 1; }
+        #stat-pending { font-size: 24px; color: var(--accent); }
+        #stat-assigned { font-size: 24px; color: var(--active-green); }
+        #stat-note { font-size: 24px; color: var(--note-blue); }
+        
+        .high-alert { background: #1a1a00 !important; border: 2px solid var(--active-green); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); animation: alert-glow 0.6s infinite alternate; }
+        @keyframes alert-glow { from { border-color: #333; } to { border-color: var(--active-green); } }
+        
+        .unassigned-glow { border: 2px solid var(--accent) !important; z-index: 10; animation: pro-glow 1.2s infinite ease-in-out; }
+        @keyframes pro-glow {
+            0% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
+            50% { box-shadow: 0 0 25px var(--accent), inset 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.01); border-color: var(--accent); }
+            100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
+        }
 
-    .new-stops-badge {
-      background: #ff0000;
-      color: #fff;
-      border: 2px solid #fff;
-      padding: 4px 12px;
-      border-radius: 50px;
-      font-size: 16px;
-      margin-left: 15px;
-      font-weight: 900;
-      display: none;
-      vertical-align: middle;
-      box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
-      animation: explosion 1s infinite;
-    }
+        @keyframes inner-pulse {
+            0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+            50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
+            100% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+        }
 
-    @keyframes explosion {
-      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-      70% { transform: scale(1.2); box-shadow: 0 0 20px 20px rgba(255, 0, 0, 0); }
-      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
-    }
+        .shiny-text {
+            background: linear-gradient(to right, var(--accent) 20%, #fff 50%, var(--accent) 80%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: text-shine 3s linear infinite;
+        }
+        @keyframes text-shine { to { background-position: 200% center; } }
 
-    @keyframes pro-pulse-blue {
-      0% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.1); border-color: rgba(0, 212, 255, 0.3); background: rgba(0, 212, 255, 0.05); }
-      50% { box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); border-color: var(--update-blue); background: rgba(0, 212, 255, 0.1); }
-      100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.1); border-color: rgba(0, 212, 255, 0.3); background: rgba(0, 212, 255, 0.05); }
-    }
+        details > summary { list-style: none; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
 
-    #login-overlay {
-      position: fixed; inset: 0; background: #000; z-index: 999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
-    }
-    .login-box {
-      width: 100%; max-width: 350px; background: #111; padding: 30px; 
-      border-radius: 16px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-      text-align: center;
-    }
-    .login-box h2 { color: var(--accent); margin-top: 0; font-weight: 800; letter-spacing: 1px; }
-    .login-input {
-      width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444;
-      color: #fff; border-radius: 8px; font-size: 16px; outline: none; transition: 0.3s;
-    }
-    .login-input:focus { border-color: var(--accent); background: #2a2a2a; }
-    .login-submit {
-      width: 100%; padding: 15px; margin-top: 15px; background: var(--accent); border: none;
-      color: #000; font-weight: 900; font-size: 16px; border-radius: 8px; cursor: pointer;
-      text-transform: uppercase; box-shadow: 0 4px 15px rgba(255, 204, 0, 0.3);
-    }
+        .note-highlight { border: 2px solid var(--note-blue) !important; animation: note-glow 1.5s infinite; }
+        .note-text-glow { color: var(--note-blue) !important; font-weight: 900; animation: text-pulse 1.5s infinite; cursor: pointer; }
+        @keyframes note-glow {
+            0% { box-shadow: 0 0 5px var(--note-blue); }
+            50% { box-shadow: 0 0 20px var(--note-blue); }
+            100% { box-shadow: 0 0 5px var(--note-blue); }
+        }
+        @keyframes text-pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
 
-    header { padding: 12px 16px; background: #0a0a0a; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 10; }
-    h1 { margin: 0; color: var(--accent); font-size: 18px; font-weight: 800; display: flex; align-items: center; letter-spacing: 0.5px; }
-    #clock { font-size: 14px; color: var(--accent); font-weight: 600; opacity: 0.9; }
+        input, select, textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 16px; margin-bottom: 6px; box-sizing: border-box; }
+        .flex-row { display: flex; gap: 8px; }
+        .driver-select { width: 100%; background: #000; color: var(--accent); border: 1px solid #555; font-weight: bold; padding: 10px; border-radius: 4px; }
+        
+        button.primary {
+            width: 100%;
+            padding: 18px;
+            background: #1a1a1a;
+            color: #fff;
+            font-weight: 900;
+            border: 1px solid #333;
+            border-bottom: 2px solid var(--accent);
+            cursor: pointer;
+            border-radius: 6px;
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        button.primary:hover {
+            background: #222;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        button.primary:active {
+            transform: translateY(1px);
+        }
+        
+        .dispatch-card { background: #111; border: 1px solid #444; border-left: 6px solid var(--accent); margin-bottom: 30px; border-radius: 4px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.7); overflow: hidden; position: relative; }
+        .card-body { padding: 15px; }
+        .card-ctrl { background: #1c1c1c; padding: 12px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 0 0 8px 8px; }
+        .addr { font-weight: 800; font-size: 17px; margin: 6px 0; }
+        .loc-tag { font-size: 16px; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; background: #333; color: #fff; border: 1px solid #555; display: inline-block; margin-bottom: 8px; }
+        .pkg-badge { font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 5px; border-radius: 3px; margin-left: 10px; vertical-align: middle; }
+        .reset-btn { background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        
+        .edit-btn { background: #444; color: var(--accent); border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .save-btn { background: var(--active-green); color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .edit-input { animation: subtle-glow 3s infinite ease-in-out; }
 
-    #main-container { display: flex; flex: 1; width: 100%; overflow: hidden; background: #050505; }
-    
-    #history-sidebar { width: 115px; border-right: 1px solid #222; overflow-y: auto; background: #0f0f0f; padding: 8px; flex-shrink: 0; display: flex; flex-direction: column; padding-bottom: 80px; }
-    
-    #multi-route-btn {
-      position: fixed; bottom: 10px; left: 8px; width: 100px;
-      padding: 10px 4px; background: #222; border: 1px solid #444;
-      color: #888; font-weight: 800; font-size: 11px; border-radius: 8px;
-      cursor: pointer; text-align: center; z-index: 100; transition: all 0.3s;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    
-    .glow-active {
-      background: var(--queue-orange) !important;
-      color: #000 !important;
-      border-color: #fff !important;
-      animation: buttonGlow 1.5s infinite alternate;
-    }
+        .history-box { margin-top: 30px; border-top: 2px dashed #333; padding: 15px; background: #080808; display: flex; gap: 15px; flex-wrap: wrap; }
+        .archive-column { flex: 1; min-width: 300px; border-right: 1px dashed #333; padding-right: 10px; }
+        .archive-column:last-child { border-right: none; padding-right: 0; }
+        .archive-title { font-size: 14px; font-weight: 900; color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
 
-    .glow-max {
-      background: var(--active-green) !important;
-      color: #fff !important;
-      border: 2px solid #fff !important;
-      transform: scale(1.05);
-      animation: buttonMaxGlow 0.8s infinite alternate !important;
-    }
+        .new-entry-pop { animation: archive-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; z-index: 10; }
+        @keyframes archive-pop {
+            0% { transform: scale(0.5) translateY(-20px); opacity: 0; background: var(--active-green); box-shadow: 0 0 50px var(--active-green); }
+            50% { transform: scale(1.05); background: #333; box-shadow: 0 0 20px var(--active-green); }
+            100% { transform: scale(1); opacity: 1; background: #111; box-shadow: none; }
+        }
 
-    @keyframes buttonGlow {
-      from { box-shadow: 0 0 5px var(--queue-orange); transform: scale(1); }
-      to { box-shadow: 0 0 15px var(--queue-orange); transform: scale(1.02); }
-    }
+        .hist-driver { background: var(--active-green); color: #000; font-weight: 900; padding: 3px 8px; border-radius: 3px; font-size: 13px; text-transform: uppercase; }
+        .hist-time { font-size: 11px; color: var(--accent); margin-top: 8px; font-family: monospace; font-weight: bold; }
+        .hist-city { font-size: 14px; font-weight: 900; background: #2a2a2a; color: #fff; padding: 3px 8px; border-radius: 4px; margin-right: 10px; vertical-align: middle; text-transform: uppercase; border: 1px solid #444; }
+        .hist-name { font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
+        
+        .driver-map-label {
+            color: #ffff00 !important;
+            font-weight: 900;
+            font-size: 14px;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
 
-    @keyframes buttonMaxGlow {
-      from { box-shadow: 0 0 10px var(--active-green); }
-      to { box-shadow: 0 0 25px rgba(255,255,255,0.5); }
-    }
+        .driver-route-label {
+            color: #00ff41 !important;
+            font-weight: 900;
+            font-size: 15px;
+            font-family: system-ui, -apple-system, sans-serif;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(0,0,0,0.9);
+            letter-spacing: 0.5px;
+        }
 
-    .section-label-pending { font-size: 13px; font-weight: 800; text-transform: uppercase; margin: 10px 0 6px 0; color: var(--queue-orange); border-bottom: 1px solid #333; animation: pulseOrange 3s infinite ease-in-out; letter-spacing: 0.5px; }
-    .section-label-done { font-size: 12px; font-weight: 800; text-transform: uppercase; margin: 15px 0 6px 0; color: var(--active-green); border-bottom: 1px solid #333; opacity: 0.8; }
-    
-    .history-item { background: #181818; padding: 10px 8px; margin-bottom: 6px; border-radius: 6px; border-left: 3px solid var(--active-green); font-size: 12px; cursor: pointer; overflow: hidden; white-space: normal; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .just-archived { animation: proArchivePop 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; z-index: 10; border-left-width: 6px; }
+        .card-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; font-size: 18px; }
+        .detail-label { color: #888; text-transform: uppercase; font-size: 14px; font-weight: 900; margin-bottom: 2px; }
+        .detail-value { color: #fff; margin-bottom: 5px; font-weight: 500; }
 
-    @keyframes proArchivePop {
-      0% { transform: scale(0.5) translateX(50px); opacity: 0; background: var(--active-green); }
-      30% { transform: scale(1.1) translateX(0); opacity: 1; background: var(--active-green); }
-      100% { transform: scale(1); opacity: 1; background: #151515; }
-    }
+        .more-btn { width: 100%; padding: 15px; background: #222; color: var(--accent); border: 1px solid #444; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        
+        #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 2px solid var(--accent); padding: 10px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
+        #archive-search { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: var(--accent); font-weight: bold; border-radius: 4px; font-size: 16px; }
 
-    /* NEW MINI JOB ANIMATION */
-    .new-mini-pop { animation: miniPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    @keyframes miniPop {
-      0% { transform: scale(0.8); opacity: 0; background: var(--update-blue); }
-      100% { transform: scale(1); opacity: 1; }
-    }
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: #161616; margin: 5% auto; padding: 20px; width: 85%; max-width: 500px; border: 2px solid var(--accent); color: #eee; border-radius: 8px; }
 
-    .history-contact { color: var(--queue-orange); font-size: 11px; display: block; margin-top: 2px; text-transform: uppercase; font-weight: 600; }
-    .history-package { color: #777; font-size: 12px; display: block; text-transform: uppercase; font-weight: 700; margin-top: 3px; }
+        /* LOGIN OVERLAY */
+        #login-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        .login-box { width: 100%; max-width: 350px; background: #111; padding: 30px; border-radius: 15px; border: 1px solid #333; text-align: center; }
+        .login-input { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 18px; outline: none; }
+        .login-submit { width: 100%; padding: 15px; margin-top: 15px; background: var(--accent); border: none; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        #user-display { color: var(--active-green); font-size: 12px; font-weight: 900; text-transform: uppercase; animation: fadeIn 1s ease-out; margin-bottom: 5px; }
 
-    #live-feed { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-    .active-card { background: var(--card-bg); padding: 16px; border-radius: 12px; border: 1px solid #333; width: 100%; display: flex; flex-direction: column; animation: slideInRight 0.4s both; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); position: relative; }
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: #1a1a1a; border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; color: #eee; font-weight: bold; }
+        .suggestion-item:hover { background: var(--accent); color: #000; }
 
-    .new-job-highlight {
-      border: 2px solid var(--active-green) !important;
-      box-shadow: 0 0 40px rgba(76, 175, 80, 0.3), inset 0 0 20px rgba(76, 175, 80, 0.1);
-      background: linear-gradient(135deg, #1e251e 0%, #1a1a1a 100%) !important;
-    }
+        @keyframes voice-glow {
+            0% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
+            50% { filter: drop-shadow(0 0 8px var(--active-green)); transform: scale(1.1); fill: #fff; }
+            100% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
+        }
+        .voice-active { animation: voice-glow 1.5s infinite; fill: var(--active-green) !important; }
+        
+        .mode-switch-container { display: flex; margin-bottom: 10px; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
+        .mode-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; font-size: 14px; background: #111; color: #555; transition: 0.3s; }
+        .mode-btn.active-mode { background: var(--accent); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; }
 
-    @keyframes softPulse { 0% { border-color: #333; } 50% { border-color: #555; } 100% { border-color: #333; } }
-    .card-exit-success { transform: scale(0.9) translateX(-20px); opacity: 0; filter: blur(5px); pointer-events: none; transition: 0.5s ease; }
-    
-    .done-slash {
-      border-left-color: #555 !important;
-      opacity: 0.5;
-      filter: grayscale(1);
-    }
-
-    .card-date-badge { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; letter-spacing: 0.5px; }
-    .card-layout { display: flex; justify-content: space-between; gap: 12px; }
-    .address-side { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .specs-side { width: 90px; text-align: right; display: flex; flex-direction: column; gap: 8px; }
-    .card-label { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-bottom: 2px; }
-    .nav-link { text-decoration: none; color: inherit; }
-    .city-tag { display: inline-block; font-size: 12px; background: #2a2a2a; color: #fff; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; border: 1px solid #444; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .pickup-value { font-size: 18px; font-weight: 700; line-height: 1.25; color: #fff; text-transform: uppercase; margin-bottom: 4px; word-wrap: break-word; }
-    .drop-value { font-size: 16px; font-weight: 500; line-height: 1.3; color: #bbb; text-transform: uppercase; word-wrap: break-word; }
-    .tech-info { font-size: 14px; font-weight: 700; color: #eee; text-transform: uppercase; line-height: 1.2; }
-    .dim-x { color: #666; font-weight: 400; padding: 0 1px; }
-    
-    .time-stack { text-align: center; margin: 12px 0 8px 0; border-top: 1px solid #2a2a2a; padding-top: 8px; display: flex; justify-content: center; gap: 8px; align-items: baseline; }
-    .job-time-stamp { font-size: 14px; font-weight: 700; color: #FFB020; }
-    .job-date-stamp { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; }
-
-    .card-action-row { display: flex; gap: 10px; align-items: stretch; margin-top: 5px; }
-    .info-btn { flex: 0 0 70px; background: transparent; color: var(--review-blue); border: 1px solid var(--review-blue); padding: 10px 0; font-size: 13px; font-weight: 800; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
-    .info-btn:active { background: rgba(33, 150, 243, 0.1); }
-    .done-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; color: #fff; font-weight: 800; cursor: pointer; text-transform: uppercase; background: linear-gradient(135deg, var(--active-green), #388e3c); font-size: 16px; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); transition: transform 0.1s; letter-spacing: 1px; }
-    .done-btn:active { transform: scale(0.98); }
-    
-    .details-box { display: none; background: #111; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid var(--review-blue); font-size: 15px; color: #ddd; line-height: 1.5; overflow-wrap: anywhere; pointer-events: auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-    
-    .decline-btn {
-      width: 100%; margin-top: 15px; padding: 12px; background: transparent; 
-      color: var(--decline-red); border: 1px solid var(--decline-red); 
-      border-radius: 6px; font-weight: 800; font-size: 14px; cursor: pointer; 
-      text-transform: uppercase; transition: 0.3s;
-    }
-    .decline-btn:active { background: rgba(244, 67, 54, 0.1); }
-
-    /* DND BUTTON STYLING */
-    .dnd-btn {
-      width: 100%; margin-top: 10px; padding: 12px; background: #333; 
-      color: var(--queue-orange); border: 1px solid var(--queue-orange); border-radius: 6px; font-weight: 800; 
-      font-size: 14px; cursor: pointer; text-transform: uppercase; transition: 0.2s;
-    }
-    .dnd-btn:active { background: var(--queue-orange); color: #000; }
-
-    /* DRIVER NOTE BUTTON STYLING */
-    .driver-note-btn {
-      width: 100%; margin-top: 10px; padding: 12px; background: transparent; 
-      color: var(--accent); border: 1px solid var(--accent); 
-      border-radius: 6px; font-weight: 800; font-size: 14px; cursor: pointer; 
-      text-transform: uppercase; transition: 0.3s;
-    }
-    .driver-note-btn:active { background: var(--accent); color: #000; }
-
-    /* EDITED NOTES STYLE */
-    .notes-edited { color: var(--queue-orange) !important; font-style: italic; }
-    .edit-note-input { width: 100%; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 8px; font-family: inherit; margin-top: 5px; font-size: 14px; }
-    .save-note-btn { background: var(--active-green); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; margin-top: 8px; cursor: pointer; font-weight: bold; }
-    .glow-yellow { border: 1px solid var(--accent) !important; box-shadow: 0 0 10px var(--accent) !important; outline: none; }
-
-    @keyframes heavy-flash {
-      0% { color: #ff3333; text-shadow: 0 0 5px #ff0000; transform: scale(1); }
-      50% { color: #ff0000; text-shadow: 0 0 15px #ff0000; transform: scale(1.1); }
-      100% { color: #ff3333; text-shadow: 0 0 5px #ff0000; transform: scale(1); }
-    }
-    .heavy-word { display: inline-block; animation: heavy-flash 0.8s infinite; font-weight: 900; text-transform: uppercase; }
-
-    @keyframes pulseOrange { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
-    @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-  </style>
+        /* GRAPH INDICATOR STYLES */
+        #driver-stats-panel { background: #111; padding: 10px; border-bottom: 2px solid #333; display: flex; flex-direction: column; gap: 5px; }
+        .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #1a1a1a; border-radius: 4px; animation: slideIn 0.3s ease-out; border: 1px solid #2a2a2a; }
+        .ds-name { color: #fff; font-weight: 900; font-size: 16px; width: 80px; text-transform: uppercase; }
+        .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
+        .stat-item { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; display: flex; align-items: center; gap: 5px; background: #111; padding: 4px 8px; border-radius: 4px; border: 1px solid #222; }
+        .stat-val-p { color: var(--accent); font-size: 14px; font-weight: 900; animation: num-pulse 2s infinite alternate; }
+        .stat-val-d { color: var(--active-green); font-size: 14px; font-weight: 900; animation: num-pulse 2s infinite alternate; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes num-pulse { from { text-shadow: 0 0 2px rgba(255,255,255,0); } to { text-shadow: 0 0 8px rgba(255,255,255,0.8); } }
+    </style>
 </head>
 <body>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2>E&C PORTAL</h2>
+        <h2 style="color: var(--accent); font-weight: 900;">COMMAND LOGIN</h2>
         <input type="text" id="login-user" class="login-input" placeholder="Username" autofocus>
-        <input type="password" id="login-pin" class="login-input" placeholder="Password">
-        <button class="login-submit" onclick="attemptLogin()">Enter</button>
+        <input type="password" id="login-pin" class="login-input" placeholder="Pin">
+        <button class="login-submit" onclick="attemptLogin()">Authorize</button>
     </div>
 </div>
 
 <header>
-  <h1 id="header-name">
-    <img src="icon-512.png" class="header-logo" alt="Logo">
-    E&C PORTAL
-  </h1>
-  <div id="clock"></div>
+    <div style="display: flex; flex-direction: column; width: 100%;">
+        <div id="user-display"></div>
+        <div style="display: flex; align-items: center; overflow: hidden;">
+            <img src="icon-512.png" class="header-logo" alt="E&C Logo">
+            <span class="shiny-text" style="font-size: 20px; font-weight: 900; white-space: nowrap;">E&C COMMAND CENTER</span>
+        </div>
+    </div>
+    <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap;"></div>
 </header>
 
-<div id="main-container">
-  <div id="history-sidebar">
-    <div class="section-label-pending">Pending</div>
-    <div id="queue-log"></div>
-    <div class="section-label-done">Done (Today)</div>
-    <div id="recent-log"></div>
-    <button id="multi-route-btn" onclick="routeOptimized()">ROUTE NAV</button>
-  </div>
-  <div id="live-feed"></div>
+<div class="stats-bar">
+    <div id="pending-box" class="stat-box" onclick="requestNotifyPermission()" style="cursor:pointer;">
+        <span class="stat-label">Pending</span>
+        <div id="stat-pending" class="stat-number">0</div>
+    </div>
+
+    <div class="stat-box">
+        <button id="locate-btn" onclick="openMap()">Driver Map</button>
+    </div>
+
+    <div id="assigned-box" class="stat-box">
+        <span class="stat-label">Assigned</span>
+        <div id="stat-assigned" class="stat-number">0</div>
+    </div>
+    <div id="note-box" class="stat-box" style="display:none;"><span class="stat-label">Note</span><div id="stat-note" class="stat-number">0</div></div>
+</div>
+
+<div id="entry-panel">
+    <div class="mode-switch-container">
+        <button class="mode-btn active-mode" id="btn-mode-pickup" onclick="setMode('pickup')">Schedule Pickup</button>
+        <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Schedule Delivery</button>
+    </div>
+
+    <div style="position:relative; margin-bottom: 8px;">
+        <div style="position:absolute; right:10px; top:12px; z-index:10; font-size:11px; font-weight:bold; cursor:pointer; color: #757575;" onclick="resetFormFields()">RESET</div>
+    </div>
+
+    <div id="top-input-section"></div>
+    
+    <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
+
+    <div class="flex-row">
+        <input type="text" id="f-po" placeholder="PO / Reference" style="flex: 1;">
+        <input type="text" id="f-info" placeholder="Driver Notes..." style="flex: 1.5;">
+    </div>
+
+    <div id="bottom-input-section" style="margin-top: 8px;"></div>
+
+    <select id="f-driver" class="driver-select" style="margin-bottom: 8px; border: 1px solid var(--accent);">
+        <option value="Unassigned" selected disabled hidden>Assign Driver</option>
+        <option value="Unassigned">UNASSIGNED</option>
+        <option value="Matt">Matt</option>
+        <option value="Touch">Touch</option>
+        <option value="Julian">Julian</option>
+        <option value="Jess">Jess</option>
+        <option value="Alicia">Alicia</option>
+        <option value="Kayla">Kayla</option>
+    </select>
+    <div style="display: flex; gap: 8px;">
+        <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
+        <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #000; border: 1px solid #fff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: inner-pulse 2s infinite;"><svg id="mic-icon" viewBox="0 0 24 24" width="28" height="28" style="fill: #fff; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+    </div>
+</div>
+
+<div id="driver-stats-panel"></div>
+
+<div style="display:none;">
+    <div id="group-pickup">
+        <div style="position:relative;">
+            <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
+            <div id="suggestions" class="suggestions-box"></div>
+        </div>
+        <div class="flex-row">
+            <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
+            <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+        </div>
+    </div>
+
+    <div id="group-drop">
+        <div style="position:relative;">
+            <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
+            <div id="drop-suggestions" class="suggestions-box"></div>
+        </div>
+        <div class="flex-row">
+            <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
+            <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+        </div>
+    </div>
+</div>
+
+<div id="board-panel">
+    <div class="history-box">
+        <div id="filter-reset-ui" style="width:100%; text-align:center; display:none; margin-bottom:10px;">
+            <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:20px; font-weight:900; padding:8px 20px; border-radius:30px; text-transform:uppercase; background:#111; box-shadow: 0 0 10px rgba(255,255,255,0.1);"></div>
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button id="view-route-btn" class="route-btn" style="display:none;">View Current Route</button>
+                <button onclick="clearDriverFilter()" style="background:#222; border:1px solid var(--accent); color:var(--accent); padding:8px 20px; font-weight:900; border-radius:4px; text-transform:uppercase; cursor:pointer;">Back to All</button>
+            </div>
+        </div>
+        <div class="archive-column">
+            <div class="archive-title" style="color:var(--archive-orange);">Pickups</div>
+            <div id="list-pickups"></div>
+        </div>
+        <div class="archive-column">
+            <div class="archive-title" style="color:#00ff41;">Deliveries</div>
+            <div id="list-deliveries"></div>
+        </div>
+    </div>
+</div>
+
+<div id="search-footer">
+    <input type="text" id="archive-search" placeholder="SEARCH ARCHIVE" onkeyup="renderData()" onkeydown="handleSearchKey(event)">
+    <button id="install-btn">Install App</button>
+</div>
+
+<div id="map-modal">
+    <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
+    <div id="map"></div>
+</div>
+
+<div id="detailsModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h2 id="m-title" style="color:var(--accent); margin-top:0;">Job Details</h2>
+        <div id="m-body"></div>
+        <div id="m-note-section" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+            <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px;"></textarea>
+            <button class="save-btn" id="m-note-save" style="width: 100%; padding: 12px; font-size: 14px;">Add Note to Job</button>
+        </div>
+        <button class="primary" style="margin-top:20px; padding:10px; background:#444;" onclick="document.getElementById('detailsModal').style.display='none'">DONE</button>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry"></script>
+
 <script>
-  firebase.initializeApp({
-    apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
-    authDomain: "eandccourier-36fcc.firebaseapp.com",
-    databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
-    projectId: "eandccourier-36fcc"
-  }); 
+    firebase.initializeApp({
+        apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
+        authDomain: "eandccourier-36fcc.firebaseapp.com",
+        databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
+        projectId: "eandccourier-36fcc"
+    });
 
-  firebase.auth().signInAnonymously();
-  const db = firebase.database();
-  let currentDriver = localStorage.getItem('ec_driver_name');
+    const db = firebase.database();
+    let rawPickups = {};
+    let rawDropoffs = {};
+    let addressData = {};
+    let deliveryData = {};
+    let currentUser = localStorage.getItem('ec_command_user');
+    let currentMode = 'pickup';
+    let currentDriverFilter = null;
 
-  let observer = null;
-  let fieldSnapshots = {}; 
-  let pendingAlerts = {};
-  const selfEdited = new Set();
-  
-  let globalJobs = {};
+    function filterByDriver(name) {
+        currentDriverFilter = name;
+        renderData();
+        
+        const routeBtn = document.getElementById("view-route-btn");
+        if(routeBtn) {
+            routeBtn.style.display = "inline-block";
+            routeBtn.onclick = (e) => viewDriverRoute(name, e);
+        }
 
-  let lastGpsUpdate = 0;
-  const gpsInterval = 60000; 
-  let wakeLock = null;
-
-  async function startContinuousTracking() {
-    if ("Notification" in window) {
-      Notification.requestPermission();
+        const label = document.getElementById("selected-driver-label");
+        if(label) {
+            label.innerText = name;
+            label.style.display = "block";
+            const dColors = {
+                'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
+                'Jess': '#FF69B4', 'Alicia': '#9C27B0', 'Kayla': '#E91E63'
+            };
+            const c = dColors[name] || '#ffffff';
+            label.style.borderColor = c;
+            label.style.color = c;
+            label.style.boxShadow = `0 0 15px ${c}`;
+        }
     }
-    if ('wakeLock' in navigator) {
-      try {
-        wakeLock = await navigator.wakeLock.request('screen');
-      } catch (err) {
-        console.warn("Wake Lock failed:", err.message);
-      }
+    
+    function clearDriverFilter() {
+        currentDriverFilter = null;
+        const routeBtn = document.getElementById("view-route-btn");
+        if(routeBtn) routeBtn.style.display = "none";
+        
+        const label = document.getElementById("selected-driver-label");
+        if(label) label.style.display = "none";
+
+        renderData();
     }
 
-    if (!navigator.geolocation) return;
-    navigator.geolocation.watchPosition((pos) => {
-      const now = Date.now();
-      if (now - lastGpsUpdate > gpsInterval) {
-        db.ref(`driver_locations/${currentDriver}`).update({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          last_seen: now,
-          gps_timestamp: now 
+    function attemptLogin() {
+        const user = document.getElementById('login-user').value.trim();
+        const pin = document.getElementById('login-pin').value.trim();
+        if(!user || !pin) return;
+        db.ref("command_secrets").child(user).once('value', s => {
+            if(s.exists() && s.val().toString() === pin) {
+                localStorage.setItem('ec_command_user', user);
+                currentUser = user;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('user-display').innerText = `Logged in as: ${user}`;
+            } else {
+                alert("Invalid Credentials");
+            }
         });
-        lastGpsUpdate = now;
-      }
-    }, (err) => console.warn("GPS Error:", err.message), 
-    { enableHighAccuracy: true, maximumAge: 0 });
-  }
+    }
 
-  if(currentDriver) {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('header-name').innerHTML = `
-      <img src="icon-512.png" class="header-logo">
-      <span style="font-size: 14px; color: #39FF14; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border: 1px solid #39FF14; padding: 2px 8px; border-radius: 4px; white-space: nowrap; margin-right: 8px;">${currentDriver}</span>
-      <span style="white-space: nowrap;">
-        <span id="stop-counter" class="stop-badge" style="margin-left: 0;">0 STOPS</span>
-        <span id="new-stops-badge" class="new-stops-badge">0 NEW</span>
-      </span>
-    `;
-    startContinuousTracking();
-    setupIntersectionObserver();
-  }
+    if(currentUser) {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
+    }
 
-  function setupIntersectionObserver() {
-    observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const cardId = entry.target.id.replace('card-', '');
-          const job = globalJobs[cardId];
-          if(job) {
-             const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-             db.ref(`${refPath}/${cardId}/seen_by/${currentDriver}`).once('value', snapshot => {
-               if (!snapshot.exists()) {
-                 setTimeout(() => {
-                   if (document.getElementById(entry.target.id)) {
-                     markAsSeenPersistent(cardId, refPath);
-                   }
-                 }, 3000);
-               }
-             });
-          }
+    function formatTime12(ts) {
+        if (!ts) return '--:--';
+        const d = new Date(ts);
+        if (isNaN(d.getTime())) return '--:--';
+        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    // MAP LOGIC
+    let mainMap;
+    let mapMarkers = {};
+    let activePolyline = null;
+    let listeningRef = null;
+
+    function openMap() {
+        document.getElementById('map-modal').style.display = 'block';
+        if (!mainMap) {
+            mainMap = new google.maps.Map(document.getElementById("map"), {
+                gestureHandling: "greedy",
+                styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
+            });
         }
-      });
-    }, { threshold: 0.5 });
-  }
-
-  function markAsSeenPersistent(id, refPath) {
-    db.ref(`${refPath}/${id}/seen_by/${currentDriver}`).set(true).then(() => {
-        const card = document.getElementById(`card-${id}`);
-        if (card) {
-          card.classList.remove('new-job-highlight');
-          updateNewStopsCountUI();
-        }
-    });
-  }
-
-  function acknowledgeUpdate(id) {
-    setTimeout(() => {
-      sessionStorage.setItem(`ack_update_${id}`, 'true');
-      delete pendingAlerts[id];
-      const card = document.getElementById(`card-${id}`);
-      const mini = document.getElementById(`mini-${id}`);
-      
-      if(card) {
-        card.classList.remove('has-update');
-        card.querySelectorAll('.field-highlight').forEach(el => el.classList.remove('field-highlight'));
-        const infoBtn = card.querySelector('.info-btn');
-        if(infoBtn) infoBtn.classList.remove('info-btn-animate');
-      }
-      if(mini) mini.classList.remove('has-update');
-      
-      const badge = document.getElementById(`badge-${id}`);
-      if(badge) badge.style.display = 'none';
-    }, 3000);
-  }
-
-  function scrollToCard(id) {
-    const card = document.getElementById(`card-${id}`);
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      card.style.transition = '0.3s';
-      card.style.background = '#2a2a2a';
-      setTimeout(() => card.style.background = 'var(--card-bg)', 500);
-    }
-  }
-
-  function updateNewStopsCountUI() {
-    const newCards = document.querySelectorAll('.new-job-highlight');
-    const badge = document.getElementById('new-stops-badge');
-    if (badge) {
-      badge.innerText = `${newCards.length} NEW`;
-      badge.style.display = newCards.length > 0 ? 'inline-block' : 'none';
-    }
-  }
-
-
-function attemptLogin() {
-  const nameInput = document.getElementById('login-user').value.trim();
-  const pinInput = document.getElementById('login-pin').value;
-
-  if (!nameInput || !pinInput) {
-    alert("Please enter both Name and PIN");
-    return;
-  }
-
-  // Connects to your Firebase 'driver_secrets' folder
-  db.ref(`driver_secrets/${nameInput}`).once('value', snapshot => {
-    const dbPin = snapshot.val();
-
-    // Compares database PIN to what you typed
-    if (dbPin && dbPin.toString() === pinInput.toString()) {
-      localStorage.setItem('ec_driver_name', nameInput);
-      location.reload();
-    } else {
-      alert("Invalid Name or PIN. Check your Firebase data.");
-    }
-  }).catch(err => {
-    alert("Database error. Make sure your Rules are Published.");
-  });
-}
-
-// This allows pressing 'Enter' to log in
-document.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter' && document.getElementById('login-overlay').style.display !== 'none') {
-    attemptLogin();
-  }
-});
-  function formatTime12(ts) {
-    const d = ts ? new Date(ts) : new Date();
-    return d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  }
-
-  function formatDateShort(ts) {
-    const d = new Date(ts);
-    return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-  }
-
-  function toggleDetails(btn, id) {
-    const box = btn.closest('.active-card').querySelector('.details-box');
-    const isOpening = box.style.display !== "block";
-    box.style.display = isOpening ? "block" : "none";
-    btn.innerText = isOpening ? "HIDE" : "INFO";
-    acknowledgeUpdate(id);
-  }
-
-  function restoreToQueue(id) {
-    const job = globalJobs[id];
-    if(!job) return;
-    const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-    
-    if(confirm("Restore this job back to the active list?")) {
-      db.ref(refPath).child(id).update({ 
-        status: 'pending',
-        completed_at: null 
-      });
-    }
-  }
-
-  function declineJob(id) {
-    const job = globalJobs[id];
-    if(!job) return;
-    const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-    
-    if(confirm("Are you sure you want to decline this job?")) {
-      db.ref(refPath).child(id).update({ 
-        assigned_to: "",
-        status: "pending"
-      }).catch(err => alert("Error declining job: " + err.message));
-    }
-  }
-
-  /* NEW DND LOGIC */
-  function dndJob(id, existingNotes) {
-    const job = globalJobs[id];
-    if(!job) return;
-    const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-    const reasonText = job.jobType === 'pickup' ? "Reason for DNP:" : "Reason for DND:";
-    const tag = job.jobType === 'pickup' ? "DNP" : "DND";
-    
-    const reason = prompt(reasonText);
-    if (reason === null) return; // Cancelled
-    
-    if (!reason.trim()) {
-      alert("Please provide a reason.");
-      return;
-    }
-
-    // TAG DRIVER AND MARK AS EDITED
-    const updatedNotes = existingNotes ? `${existingNotes} | ${tag} (${currentDriver}): ${reason}` : `${tag} (${currentDriver}): ${reason}`;
-    
-    db.ref(refPath).child(id).update({ 
-      assigned_to: "",
-      status: "pending",
-      other_info: updatedNotes
-    }).catch(err => alert("Error processing: " + err.message));
-  }
-
-  /* EDITABLE NOTES LOGIC */
-  function enterNoteEdit(id, currentNotes) {
-    if (event) event.stopPropagation();
-    const container = document.getElementById(`note-display-${id}`);
-    const safeNotes = currentNotes.replace(/\\'/g, "'");
-    container.innerHTML = `
-      <textarea id="edit-input-${id}" class="edit-note-input" onclick="event.stopPropagation()">${safeNotes}</textarea>
-      <button class="save-note-btn" onclick="event.stopPropagation(); saveNoteEdit('${id}')">SAVE</button>
-    `;
-  }
-
-  function saveNoteEdit(id) {
-    const job = globalJobs[id];
-    if(!job) return;
-    const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-    
-    const newText = document.getElementById(`edit-input-${id}`).value;
-    const taggedNote = `${newText} (Edited by ${currentDriver})`;
-    selfEdited.add(`${id}_notes`);
-    db.ref(refPath).child(id).update({ other_info: taggedNote })
-      .catch(err => alert("Save failed: " + err.message));
-  }
-
-  function toggleDriverNoteEdit(e, id) {
-    e.stopPropagation();
-    const container = document.getElementById(`driver-note-display-${id}`);
-    if(container.innerHTML.trim() !== "") {
-        container.innerHTML = "";
-    } else {
-        container.innerHTML = `
-          <textarea id="driver-edit-input-${id}" class="edit-note-input glow-yellow" onclick="event.stopPropagation()"></textarea>
-          <button class="save-note-btn" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="event.stopPropagation(); saveDriverNote('${id}')">SEND</button>
-        `;
-        setTimeout(() => document.getElementById(`driver-edit-input-${id}`).focus(), 100);
-    }
-  }
-
-  function saveDriverNote(id) {
-    const job = globalJobs[id];
-    if(!job) return;
-    const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-    
-    const newText = document.getElementById(`driver-edit-input-${id}`).value;
-    db.ref(refPath).child(id).child("other_info").once("value", s => {
-      const existing = s.val() || "";
-      const taggedNote = existing ? `${existing} | Driver Note (${currentDriver}): ${newText}` : `Driver Note (${currentDriver}): ${newText}`;
-      selfEdited.add(`${id}_notes`);
-      db.ref(refPath).child(id).update({ other_info: taggedNote })
-        .catch(err => alert("Save failed: " + err.message));
-    });
-  }
-
-  function enterPoEdit(e, id, currentVal) {
-    e.stopPropagation();
-    const container = document.getElementById(`po-container-${id}`);
-    const safeVal = currentVal.replace(/"/g, "");
-    container.innerHTML = `
-        <div style="display:flex; gap:5px; justify-content:flex-end; align-items:center; margin-top:5px;">
-          <input type="text" id="po-input-${id}" class="login-input glow-yellow" style="width: 120px; padding: 6px; margin: 0; font-size:13px;" value="${safeVal}" onclick="event.stopPropagation()">
-          <button class="save-note-btn" style="margin:0;" onclick="savePoEdit(event, '${id}')">SAVE</button>
-          <button class="save-note-btn" style="background:#555; margin:0;" onclick="cancelPoEdit(event, '${id}', '${safeVal}')">X</button>
-        </div>
-    `;
-  }
-
-  function savePoEdit(e, id) {
-    e.stopPropagation();
-    const job = globalJobs[id];
-    if(!job) return;
-    const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-    
-    const val = document.getElementById(`po-input-${id}`).value;
-    selfEdited.add(`${id}_po`);
-    db.ref(refPath).child(id).update({ po_number: val });
-  }
-
-  function cancelPoEdit(e, id, original) {
-    e.stopPropagation();
-    document.getElementById(`po-container-${id}`).innerHTML = `PO: <span style="color:var(--accent);">${original}</span>`;
-  }
-
-  function getNavUrl(addr, city) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr + ', ' + city)}&travelmode=driving`;
-  }
-
-  function getCurrentPosition() {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject("Geolocation not supported");
-      navigator.geolocation.getCurrentPosition(
-        pos => resolve(`${pos.coords.latitude},${pos.coords.longitude}`),
-        err => reject(err),
-        { enableHighAccuracy: true, timeout: 5000 }
-      );
-    });
-  }
-
-  async function routeOptimized() {
-    const GOOGLE_KEY = "AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ";
-    const btn = document.getElementById("multi-route-btn");
-    const oldText = btn.innerText;
-    
-    const pendingJobs = Object.values(globalJobs)
-      .filter(p => p.assigned_to === currentDriver && p.status === 'pending')
-      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-    if (pendingJobs.length === 0) return alert("No pending jobs.");
-    
-    btn.innerText = "OPTIMIZING...";
-
-    try {
-      const userLoc = await getCurrentPosition().catch(() => null);
-      
-      const stops = pendingJobs.map(p => {
-         if (p.jobType === 'pickup') {
-             return `${p.name}, ${p.pickup_location}, ${p.city || ''}`;
-         } else {
-             return `${p.delivery_name}, ${p.destination}, ${p.city || ''}`;
-         }
-      });
-      
-      const origin = userLoc ? 
-        { location: { latLng: { latitude: parseFloat(userLoc.split(',')[0]), longitude: parseFloat(userLoc.split(',')[1]) } } } : 
-        { address: stops[0] };
         
-      const destination = { address: stops[stops.length - 1] };
-      const intermediates = (userLoc ? stops.slice(0, -1) : stops.slice(1, -1)).map(addr => ({ address: addr }));
+        db.ref('driver_locations').on('value', (snapshot) => {
+            const drivers = snapshot.val();
+            const bounds = new google.maps.LatLngBounds();
+            let hasDrivers = false;
 
-      const response = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": GOOGLE_KEY,
-          "X-Goog-FieldMask": "routes.optimizedIntermediateWaypointIndex,routes.polyline.encodedPolyline"
-        },
-        body: JSON.stringify({
-          origin: origin,
-          destination: destination,
-          intermediates: intermediates,
-          travelMode: "DRIVE",
-          optimizeWaypointOrder: true
-        })
-      });
+            for (let name in drivers) {
+                const driver = drivers[name];
+                const pos = { lat: driver.lat, lng: driver.lng };
+                const updateTS = driver.gps_timestamp || driver.timestamp || driver.last_seen;
+                const timeStr = formatTime12(updateTS);
+                const d = new Date(updateTS);
+                const dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+                const markerLabelText = `${name}\n${timeStr} | ${dateStr}`;
+                
+                bounds.extend(pos);
+                hasDrivers = true;
 
-      const result = await response.json();
-      
-      if (result.routes && result.routes[0] && result.routes[0].polyline) {
-        db.ref(`driver_locations/${currentDriver}`).update({
-          active_route: result.routes[0].polyline.encodedPolyline,
-          route_timestamp: Date.now()
+                if (mapMarkers[name]) {
+                    mapMarkers[name].setPosition(pos);
+                    mapMarkers[name].setLabel({ text: markerLabelText, className: "pulsing-dot driver-map-label" });
+                } else {
+                    mapMarkers[name] = new google.maps.Marker({
+                        position: pos, map: mainMap,
+                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00ff41', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
+                        label: { text: markerLabelText, className: "pulsing-dot driver-map-label" },
+                        title: name
+                    });
+                }
+            }
+            if (hasDrivers) {
+                mainMap.fitBounds(bounds);
+                google.maps.event.addListenerOnce(mainMap, 'idle', () => { if (mainMap.getZoom() > 16) mainMap.setZoom(16); });
+            }
         });
-      }
-
-      let finalSequence = [];
-
-      if (result.routes && result.routes[0].optimizedIntermediateWaypointIndex) {
-        const order = result.routes[0].optimizedIntermediateWaypointIndex;
-        const middleStops = userLoc ? stops.slice(0, -1) : stops.slice(1, -1);
-        if (!userLoc) finalSequence.push(stops[0]);
-        order.forEach(idx => finalSequence.push(middleStops[idx]));
-        finalSequence.push(stops[stops.length - 1]);
-      } else {
-        finalSequence = stops;
-      }
-
-      const originParam = userLoc || encodeURIComponent(finalSequence[0]);
-      const destParam = encodeURIComponent(finalSequence[finalSequence.length - 1]);
-      const waypointParam = finalSequence.slice(userLoc ? 0 : 1, -1).map(s => encodeURIComponent(s)).join('|');
-      
-      const mapUrl = `https://www.google.com/maps/dir/?api=1&origin=${originParam}&destination=${destParam}&waypoints=${waypointParam}&travelmode=driving`;
-      window.open(mapUrl, '_blank');
-
-    } catch (err) {
-      console.error("Routing Error:", err);
-      const fallback = pendingJobs.map(p => {
-         if (p.jobType === 'pickup') {
-             return encodeURIComponent(`${p.name}, ${p.pickup_location}, ${p.city || ''}`);
-         } else {
-             return encodeURIComponent(`${p.delivery_name}, ${p.destination}, ${p.city || ''}`);
-         }
-      }).join('/');
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${fallback}`, '_blank');
-    } finally {
-      btn.innerText = oldText;
     }
-  }
 
-  let pickupData = {};
-  let dropoffData = {};
-
-  db.ref("pickups").on("value", snap => {
-    pickupData = snap.val() || {};
-    mergeAndRender();
-  });
-
-  db.ref("dropoffs").on("value", snap => {
-    dropoffData = snap.val() || {};
-    mergeAndRender();
-  });
-
-  function mergeAndRender() {
-    if(!currentDriver) return;
-    
-    globalJobs = {};
-    Object.entries(pickupData).forEach(([k, v]) => {
-        globalJobs[k] = { ...v, jobType: 'pickup' };
-    });
-    Object.entries(dropoffData).forEach(([k, v]) => {
-        globalJobs[k] = { ...v, jobType: 'delivery' };
-    });
-    
-    renderUnifiedFeed();
-  }
-
-  function renderUnifiedFeed() {
-    const feed = document.getElementById("live-feed"); 
-    const rLog = document.getElementById("recent-log"); 
-    const qLog = document.getElementById("queue-log");
-    const routeBtn = document.getElementById("multi-route-btn");
-    const stopCounter = document.getElementById("stop-counter");
-    
-    // CAPTURE EXISTING IDs BEFORE CLEARING
-    const existingQueueIds = Array.from(qLog.querySelectorAll('.history-item')).map(el => el.id.replace('mini-', ''));
-
-    feed.innerHTML = ""; rLog.innerHTML = ""; qLog.innerHTML = "";
-    const startOfToday = new Date().setHours(0,0,0,0);
-    const lastDoneId = sessionStorage.getItem('last_completed_job');
-    let pendingCount = 0;
-
-    const sortedEntries = Object.entries(globalJobs).sort((a, b) => (a[1].timestamp || 0) - (b[1].timestamp || 0));
-
-    sortedEntries.forEach(([id, p]) => {
-      if (p.assigned_to !== currentDriver) return;
-      if (p.status === 'completed' && (p.completed_at || 0) < startOfToday) return;
-
-      const currentFields = {
-          addr: p.pickup_location,
-          dest: p.destination,
-          contact: p.name,
-          dropName: p.delivery_name,
-          po: p.po_number,
-          notes: p.other_info,
-          details: p.package_details,
-          status: p.status,
-          assigned: p.assigned_to
-      };
-
-      const acked = sessionStorage.getItem(`ack_update_${id}`);
-
-      if (fieldSnapshots[id]) {
-          Object.keys(currentFields).forEach(key => {
-              if (fieldSnapshots[id][key] !== currentFields[key]) {
-                  if (selfEdited.has(`${id}_${key}`)) {
-                      selfEdited.delete(`${id}_${key}`);
-                  } else {
-                      if (!pendingAlerts[id]) pendingAlerts[id] = [];
-                      if (!pendingAlerts[id].includes(key)) pendingAlerts[id].push(key);
-                      sessionStorage.removeItem(`ack_update_${id}`);
-                  }
-              }
-          });
-      }
-      fieldSnapshots[id] = { ...currentFields };
-
-      const changedFields = pendingAlerts[id] || [];
-      const needsAlert = changedFields.length > 0 && !sessionStorage.getItem(`ack_update_${id}`);
-      const internalChange = changedFields.some(f => ['contact', 'dropName', 'po', 'notes'].includes(f));
-
-      // DYNAMIC CARD LOGIC
-      let topLabel, topAddr, topContact;  // The "Target"
-      let botLabel, botAddr, botContact;  // The "Secondary"
-      let badgeColor, badgeText;
-      let dndButtonText;
-
-      if (p.jobType === 'pickup') {
-            badgeColor = "#ff9800"; // Orange
-            badgeText = "PICK UP";
-            dndButtonText = "DNP";
-            
-            topLabel = "PICKUP AT";
-            topAddr = p.pickup_location;
-            topContact = p.name; 
-            
-            botLabel = "DELIVER TO";
-            botAddr = p.destination;
-            botContact = p.delivery_name;
-      } else {
-            badgeColor = "#00ff41"; // Green
-            badgeText = "DELIVERY";
-            dndButtonText = "DND";
-            
-            topLabel = "DELIVER TO";
-            topAddr = p.destination;
-            topContact = p.delivery_name;
-            
-            botLabel = "FROM";
-            botAddr = p.pickup_location;
-            botContact = p.name; 
-      }
-
-      const shortAddr = topAddr || "No Address";
-      const contactName = topContact || 'No Name';
-      
-      const item = document.createElement("div"); 
-      item.className = "history-item";
-      item.id = `mini-${id}`;
-      
-      // ANIMATE IF NEW TO PENDING LIST
-      if (p.status !== 'completed' && !existingQueueIds.includes(id) && existingQueueIds.length > 0) {
-        item.classList.add('new-mini-pop');
-      }
-
-      if(id === lastDoneId) {
-        item.classList.add('just-archived');
-        sessionStorage.removeItem('last_completed_job');
-      }
-      
-      if(needsAlert) item.classList.add('has-update');
-
-      item.innerHTML = `
-        <div style="background:${badgeColor}; width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px;"></div>
-        <span class="history-contact" style="font-size:12px; margin-bottom:1px; display:inline;">${contactName}</span>
-        <div style="font-weight:700; font-size:11px; line-height:1.2; color:#ccc;">${shortAddr}</div>
-        <span class="history-package">${(p.package_details || '').replace(/\b(skid|pallet)\b/gi, '<span class="heavy-word">$&</span>')}</span>
-      `;
-
-      if (p.status === 'completed') {
-        item.classList.add('done-slash');
-        item.onclick = () => restoreToQueue(id);
-        rLog.appendChild(item);
-      } else {
-        pendingCount++;
-        item.onclick = () => scrollToCard(id); 
-        qLog.appendChild(item);
-
-        const navUrl = getNavUrl(topAddr, p.city || '');
-        const card = document.createElement("div"); 
-        card.className = "active-card";
-        card.onclick = () => acknowledgeUpdate(id);
+    function viewDriverRoute(name, e) {
+        if(e) e.stopPropagation();
+        document.getElementById('map-modal').style.display = 'block';
         
-        if (!p.seen_by || !p.seen_by[currentDriver]) {
-          card.classList.add('new-job-highlight');
+        if (!mainMap) {
+            mainMap = new google.maps.Map(document.getElementById("map"), {
+                gestureHandling: "greedy",
+                styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
+            });
         }
-
-        if(needsAlert) card.classList.add('has-update');
-
-        // ESCAPE QUOTES FOR DND FUNCTION STRING
-        const escapedNotes = (p.other_info || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-        const isEdited = (p.other_info || "").includes("(Edited by") || (p.other_info || "").includes("DND (") || (p.other_info || "").includes("DNP (") || (p.other_info || "").includes("Driver Note (");
-
-        card.id = `card-${id}`;
         
-        const noteWithTags = (p.other_info || "").replace(/\[([^\]]+)\]:/g, '<span style="color:var(--update-blue); font-weight:900; text-shadow:0 0 5px rgba(0,212,255,0.3);">[$1]:</span>');
+        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
+        if(listeningRef) { listeningRef.off(); listeningRef = null; }
+        db.ref('driver_locations').off();
+        
+        // Clear previous markers
+        for(let k in mapMarkers) {
+             if(mapMarkers[k]) mapMarkers[k].setMap(null);
+        }
+        mapMarkers = {};
 
-        const notesDisplay = (p.other_info && p.other_info.trim() !== "") ? 
-          `<div class="${isEdited ? 'notes-edited' : ''} ${needsAlert && changedFields.includes('notes') ? 'field-highlight' : ''}" style="text-align:center; width:100%; margin-top:10px; color:#ddd; font-size:14px; word-wrap:break-word; font-style:italic;">${noteWithTags}</div>` 
-          : '';
+        listeningRef = db.ref(`driver_locations/${name}`);
+        listeningRef.on('value', snap => {
+            const data = snap.val();
+            if(!data) return;
 
-        card.innerHTML = `
-          <div class="card-date-badge">
-            <div style="background:${badgeColor}; color:#000; font-weight:900; padding:2px 6px; border-radius:4px; font-size:11px;">${badgeText}</div>
-            ${needsAlert ? `<span id="badge-${id}" class="update-badge">NEW INFO</span>` : ''}
-          </div>
-          
-          <div style="position: absolute; top: 12px; right: 12px; cursor: pointer; z-index: 5;" onclick="toggleDriverNoteEdit(event, '${id}')">
-            <svg viewBox="0 0 24 24" style="width: 26px; height: 26px; fill: var(--accent); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));">
-              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-            </svg>
-          </div>
+            const pos = { lat: data.lat, lng: data.lng };
+            const timeStr = formatTime12(data.gps_timestamp || Date.now());
 
-          <div class="card-layout">
-            <div class="address-side">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                  <a href="${navUrl}" target="_blank" class="nav-link"><div class="city-tag" style="margin:0;">${p.city || '??'}</div></a>
-              </div>
-              
-              <div class="card-label" style="margin-top:2px;">${topLabel}</div>
-              <div class="tech-info ${needsAlert && changedFields.includes('contact') ? 'field-highlight' : ''}" style="margin-bottom:2px; color: var(--queue-orange); font-size:22px; line-height:1.1;">${topContact || 'N/A'}</div>
-              <a href="${navUrl}" target="_blank" class="nav-link">
-                 <div class="pickup-value ${needsAlert && changedFields.includes('addr') ? 'field-highlight' : ''}">${topAddr}</div>
-              </a>
+            // Driver Marker
+            if(mapMarkers[name]) {
+                 mapMarkers[name].setPosition(pos);
+            } else {
+                 const marker = new google.maps.Marker({
+                    position: pos, map: mainMap,
+                    icon: { 
+                        path: google.maps.SymbolPath.CIRCLE, 
+                        fillColor: '#00ff41', 
+                        fillOpacity: 1, 
+                        strokeWeight: 2, 
+                        strokeColor: '#ffffff', 
+                        scale: 7,
+                        labelOrigin: new google.maps.Point(0, -15)
+                    },
+                    label: { text: `${name} ${timeStr}`, className: "pulsing-dot driver-route-label" }
+                 });
+                 mapMarkers[name] = marker;
+            }
 
-              <div class="card-label" style="margin-top:8px;">${botLabel}</div>
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:5px;">
-                  <div style="flex:1;">
-                      <div class="tech-info ${needsAlert && changedFields.includes('dropName') ? 'field-highlight' : ''}" style="color: #bbb; font-size:14px;">${botContact || 'N/A'}</div>
-                      <div class="drop-value ${needsAlert && changedFields.includes('dest') ? 'field-highlight' : ''}" style="font-size:14px;">${botAddr}</div>
-                  </div>
-                  <div style="text-align:right; min-width:80px; display:flex; flex-direction:column; align-items:flex-end;">
-                     <div class="tech-info ${needsAlert && changedFields.includes('details') ? 'field-highlight' : ''}" style="border:1px solid #b3ffb3; border-radius:5px; padding:6px 10px; background:rgba(0,50,0,0.4); margin-bottom:4px;">${(p.package_details || "-").replace(/\b(skid|pallet)\b/gi, '<span class="heavy-word">$&</span>')}</div>
-                     ${(p.po_number && p.po_number.trim() !== "") ? `<div id="po-container-${id}" onclick="enterPoEdit(event, '${id}', '${(p.po_number||"").replace(/'/g, "\\'")}')" style="font-weight:bold; color:#aaa; font-size:15px; cursor:pointer;">PO: <span class="${needsAlert && changedFields.includes('po') ? 'field-highlight' : ''}" style="color:var(--accent);">${p.po_number}</span></div>` : ''}
-                  </div>
-              </div>
+            if(data.active_route && !activePolyline) {
+                 const path = google.maps.geometry.encoding.decodePath(data.active_route);
+                 activePolyline = new google.maps.Polyline({
+                     path: path, geodesic: true,
+                     strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5,
+                     map: mainMap
+                 });
+                 
+                 const bounds = new google.maps.LatLngBounds();
+                 path.forEach(p => bounds.extend(p));
+                 
+                 // Add job markers to the map if they are part of the active route
+                 // This assumes jobs are geocoded, or we can use the path points if they match known jobs
+                 // Simplified: Show all pending jobs for this driver on the route map
+                 
+                 const driverJobs = [];
+                 Object.values(rawPickups).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'pickup'}); });
+                 Object.values(rawDropoffs).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'drop'}); });
+                 
+                 // Geocode addresses to place markers on route (simple approximation)
+                 const geocoder = new google.maps.Geocoder();
+                 
+                 driverJobs.forEach((job, index) => {
+                     const addr = job.type === 'pickup' ? job.pickup_location : job.destination;
+                     const label = job.type === 'pickup' ? job.name : job.delivery_name;
+                     const fullAddr = `${addr}, ${job.city || ''}`;
+                     
+                     geocoder.geocode({ 'address': fullAddr }, (results, status) => {
+                        if (status === 'OK') {
+                            const marker = new google.maps.Marker({
+                                map: mainMap,
+                                position: results[0].geometry.location,
+                                label: { 
+                                    text: label, 
+                                    color: "#00ff41", 
+                                    fontWeight: "bold",
+                                    fontSize: "12px",
+                                    className: "driver-map-label"
+                                },
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 5,
+                                    fillColor: job.type === 'pickup' ? '#ff9800' : '#00ff41',
+                                    fillOpacity: 1,
+                                    strokeWeight: 1,
+                                    strokeColor: 'white'
+                                }
+                            });
+                            // Keep track to remove later if needed
+                            const key = `job_${index}`;
+                            mapMarkers[key] = marker;
+                        }
+                     });
+                 });
+                 
+                 mainMap.fitBounds(bounds);
+            } else if (!activePolyline) {
+                 mainMap.setCenter(pos);
+                 mainMap.setZoom(15);
+            }
+        });
+    }
+
+    function closeMap() {
+        document.getElementById('map-modal').style.display = 'none';
+        db.ref('driver_locations').off();
+        if(listeningRef) { listeningRef.off(); listeningRef = null; }
+        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
+        
+        // Clear all markers including job markers
+        for(let k in mapMarkers) {
+             if(mapMarkers[k]) mapMarkers[k].setMap(null);
+        }
+        mapMarkers = {};
+    }
+
+    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+    function requestNotifyPermission() {
+        if ("Notification" in window) Notification.requestPermission();
+    }
+
+    function updateClock() { document.getElementById('clock').innerText = formatTime12(new Date()); }
+    setInterval(updateClock, 1000); updateClock();
+
+    function setMode(mode) {
+        currentMode = mode;
+        const top = document.getElementById('top-input-section');
+        const bot = document.getElementById('bottom-input-section');
+        const grpPickup = document.getElementById('group-pickup');
+        const grpDrop = document.getElementById('group-drop');
+        const btnPickup = document.getElementById('btn-mode-pickup');
+        const btnDelivery = document.getElementById('btn-mode-delivery');
+
+        if(mode === 'pickup') {
+            top.appendChild(grpPickup);
+            bot.appendChild(grpDrop);
+            btnPickup.classList.add('active-mode');
+            btnDelivery.classList.remove('active-mode', 'delivery-mode');
+        } else {
+            top.appendChild(grpDrop);
+            bot.appendChild(grpPickup);
+            btnPickup.classList.remove('active-mode');
+            btnDelivery.classList.add('active-mode', 'delivery-mode');
+        }
+    }
+
+    // Initialize Mode
+    setMode('pickup');
+
+    firebase.auth().signInAnonymously().then(() => {
+        db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
+        
+        db.ref("pickups").on("value", snapshot => {
+            rawPickups = snapshot.val() || {};
+            renderData();
+        });
+
+        db.ref("dropoffs").on("value", snapshot => {
+            rawDropoffs = snapshot.val() || {};
+            renderData();
+        });
+    });
+
+    function handleSearchKey(e) {
+        if (e.key === "Enter") {
+            e.target.blur();
+            document.getElementById('board-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function resetFormFields() {
+        ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.value = "";
+        });
+    }
+
+    function startVoiceEntry() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) return alert("Voice API not supported");
+        
+        const rec = new Speech();
+        rec.lang = 'en-US';
+        rec.start();
+        
+        const icon = document.getElementById('mic-icon');
+        icon.classList.add('voice-active');
+        
+        rec.onresult = (e) => {
+            let cmdStr = e.results[0][0].transcript.toLowerCase();
+            if (cmdStr.trim() === "dispatch") { createJob(); return; }
+            
+            // Basic number conversion
+            const numWords = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
+            Object.keys(numWords).forEach(word => {
+                const reg = new RegExp(`\\b${word}\\b`, 'g');
+                cmdStr = cmdStr.replace(reg, numWords[word]);
+            });
+
+            // Logic to populate fields (simplified for merged app)
+            let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess|alicia|kayla)\b/);
+            if (drvMatch) {
+                let dName = drvMatch[1].charAt(0).toUpperCase() + drvMatch[1].slice(1);
+                document.getElementById('f-driver').value = dName;
+            }
+        };
+        
+        rec.onend = () => { icon.classList.remove('voice-active'); };
+    }
+
+    function handleNameInput(val) {
+        const box = document.getElementById('suggestions');
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectClient('${k}')">${k}</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function selectClient(name) {
+        const data = addressData[name];
+        if(!data) return;
+        document.getElementById('f-name').value = name;
+        document.getElementById('f-pickup').value = data.address || "";
+        document.getElementById('f-city').value = data.city || "";
+        document.getElementById('suggestions').style.display = 'none';
+    }
+
+    function handleDropNameInput(val) {
+        const box = document.getElementById('drop-suggestions');
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectDropClient('${k}')">${k}</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function selectDropClient(name) {
+        const data = addressData[name];
+        if(!data) return;
+        document.getElementById('f-drop-name').value = name;
+        document.getElementById('f-drop-address').value = data.address || "";
+        document.getElementById('f-drop-city').value = data.city || "";
+        document.getElementById('drop-suggestions').style.display = 'none';
+    }
+
+    function createJob() {
+        const pickup = document.getElementById('f-pickup').value;
+        const drop = document.getElementById('f-drop-address').value + (document.getElementById('f-drop-city').value ? ", " + document.getElementById('f-drop-city').value : "");
+        const city = document.getElementById('f-city').value;
+        const name = document.getElementById('f-name').value;
+        const dropName = document.getElementById('f-drop-name').value;
+        const assigned = document.getElementById('f-driver').value;
+        const infoRaw = document.getElementById('f-info').value;
+        const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
+
+        if(!pickup || !name || !dropName) return alert("Please fill in main contacts and addresses");
+
+        const jobData = {
+            city: city, pickup_location: pickup, destination: drop,
+            delivery_name: dropName,
+            package_details: document.getElementById('f-pkg-details').value,
+            po_number: document.getElementById('f-po').value,
+            name: name,
+            other_info: info,
+            status: 'pending', 
+            assigned_to: assigned, 
+            timestamp: Date.now()
+        };
+
+        const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
+        db.ref(targetNode).push(jobData);
+        
+        // Save addresses for autosuggest
+        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city });
+        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value });
+
+        resetFormFields();
+        document.getElementById('f-driver').value = "Unassigned";
+    }
+
+    function viewDetails(id, type) {
+        const isPickup = type === 'pickup';
+        const data = isPickup ? rawPickups[id] : rawDropoffs[id];
+        if(!data) return;
+
+        const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
+        const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alicia', 'Kayla'];
+        const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
+
+        const html = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div style="font-weight:900; font-size:18px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
+                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:8px 12px; font-weight:bold; cursor:pointer; font-size:12px;">DELETE</button>
             </div>
-          </div>
-          
-          ${notesDisplay}
-          
-          <div id="driver-note-display-${id}"></div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:16px;">
+                <select id="e-driver" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-weight:bold; font-size:16px;">${driverOpts}</select>
+                
+                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                
+                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                
+                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                
+                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
 
-          <div class="time-stack">
-            <div class="job-time-stamp">${formatTime12(p.timestamp)}</div>
-            <div class="job-date-stamp">${formatDateShort(p.timestamp)}</div>
-          </div>
-          
-          <div class="card-action-row">
-            <button class="info-btn" onclick="dndJob('${id}', '${escapedNotes}')">${dndButtonText}</button>
-            <button class="done-btn" onclick="markDone('${id}')">DONE</button>
-          </div>
+                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                
+                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:60px; padding:12px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:16px;">${val(data.other_info)}</textarea>
+                <input id="e-add-note" placeholder="Append Note w/ Name Tag" style="grid-column:span 2; padding:12px; background:#1a1a1a; border:1px solid var(--accent); color:#fff; font-size:16px;">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px; margin-top:15px;">
+                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:15px; font-weight:bold; cursor:pointer; font-size:14px;">CANCEL</button>
+                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:15px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:14px;">SAVE</button>
+            </div>
         `;
-        feed.appendChild(card);
-        if (observer) observer.observe(card);
-      }
-    });
-
-    updateNewStopsCountUI();
-    if (stopCounter) stopCounter.innerText = `${pendingCount} STOP${pendingCount !== 1 ? 'S' : ''}`;
-
-    if(pendingCount >= 20) {
-      routeBtn.classList.add('glow-max');
-      routeBtn.innerText = "MAX ROUTE";
-    } else if(pendingCount > 1) {
-      routeBtn.classList.remove('glow-max');
-      routeBtn.classList.add('glow-active');
-      routeBtn.innerText = "ROUTE NAV";
-    } else {
-      routeBtn.classList.remove('glow-active', 'glow-max');
-      routeBtn.innerText = "ROUTE NAV";
+        
+        const modalContent = document.querySelector('#detailsModal .modal-content');
+        modalContent.innerHTML = html;
+        document.getElementById('detailsModal').style.display = 'block';
     }
-  }
 
-  function markDone(id) {
-    if(!confirm("Complete?")) return;
-    const card = document.getElementById(`card-${id}`);
-    if(card) card.classList.add('card-exit-success');
-    
-    const job = globalJobs[id];
-    const refPath = job ? (job.jobType === 'pickup' ? 'pickups' : 'dropoffs') : 'dropoffs';
+    function saveEdit(id, type) {
+        let noteVal = document.getElementById('e-note').value;
+        const addVal = document.getElementById('e-add-note').value;
+        if(addVal.trim()) noteVal = (noteVal ? noteVal + " " : "") + `[${currentUser}]: ${addVal.trim()}`;
 
-    sessionStorage.setItem('last_completed_job', id);
-    setTimeout(() => {
-      db.ref(refPath).child(id).update({ 
-        status: 'completed',
-        completed_at: Date.now() 
-      });
-    }, 500); 
-  }
-
-  function updateClock() { document.getElementById('clock').innerText = formatTime12(); }
-  setInterval(updateClock, 1000); updateClock();
-
-  window.onload = () => {
-    if(currentDriver) {
-        startContinuousTracking();
-        setupIntersectionObserver();
+        const updates = {
+            assigned_to: document.getElementById('e-driver').value,
+            package_details: document.getElementById('e-pkg').value,
+            po_number: document.getElementById('e-po').value,
+            name: document.getElementById('e-name').value,
+            pickup_location: document.getElementById('e-pickup').value,
+            city: document.getElementById('e-city').value,
+            delivery_name: document.getElementById('e-drop-name').value,
+            destination: document.getElementById('e-drop').value,
+            other_info: noteVal
+        };
+        const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+        db.ref(node).child(id).update(updates).then(() => {
+            document.getElementById('detailsModal').style.display = 'none';
+        });
     }
-  };
-  document.addEventListener('click', e => { 
-      if(e.target.id && e.target.id.startsWith('note-display-')) { 
-          e.stopPropagation(); 
-          const id = e.target.id.split('-').pop();
-          const job = globalJobs[id];
-          if(job) {
-             const refPath = job.jobType === 'pickup' ? 'pickups' : 'dropoffs';
-             db.ref(`${refPath}/${id}/other_info`).once('value', s => enterNoteEdit(id, (s.val() || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'"))); 
-          }
-      } 
-  });
+
+    function deleteJob(id, type) {
+        if(confirm("Delete this dispatch completely?")) {
+            const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+            db.ref(node).child(id).remove();
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+    }
+
+    function renderData() {
+        const pList = document.getElementById("list-pickups"); 
+        const dList = document.getElementById("list-deliveries");
+        const statsPanel = document.getElementById("driver-stats-panel");
+        const searchTerm = document.getElementById("archive-search").value.toLowerCase();
+        
+        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
+
+        const filterUI = document.getElementById('filter-reset-ui');
+        if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
+        
+        let pending = 0, assignedCount = 0, noteCount = 0;
+        let driverStats = {};
+
+        // Define Colors Here
+        const dColors = {
+            'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
+            'Jess': '#FF69B4', 'Alicia': '#9C27B0', 'Kayla': '#E91E63'
+        };
+
+        // INIT DRIVERS from Select
+        const driverOptions = document.getElementById('f-driver').options;
+        for(let i=0; i<driverOptions.length; i++){
+            const dVal = driverOptions[i].value;
+            if(dVal !== 'Unassigned' && dVal !== 'Assign Driver') {
+                driverStats[dVal] = { p: 0, d: 0 };
+            }
+        }
+
+        function processJobs(obj, type) {
+            const list = type === 'pickup' ? pList : dList;
+            const entries = Object.entries(obj).reverse();
+            
+            entries.forEach(([id, p]) => {
+                const assignedTo = p.assigned_to;
+                if(p.status !== 'completed') {
+                    if(!assignedTo || assignedTo === 'Unassigned') pending++;
+                    else {
+                        assignedCount++;
+                        if(driverStats[assignedTo]) {
+                            if(type === 'pickup') driverStats[assignedTo].p++;
+                            else driverStats[assignedTo].d++;
+                        }
+                    }
+                    if(p.driver_edited_note) noteCount++;
+                }
+
+                // Filter for Archive View (Show all, or filter by search)
+                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
+                if(searchTerm && !textSearch.includes(searchTerm)) return;
+
+                if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
+
+                const card = document.createElement("div");
+                card.className = "history-item";
+                card.onclick = () => viewDetails(id, type);
+                card.style.cursor = "pointer";
+                // Color coding borders based on type
+                card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
+                
+                // Color Map Logic
+                const bg = dColors[p.assigned_to] || '#00ff41'; 
+                // Light colors need black text, dark colors need white text
+                const darkText = ['#00ff41', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
+                
+                const driverHTML = p.assigned_to ? 
+                    `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
+                    `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
+                
+                const contact = type === 'pickup' ? p.name : p.delivery_name;
+                
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        ${driverHTML}
+                        <div style="font-size:10px; color:#666;">INFO</div>
+                    </div>
+                    <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
+                    <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        processJobs(rawPickups, 'pickup');
+        processJobs(rawDropoffs, 'delivery');
+
+        // RENDER DRIVER STATS
+        Object.keys(driverStats).forEach(driver => {
+            const pCount = driverStats[driver].p;
+            const dCount = driverStats[driver].d;
+            if(pCount > 0 || dCount > 0) {
+                const total = pCount + dCount;
+                const pFlex = total > 0 ? (pCount / total) : 0;
+                const dFlex = total > 0 ? (dCount / total) : 0;
+                
+                const color = dColors[driver] || '#fff';
+
+                const row = document.createElement("div");
+                row.className = "driver-stat-row";
+                row.style.cursor = "pointer";
+                row.onclick = () => filterByDriver(driver);
+                row.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <div class="ds-name" style="color:${color};">${driver}</div>
+                    </div>
+                    <div class="stat-info">
+                        ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
+                        ${dCount > 0 ? `<div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>` : ''}
+                    </div>
+                `;
+                statsPanel.appendChild(row);
+            }
+        });
+
+        document.getElementById("stat-pending").innerText = pending;
+        document.getElementById("stat-assigned").innerText = assignedCount;
+        document.getElementById("stat-note").innerText = noteCount;
+        document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
+        document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
+    }
 </script>
 </body>
 </html>
