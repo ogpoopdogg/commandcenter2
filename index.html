@@ -834,7 +834,9 @@
 
     function createJob() {
         const pickup = document.getElementById('f-pickup').value;
-        const drop = document.getElementById('f-drop-address').value + (document.getElementById('f-drop-city').value ? ", " + document.getElementById('f-drop-city').value : "");
+        const dropAddr = document.getElementById('f-drop-address').value;
+        const dropCity = document.getElementById('f-drop-city').value;
+        const drop = dropAddr + (dropCity ? ", " + dropCity : "");
         const city = document.getElementById('f-city').value;
         const name = document.getElementById('f-name').value;
         const dropName = document.getElementById('f-drop-name').value;
@@ -842,7 +844,7 @@
         const infoRaw = document.getElementById('f-info').value;
         const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
 
-        if(!pickup || !name || !dropName) return alert("Please fill in main contacts and addresses");
+        if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert("Please complete either the full Pickup section or full Delivery section.");
 
         const jobData = {
             city: city, pickup_location: pickup, destination: drop,
