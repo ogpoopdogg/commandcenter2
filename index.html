@@ -891,6 +891,7 @@
                 <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
                 
                 <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:60px; padding:12px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:16px;">${val(data.other_info)}</textarea>
+                <input id="e-add-note" placeholder="Append Note w/ Name Tag" style="grid-column:span 2; padding:12px; background:#1a1a1a; border:1px solid var(--accent); color:#fff; font-size:16px;">
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px; margin-top:15px;">
@@ -905,6 +906,10 @@
     }
 
     function saveEdit(id, type) {
+        let noteVal = document.getElementById('e-note').value;
+        const addVal = document.getElementById('e-add-note').value;
+        if(addVal.trim()) noteVal = (noteVal ? noteVal + " " : "") + `[${currentUser}]: ${addVal.trim()}`;
+
         const updates = {
             assigned_to: document.getElementById('e-driver').value,
             package_details: document.getElementById('e-pkg').value,
@@ -914,7 +919,7 @@
             city: document.getElementById('e-city').value,
             delivery_name: document.getElementById('e-drop-name').value,
             destination: document.getElementById('e-drop').value,
-            other_info: document.getElementById('e-note').value
+            other_info: noteVal
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(node).child(id).update(updates).then(() => {
