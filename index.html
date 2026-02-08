@@ -15,7 +15,7 @@
         header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
         
         .header-logo {
-            height: 28px;
+            height: 24px;
             width: auto;
             margin-right: 10px;
             vertical-align: middle;
@@ -224,6 +224,16 @@
         .mode-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; font-size: 14px; background: #111; color: #555; transition: 0.3s; }
         .mode-btn.active-mode { background: var(--accent); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
         .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; }
+
+        /* GRAPH INDICATOR STYLES */
+        #driver-stats-panel { background: #111; padding: 10px; border-bottom: 2px solid #333; display: flex; flex-direction: column; gap: 5px; }
+        .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #1a1a1a; border-radius: 4px; animation: slideIn 0.3s ease-out; border: 1px solid #2a2a2a; }
+        .ds-name { color: #fff; font-weight: 900; font-size: 12px; width: 60px; text-transform: uppercase; }
+        .ds-bars { flex: 1; display: flex; gap: 5px; margin-left: 10px; height: 18px; }
+        .ds-bar { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #000; border-radius: 3px; min-width: 0; transition: flex 0.5s; overflow: hidden; }
+        .ds-p { background: var(--accent); box-shadow: 0 0 5px rgba(255, 204, 0, 0.2); }
+        .ds-d { background: var(--active-green); box-shadow: 0 0 5px rgba(0, 255, 65, 0.2); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -238,14 +248,14 @@
 </div>
 
 <header>
-    <div style="display: flex; flex-direction: column;">
+    <div style="display: flex; flex-direction: column; width: 100%;">
         <div id="user-display"></div>
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; overflow: hidden;">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <span class="shiny-text" style="font-size: 24px; font-weight: 900;">E&C COMMAND CENTER</span>
+            <span class="shiny-text" style="font-size: 20px; font-weight: 900; white-space: nowrap;">E&C COMMAND CENTER</span>
         </div>
     </div>
-    <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent);"></div>
+    <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap;"></div>
 </header>
 
 <div class="stats-bar">
@@ -302,6 +312,8 @@
     </div>
 </div>
 
+<div id="driver-stats-panel"></div>
+
 <div style="display:none;">
     <div id="group-pickup">
         <div style="position:relative;">
@@ -357,7 +369,7 @@
             <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px;"></textarea>
             <button class="save-btn" id="m-note-save" style="width: 100%; padding: 12px; font-size: 14px;">Add Note to Job</button>
         </div>
-        <button class="primary" style="margin-top:20px; padding:10px;" onclick="document.getElementById('detailsModal').style.display='none'">Close</button>
+        <button class="primary" style="margin-top:20px; padding:10px; background:#444;" onclick="document.getElementById('detailsModal').style.display='none'">DONE</button>
     </div>
 </div>
 
@@ -680,29 +692,49 @@
     function renderData() {
         const pList = document.getElementById("list-pickups"); 
         const dList = document.getElementById("list-deliveries");
+        const statsPanel = document.getElementById("driver-stats-panel");
         const searchTerm = document.getElementById("archive-search").value.toLowerCase();
         
-        pList.innerHTML = ""; dList.innerHTML = "";
+        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
         
         let pending = 0, assignedCount = 0, noteCount = 0;
+        let driverStats = {};
+
+        // INIT DRIVERS from Select
+        const driverOptions = document.getElementById('f-driver').options;
+        for(let i=0; i<driverOptions.length; i++){
+            const dVal = driverOptions[i].value;
+            if(dVal !== 'Unassigned' && dVal !== 'Assign Driver') {
+                driverStats[dVal] = { p: 0, d: 0 };
+            }
+        }
 
         function processJobs(obj, type) {
             const list = type === 'pickup' ? pList : dList;
             const entries = Object.entries(obj).reverse();
             
             entries.forEach(([id, p]) => {
+                const assignedTo = p.assigned_to;
                 if(p.status !== 'completed') {
-                    if(!p.assigned_to || p.assigned_to === 'Unassigned') pending++;
-                    else assignedCount++;
+                    if(!assignedTo || assignedTo === 'Unassigned') pending++;
+                    else {
+                        assignedCount++;
+                        if(driverStats[assignedTo]) {
+                            if(type === 'pickup') driverStats[assignedTo].p++;
+                            else driverStats[assignedTo].d++;
+                        }
+                    }
                     if(p.driver_edited_note) noteCount++;
                 }
 
                 // Filter for Archive View (Show all, or filter by search)
-                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + p.assigned_to).toLowerCase();
+                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
 
                 const card = document.createElement("div");
                 card.className = "history-item";
+                card.onclick = () => viewDetails(id, type);
+                card.style.cursor = "pointer";
                 // Color coding borders based on type
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
@@ -713,7 +745,7 @@
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         ${driverHTML}
-                        <button style="background:#333; color:#fff; border:1px solid #555; border-radius:4px; padding:2px 6px; font-size:10px; cursor:pointer;" onclick="viewDetails('${id}', '${type}')">INFO</button>
+                        <div style="font-size:10px; color:#666;">INFO</div>
                     </div>
                     <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
                     <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
@@ -724,6 +756,28 @@
 
         processJobs(rawPickups, 'pickup');
         processJobs(rawDropoffs, 'delivery');
+
+        // RENDER DRIVER STATS
+        Object.keys(driverStats).forEach(driver => {
+            const pCount = driverStats[driver].p;
+            const dCount = driverStats[driver].d;
+            if(pCount > 0 || dCount > 0) {
+                const total = pCount + dCount;
+                const pFlex = total > 0 ? (pCount / total) : 0;
+                const dFlex = total > 0 ? (dCount / total) : 0;
+                
+                const row = document.createElement("div");
+                row.className = "driver-stat-row";
+                row.innerHTML = `
+                    <div class="ds-name">${driver}</div>
+                    <div class="ds-bars">
+                        ${pCount > 0 ? `<div class="ds-bar ds-p" style="flex:${pFlex};">${pCount}</div>` : ''}
+                        ${dCount > 0 ? `<div class="ds-bar ds-d" style="flex:${dFlex};">${dCount}</div>` : ''}
+                    </div>
+                `;
+                statsPanel.appendChild(row);
+            }
+        });
 
         document.getElementById("stat-pending").innerText = pending;
         document.getElementById("stat-assigned").innerText = assignedCount;
