@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>E&C DELIVERY COMMAND CENTER</title>
+    <title>E&C COMMAND CENTER</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffcc00">
@@ -15,7 +15,7 @@
         header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
         
         .header-logo {
-            height: 22px;
+            height: 28px;
             width: auto;
             margin-right: 10px;
             vertical-align: middle;
@@ -117,13 +117,6 @@
             100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
         }
 
-        .assigned-glow { border: 2px solid var(--active-green) !important; z-index: 10; }
-        @keyframes green-glow {
-            0% { box-shadow: 0 0 5px var(--active-green), inset 0 0 5px rgba(0, 255, 65, 0.2); transform: scale(1); border-color: #555; }
-            50% { box-shadow: 0 0 25px var(--active-green), inset 0 0 15px rgba(0, 255, 65, 0.4); transform: scale(1.01); border-color: var(--active-green); }
-            100% { box-shadow: 0 0 5px var(--active-green), inset 0 0 5px rgba(0, 255, 65, 0.2); transform: scale(1); border-color: #555; }
-        }
-        
         @keyframes inner-pulse {
             0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
             50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
@@ -173,9 +166,10 @@
         .save-btn { background: var(--active-green); color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 11px; text-transform: uppercase; }
         .edit-input { animation: subtle-glow 3s infinite ease-in-out; }
 
-        .history-box { margin-top: 30px; border-top: 2px dashed #333; padding: 15px; background: #080808; }
-        .date-divider { color: var(--archive-orange); font-size: 16px; font-weight: 900; margin: 25px 0 12px 0; padding: 5px 10px; border-left: 4px solid var(--archive-orange); text-transform: uppercase; background: linear-gradient(90deg, #1a0a00, transparent); }
-        .history-item { display: flex; flex-direction: column; background: #111; padding: 12px; border-radius: 4px; margin-bottom: 8px; font-size: 15px; border-left: 4px solid var(--active-green); cursor: pointer; transition: transform 0.2s; }
+        .history-box { margin-top: 30px; border-top: 2px dashed #333; padding: 15px; background: #080808; display: flex; gap: 15px; flex-wrap: wrap; }
+        .archive-column { flex: 1; min-width: 300px; border-right: 1px dashed #333; padding-right: 10px; }
+        .archive-column:last-child { border-right: none; padding-right: 0; }
+        .archive-title { font-size: 14px; font-weight: 900; color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
 
         .new-entry-pop { animation: archive-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; z-index: 10; }
         @keyframes archive-pop {
@@ -189,7 +183,6 @@
         .hist-city { font-size: 14px; font-weight: 900; background: #2a2a2a; color: #fff; padding: 3px 8px; border-radius: 4px; margin-right: 10px; vertical-align: middle; text-transform: uppercase; border: 1px solid #444; }
         .hist-name { font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
         
-        /* UPDATED MAP LABEL STYLING */
         .driver-map-label {
             color: #ffff00 !important;
             font-weight: 900;
@@ -227,10 +220,10 @@
         }
         .voice-active { animation: voice-glow 1.5s infinite; fill: var(--active-green) !important; }
         
-        .done-slash {
-            background: rgba(255, 152, 0, 0.25) !important;
-            border-left-color: #888 !important;
-        }
+        .mode-switch-container { display: flex; margin-bottom: 10px; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
+        .mode-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; font-size: 14px; background: #111; color: #555; transition: 0.3s; }
+        .mode-btn.active-mode { background: var(--accent); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; }
     </style>
 </head>
 <body>
@@ -249,12 +242,7 @@
         <div id="user-display"></div>
         <div style="display: flex; align-items: center;">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <details style="position: relative;">
-                <summary class="shiny-text" style="margin:0; font-size: 16px; cursor: pointer;">E&C DELIVERY COMMAND CENTER &#9662;</summary>
-                <div style="position: absolute; top: 100%; left: 0; background: #000; border: 1px solid var(--accent); padding: 10px; width: max-content; z-index: 10000; margin-top: 5px;">
-                    <div class="shiny-text" style="cursor: pointer; font-size: 16px;" onclick="location.href='https://ogpoopdogg.github.io/commandcenter/'">GOTO E&C PICKUP COMMAND</div>
-                </div>
-            </details>
+            <span class="shiny-text" style="font-size: 24px; font-weight: 900;">E&C COMMAND CENTER</span>
         </div>
     </div>
     <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent);"></div>
@@ -278,17 +266,17 @@
 </div>
 
 <div id="entry-panel">
+    <div class="mode-switch-container">
+        <button class="mode-btn active-mode" id="btn-mode-pickup" onclick="setMode('pickup')">Schedule Pickup</button>
+        <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Schedule Delivery</button>
+    </div>
+
     <div style="position:relative; margin-bottom: 8px;">
         <div style="position:absolute; right:10px; top:12px; z-index:10; font-size:11px; font-weight:bold; cursor:pointer; color: #757575;" onclick="resetFormFields()">RESET</div>
-        <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
-        <div id="drop-suggestions" class="suggestions-box"></div>
     </div>
 
-    <div class="flex-row">
-        <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
-        <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
-    </div>
-
+    <div id="top-input-section"></div>
+    
     <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
 
     <div class="flex-row">
@@ -296,18 +284,17 @@
         <input type="text" id="f-info" placeholder="Driver Notes..." style="flex: 1.5;">
     </div>
 
-    <div style="position:relative;">
-        <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
-        <div id="suggestions" class="suggestions-box"></div>
-    </div>
-    <div class="flex-row">
-        <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
-        <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
-    </div>
+    <div id="bottom-input-section" style="margin-top: 8px;"></div>
 
     <select id="f-driver" class="driver-select" style="margin-bottom: 8px; border: 1px solid var(--accent);">
         <option value="Unassigned" selected disabled hidden>Assign Driver</option>
         <option value="Unassigned">UNASSIGNED</option>
+        <option value="Matt">Matt</option>
+        <option value="Touch">Touch</option>
+        <option value="Julian">Julian</option>
+        <option value="Jess">Jess</option>
+        <option value="Alicia">Alicia</option>
+        <option value="Kayla">Kayla</option>
     </select>
     <div style="display: flex; gap: 8px;">
         <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
@@ -315,12 +302,40 @@
     </div>
 </div>
 
+<div style="display:none;">
+    <div id="group-pickup">
+        <div style="position:relative;">
+            <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
+            <div id="suggestions" class="suggestions-box"></div>
+        </div>
+        <div class="flex-row">
+            <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
+            <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+        </div>
+    </div>
+
+    <div id="group-drop">
+        <div style="position:relative;">
+            <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
+            <div id="drop-suggestions" class="suggestions-box"></div>
+        </div>
+        <div class="flex-row">
+            <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
+            <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+        </div>
+    </div>
+</div>
+
 <div id="board-panel">
-    <div id="job-list"></div>
     <div class="history-box">
-        <h3 id="archive-header" style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 15px;">Delivery Archive</h3>
-        <div id="history-list"></div>
-        <button id="load-more-btn" class="more-btn" onclick="showMore()" style="display:none;">SHOW 20 MORE</button>
+        <div class="archive-column">
+            <div class="archive-title" style="color:var(--archive-orange);">Pickups</div>
+            <div id="list-pickups"></div>
+        </div>
+        <div class="archive-column">
+            <div class="archive-title" style="color:#00ff41;">Deliveries</div>
+            <div id="list-deliveries"></div>
+        </div>
     </div>
 </div>
 
@@ -360,14 +375,12 @@
     });
 
     const db = firebase.database();
-    let archiveLimit = 10;
-    let rawData = {};
+    let rawPickups = {};
+    let rawDropoffs = {};
     let addressData = {};
     let deliveryData = {};
-    let lastKnownCompletedId = null;
-    let editingId = null; 
     let currentUser = localStorage.getItem('ec_command_user');
-    let availableDrivers = [];
+    let currentMode = 'pickup';
 
     function attemptLogin() {
         const user = document.getElementById('login-user').value.trim();
@@ -390,11 +403,9 @@
         document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
     }
 
-    // Enhanced timestamp formatter for robust parsing
     function formatTime12(ts) {
         if (!ts) return '--:--';
-        const parsedTs = isNaN(ts) ? ts : Number(ts);
-        const d = new Date(parsedTs);
+        const d = new Date(ts);
         if (isNaN(d.getTime())) return '--:--';
         return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
     }
@@ -407,7 +418,7 @@
         document.getElementById('map-modal').style.display = 'block';
         if (!mainMap) {
             mainMap = new google.maps.Map(document.getElementById("map"), {
-                gestureHandling: "greedy", // ENABLE SINGLE FINGER PANNING
+                gestureHandling: "greedy",
                 styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
             });
         }
@@ -420,16 +431,10 @@
             for (let name in drivers) {
                 const driver = drivers[name];
                 const pos = { lat: driver.lat, lng: driver.lng };
-                
                 const updateTS = driver.gps_timestamp || driver.timestamp || driver.last_seen;
                 const timeStr = formatTime12(updateTS);
-                
-                // DATE FORMAT: Month/Day/Year (MM/DD/YYYY)
                 const d = new Date(updateTS);
-                const dateStr = (d.getMonth() + 1).toString().padStart(2, '0') + '/' + 
-                                d.getDate().toString().padStart(2, '0') + '/' + 
-                                d.getFullYear();
-
+                const dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
                 const markerLabelText = `${name}\n${timeStr} | ${dateStr}`;
                 
                 bounds.extend(pos);
@@ -437,37 +442,19 @@
 
                 if (mapMarkers[name]) {
                     mapMarkers[name].setPosition(pos);
-                    mapMarkers[name].setLabel({
-                        text: markerLabelText,
-                        className: "pulsing-dot driver-map-label"
-                    });
+                    mapMarkers[name].setLabel({ text: markerLabelText, className: "pulsing-dot driver-map-label" });
                 } else {
                     mapMarkers[name] = new google.maps.Marker({
-                        position: pos,
-                        map: mainMap,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            fillColor: '#00ff41',
-                            fillOpacity: 1,
-                            strokeWeight: 2,
-                            strokeColor: '#ffffff',
-                            scale: 7,
-                            labelOrigin: new google.maps.Point(0, -2)
-                        },
-                        label: {
-                            text: markerLabelText,
-                            className: "pulsing-dot driver-map-label"
-                        },
+                        position: pos, map: mainMap,
+                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00ff41', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
+                        label: { text: markerLabelText, className: "pulsing-dot driver-map-label" },
                         title: name
                     });
                 }
             }
-
             if (hasDrivers) {
                 mainMap.fitBounds(bounds);
-                google.maps.event.addListenerOnce(mainMap, 'idle', () => {
-                    if (mainMap.getZoom() > 16) mainMap.setZoom(16);
-                });
+                google.maps.event.addListenerOnce(mainMap, 'idle', () => { if (mainMap.getZoom() > 16) mainMap.setZoom(16); });
             }
         });
     }
@@ -477,108 +464,58 @@
         db.ref('driver_locations').off();
     }
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-        .then(() => console.log("Service Worker Registered"))
-        .catch(err => console.log("SW Error:", err));
-    }
-
-    let deferredPrompt;
-    const installBtn = document.getElementById('install-btn');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (!localStorage.getItem('appInstalled')) {
-            installBtn.style.display = 'block';
-        }
-    });
-
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                installBtn.style.display = 'none';
-                localStorage.setItem('appInstalled', 'true');
-            }
-            deferredPrompt = null;
-        }
-    });
-
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-        installBtn.style.display = 'none';
-        localStorage.setItem('appInstalled', 'true');
-    }
-
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
     function requestNotifyPermission() {
-        if ("Notification" in window) {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") alert("Notifications Enabled!");
-            });
-        }
+        if ("Notification" in window) Notification.requestPermission();
     }
 
     function updateClock() { document.getElementById('clock').innerText = formatTime12(new Date()); }
     setInterval(updateClock, 1000); updateClock();
 
-    window.onscroll = function() {
-        if (window.scrollY === 0 && archiveLimit > 10) {
-            archiveLimit = 10;
-            renderData();
+    function setMode(mode) {
+        currentMode = mode;
+        const top = document.getElementById('top-input-section');
+        const bot = document.getElementById('bottom-input-section');
+        const grpPickup = document.getElementById('group-pickup');
+        const grpDrop = document.getElementById('group-drop');
+        const btnPickup = document.getElementById('btn-mode-pickup');
+        const btnDelivery = document.getElementById('btn-mode-delivery');
+
+        if(mode === 'pickup') {
+            top.appendChild(grpPickup);
+            bot.appendChild(grpDrop);
+            btnPickup.classList.add('active-mode');
+            btnDelivery.classList.remove('active-mode', 'delivery-mode');
+        } else {
+            top.appendChild(grpDrop);
+            bot.appendChild(grpPickup);
+            btnPickup.classList.remove('active-mode');
+            btnDelivery.classList.add('active-mode', 'delivery-mode');
         }
-    };
+    }
+
+    // Initialize Mode
+    setMode('pickup');
 
     firebase.auth().signInAnonymously().then(() => {
-        db.ref("driver_secrets").on("value", snap => {
-            availableDrivers = Object.keys(snap.val() || {});
-            const sel = document.getElementById('f-driver');
-            sel.innerHTML = '<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>';
-            availableDrivers.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.innerText = d;
-                sel.appendChild(opt);
-            });
-            renderData();
-        });
-
         db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
-        db.ref("delivery_lookup").on("value", snap => { deliveryData = snap.val() || {}; });
-
-        db.ref("dropoffs").limitToLast(1).on("child_added", snapshot => {
-            const newJob = snapshot.val();
-            const isFresh = (Date.now() - newJob.timestamp) < 10000;
-
-            if (isFresh && newJob.status === 'pending') {
-                alertSound.play();
-                if (Notification.permission === "granted") {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification("🚨 NEW JOB DISPATCHED", {
-                            body: `${newJob.destination}`,
-                            icon: 'icon-512.png',
-                            vibrate: [200, 100, 200],
-                            tag: 'new-job'
-                        });
-                    });
-                }
-            }
+        
+        db.ref("pickups").on("value", snapshot => {
+            rawPickups = snapshot.val() || {};
+            renderData();
         });
 
         db.ref("dropoffs").on("value", snapshot => {
-            rawData = snapshot.val() || {};
+            rawDropoffs = snapshot.val() || {};
             renderData();
         });
     });
 
-    function showMore() { archiveLimit += 20; renderData(); }
-
     function handleSearchKey(e) {
         if (e.key === "Enter") {
             e.target.blur();
-            document.getElementById('archive-header').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('board-panel').scrollIntoView({ behavior: 'smooth' });
         }
     }
 
@@ -602,87 +539,20 @@
         
         rec.onresult = (e) => {
             let cmdStr = e.results[0][0].transcript.toLowerCase();
+            if (cmdStr.trim() === "dispatch") { createJob(); return; }
             
-            if (cmdStr.trim() === "dispatch") {
-                createJob();
-                return;
-            }
-
-            // Speech-to-Text Collision Guard
-            cmdStr = cmdStr.replace(/\b(format|four mat|fore matt|for mat)\b/g, "for matt");
-            
-            // 1. Number Conversion
-            const numWords = {
-                'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10,
-                'eleven':11, 'twelve':12, 'thirteen':13, 'fourteen':14, 'fifteen':15, 'sixteen':16, 'seventeen':17, 'eighteen':18, 'nineteen':19,
-                'twenty':20, 'thirty':30, 'forty':40, 'fifty':50, 'sixty':60, 'seventy':70, 'eighty':80, 'ninety':90
-            };
+            // Basic number conversion
+            const numWords = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
             Object.keys(numWords).forEach(word => {
                 const reg = new RegExp(`\\b${word}\\b`, 'g');
                 cmdStr = cmdStr.replace(reg, numWords[word]);
             });
 
-            let globalAndMatch = cmdStr.match(/\band\b\s+(.*)/);
-            if (globalAndMatch) {
-                let extraText = globalAndMatch[1].trim();
-                let curExtra = document.getElementById('f-pkg-details').value;
-                document.getElementById('f-pkg-details').value = curExtra ? curExtra + " " + extraText : extraText;
-                cmdStr = cmdStr.substring(0, globalAndMatch.index).trim();
-            }
-
-            // PRIORITY 1: DRIVER NOTES
-            let driverNoteMatch = cmdStr.match(/\bdriver note\b(.*)/);
-            if (driverNoteMatch) {
-                document.getElementById('f-info').value = driverNoteMatch[1].trim();
-                cmdStr = cmdStr.substring(0, driverNoteMatch.index).trim();
-            }
-
-            // PRIORITY 2: PO / REFERENCE
-            let poMatch = cmdStr.match(/\b(po|p o|pee oh|reference)\b(.*)/);
-            if (poMatch) {
-                document.getElementById('f-po').value = poMatch[2].trim();
-                cmdStr = cmdStr.substring(0, poMatch.index).trim();
-            }
-
-            // PRIORITY 4: DRIVER ASSIGNMENT
-            let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess)\b/);
+            // Logic to populate fields (simplified for merged app)
+            let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess|alicia|kayla)\b/);
             if (drvMatch) {
                 let dName = drvMatch[1].charAt(0).toUpperCase() + drvMatch[1].slice(1);
                 document.getElementById('f-driver').value = dName;
-                cmdStr = cmdStr.replace(drvMatch[0], "").trim();
-            }
-
-            // PRIORITY 7: NAMES
-            cmdStr = cmdStr.replace(/[.,]/g, "").trim();
-            
-            const cleanName = (s) => {
-                // Rule 40: Stop at any package/dim/keyword
-                let stopper = new RegExp(`\\b(?:\\d+|by|for|x|and)\\b`, 'i');
-                let m = s.match(stopper);
-                let text = m ? s.substring(0, m.index).trim() : s.trim();
-                return text.replace(/[^a-zA-Z\s]+$/, "").trim();
-            };
-
-            let splitMatch = cmdStr.match(/\s+(to|for)\s+/);
-            if (splitMatch) {
-                let pName = cmdStr.substring(0, splitMatch.index).trim();
-                let dName = cmdStr.substring(splitMatch.index + splitMatch[0].length).trim();
-                
-                pName = cleanName(pName);
-                dName = cleanName(dName);
-                
-                const pMatch = pName.length > 0 ? Object.keys(addressData).find(k => k.toLowerCase().startsWith(pName)) : null;
-                document.getElementById('f-name').value = pMatch || pName;
-                if(pMatch) selectClient(pMatch);
-                
-                const dMatch = dName.length > 0 ? Object.keys(addressData).find(k => k.toLowerCase().startsWith(dName)) : null;
-                document.getElementById('f-drop-name').value = dMatch || dName;
-                if(dMatch) selectDropClient(dMatch);
-            } else if(cmdStr.length > 0) {
-                let pName = cleanName(cmdStr);
-                const pMatch = pName.length > 0 ? Object.keys(addressData).find(k => k.toLowerCase().startsWith(pName)) : null;
-                document.getElementById('f-name').value = pMatch || pName;
-                if(pMatch) selectClient(pMatch);
             }
         };
         
@@ -733,236 +603,133 @@
         const dropName = document.getElementById('f-drop-name').value;
         const assigned = document.getElementById('f-driver').value;
         const infoRaw = document.getElementById('f-info').value;
-        
-        if(!pickup || !city || !name) return alert("Enter Pickup Name, Address and City");
-
         const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
-        
-        const safeName = name.replace(/[.#$\[\]\/]/g, "").trim();
-        if(safeName) {
-            db.ref("address_lookup").child(safeName).set({
-                address: pickup,
-                city: city
-            }).catch(e => console.warn("Address Save Error:", e));
-        }
 
-        const safeDropName = dropName.replace(/[.#$\[\]\/]/g, "").trim();
-        if(safeDropName) {
-            db.ref("address_lookup").child(safeDropName).set({
-                address: document.getElementById('f-drop-address').value,
-                city: document.getElementById('f-drop-city').value
-            }).catch(e => console.warn("Drop Save Error:", e));
-        }
+        if(!pickup || !name || !dropName) return alert("Please fill in main contacts and addresses");
 
-        db.ref("dropoffs").push({
+        const jobData = {
             city: city, pickup_location: pickup, destination: drop,
             delivery_name: dropName,
             package_details: document.getElementById('f-pkg-details').value,
             po_number: document.getElementById('f-po').value,
-            name: document.getElementById('f-name').value,
+            name: name,
             other_info: info,
             status: 'pending', 
             assigned_to: assigned, 
             timestamp: Date.now()
-        });
+        };
+
+        const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
+        db.ref(targetNode).push(jobData);
         
+        // Save addresses for autosuggest
+        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city });
+        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value });
+
         resetFormFields();
         document.getElementById('f-driver').value = "Unassigned";
     }
 
-    function startEditing(id) {
-        editingId = id;
-        renderData();
-    }
+    function viewDetails(id, type) {
+        const isPickup = type === 'pickup';
+        const data = isPickup ? rawPickups[id] : rawDropoffs[id];
+        if(!data) return;
 
-    function saveEdit(id) {
-        const card = document.querySelector(`[data-id="${id}"]`);
-        const updates = {
-            pickup_location: card.querySelector('.edit-pickup').value,
-            destination: card.querySelector('.edit-drop').value,
-            delivery_name: card.querySelector('.edit-drop-name').value,
-            city: card.querySelector('.edit-city').value,
-            name: card.querySelector('.edit-name').value,
-            po_number: card.querySelector('.edit-po').value,
-            package_details: card.querySelector('.edit-pkg-details').value
-        };
-
-        const newCommandNote = card.querySelector('.edit-info').value.trim();
-        if(newCommandNote && !newCommandNote.includes(`[${currentUser}]`)) {
-            db.ref("dropoffs").child(id).child("other_info").once('value', snap => {
-                let existing = snap.val() || "";
-                let combined = existing + (existing ? " | " : "") + `[${currentUser}]: ${newCommandNote}`;
-                updates.other_info = combined;
-                db.ref("dropoffs").child(id).update(updates).then(() => {
-                    editingId = null;
-                    renderData();
-                });
-            });
-        } else {
-            updates.other_info = newCommandNote;
-            db.ref("dropoffs").child(id).update(updates).then(() => {
-                editingId = null;
-                renderData();
-            });
-        }
-    }
-
-    function clearNoteAlert(id) {
-        db.ref("dropoffs").child(id).update({ driver_edited_note: false });
-    }
-
-    function viewDetails(p, id) {
-        const created = p.timestamp ? new Date(p.timestamp).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "N/A";
-        const finishTS = p.completed_at || p.finished_at;
-        const finished = finishTS ? new Date(finishTS).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "N/A";
+        const created = data.timestamp ? new Date(data.timestamp).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "N/A";
+        const finished = data.completed_at ? new Date(data.completed_at).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "Pending";
         
         document.getElementById('m-body').innerHTML = `
-            <p><strong>Pickup:</strong> ${p.pickup_location} (${p.city})</p>
-            <p><strong>Drop:</strong> ${p.destination}</p>
-            <p><strong>Driver:</strong> ${p.assigned_to}</p>
+            <div style="background:${isPickup?'#ffcc00':'#00ff41'}; color:#000; padding:5px; font-weight:900; text-align:center; margin-bottom:10px;">${isPickup?'PICKUP':'DELIVERY'}</div>
+            <p><strong>Pickup:</strong> ${data.pickup_location} (${data.city})</p>
+            <p><strong>Drop:</strong> ${data.destination}</p>
+            <p><strong>Driver:</strong> ${data.assigned_to}</p>
             <hr style="border:0; border-top:1px solid #333">
-            <p><strong>Details:</strong> ${p.package_details || "-"}</p>
-            <p><strong>PO:</strong> ${p.po_number || "-"}</p>
-            <p><strong>Contact:</strong> ${p.name || "-"}</p>
-            <p id="m-display-notes"><strong>Notes:</strong> ${p.other_info || "None"}</p>
+            <p><strong>Details:</strong> ${data.package_details || "-"}</p>
+            <p><strong>PO:</strong> ${data.po_number || "-"}</p>
+            <p><strong>Contact:</strong> ${data.name || "-"}</p>
+            <p id="m-display-notes"><strong>Notes:</strong> ${data.other_info || "None"}</p>
             <p class="hist-time">Created: ${created}</p>
-            <p class="hist-time">Finished: ${finished}</p>`;
+            <p class="hist-time">Finished: ${finished}</p>
+            <button onclick="deleteJob('${id}', '${type}')" style="background:red; color:white; border:none; padding:8px; border-radius:4px; margin-top:10px;">DELETE JOB</button>
+        `;
         
-        // Setup Note Save Button
         const saveBtn = document.getElementById('m-note-save');
         saveBtn.onclick = () => {
             const noteInput = document.getElementById('m-note-input');
             const newNote = noteInput.value.trim();
             if(!newNote) return;
-
-            const updatedNotes = (p.other_info ? p.other_info + " | " : "") + `[${currentUser}]: ` + newNote;
-            db.ref("dropoffs").child(id).update({ other_info: updatedNotes }).then(() => {
+            const updatedNotes = (data.other_info ? data.other_info + " | " : "") + `[${currentUser}]: ` + newNote;
+            const node = isPickup ? 'pickups' : 'dropoffs';
+            db.ref(node).child(id).update({ other_info: updatedNotes }).then(() => {
                 document.getElementById('m-display-notes').innerHTML = `<strong>Notes:</strong> ${updatedNotes}`;
                 noteInput.value = "";
-                alert("Note added to archive.");
             });
         };
 
         document.getElementById('detailsModal').style.display = 'block';
     }
 
-    function assignDriver(id, driver) {
-        db.ref("dropoffs").child(id).update({ assigned_to: driver });
-    }
-
-    function unassign(id) {
-        db.ref("dropoffs").child(id).update({ assigned_to: 'Unassigned' });
-    }
-
-    function deleteJob(id) {
-        if(confirm("Delete this dispatch?")) db.ref("dropoffs").child(id).remove();
+    function deleteJob(id, type) {
+        if(confirm("Delete this dispatch completely?")) {
+            const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+            db.ref(node).child(id).remove();
+            document.getElementById('detailsModal').style.display = 'none';
+        }
     }
 
     function renderData() {
-        const list = document.getElementById("job-list"); 
-        const histList = document.getElementById("history-list");
+        const pList = document.getElementById("list-pickups"); 
+        const dList = document.getElementById("list-deliveries");
         const searchTerm = document.getElementById("archive-search").value.toLowerCase();
         
-        list.innerHTML = ""; histList.innerHTML = "";
+        pList.innerHTML = ""; dList.innerHTML = "";
         
         let pending = 0, assignedCount = 0, noteCount = 0;
-        const now = Date.now();
 
-        const allJobs = Object.entries(rawData).reverse();
-        let archivedJobs = [];
-
-        allJobs.forEach(([id, p]) => {
-            if(p.status === 'completed') { 
-                archivedJobs.push({id, ...p}); 
-                return; 
-            }
-            const activeCity = p.city || "";
-            const isUnassigned = !p.assigned_to || p.assigned_to.toLowerCase() === 'unassigned';
-            const hasDriverNote = p.driver_edited_note === true;
-
-            if(isUnassigned) pending++; else assignedCount++;
-            if(hasDriverNote) noteCount++;
-
-            const card = document.createElement("div");
+        function processJobs(obj, type) {
+            const list = type === 'pickup' ? pList : dList;
+            const entries = Object.entries(obj).reverse();
             
-            card.className = "dispatch-card" + (isUnassigned ? " unassigned-glow" : "") + (hasDriverNote ? " note-highlight" : "");
-            card.setAttribute('data-id', id);
+            entries.forEach(([id, p]) => {
+                if(p.status !== 'completed') {
+                    if(!p.assigned_to || p.assigned_to === 'Unassigned') pending++;
+                    else assignedCount++;
+                    if(p.driver_edited_note) noteCount++;
+                }
 
-            if (editingId === id) {
+                // Filter for Archive View (Show all, or filter by search)
+                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + p.assigned_to).toLowerCase();
+                if(searchTerm && !textSearch.includes(searchTerm)) return;
+
+                const card = document.createElement("div");
+                card.className = "history-item";
+                // Color coding borders based on type
+                card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
+                
+                // Minimal Info: Driver, Contact, City
+                const driverHTML = p.assigned_to ? `<span class="hist-driver">${p.assigned_to}</span>` : `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
+                const contact = type === 'pickup' ? p.name : p.delivery_name;
+                
                 card.innerHTML = `
-                    <div class="card-body">
-                        <input type="text" class="edit-input edit-name" value="${p.name || ""}" placeholder="Pickup Business/Contact Name">
-                        <div class="flex-row">
-                            <input type="text" class="edit-input edit-pickup" value="${p.pickup_location}" placeholder="Pickup Address" style="flex: 2;">
-                            <input type="text" class="edit-input edit-city" value="${activeCity}" placeholder="City/Town" style="flex: 1;">
-                        </div>
-                        <input type="text" class="edit-input edit-pkg-details" value="${p.package_details || ""}" placeholder="Packages/Items/Dimensions">
-                        <div class="flex-row">
-                            <input type="text" class="edit-input edit-po" value="${p.po_number || ""}" placeholder="PO / Reference" style="flex: 1;">
-                            <input type="text" class="edit-input edit-info" value="${p.other_info || ""}" placeholder="Driver Notes..." style="flex: 1.5;">
-                        </div>
-                        <input type="text" class="edit-input edit-drop-name" value="${p.delivery_name || ""}" placeholder="Delivery Contact/Business Name">
-                        <input type="text" class="edit-input edit-drop" value="${p.destination}" placeholder="Delivery Address & City/Town">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        ${driverHTML}
+                        <button style="background:#333; color:#fff; border:1px solid #555; border-radius:4px; padding:2px 6px; font-size:10px; cursor:pointer;" onclick="viewDetails('${id}', '${type}')">INFO</button>
                     </div>
-                    <div class="card-ctrl">
-                        <button class="save-btn" onclick="saveEdit('${id}')">Done</button>
-                        <button onclick="editingId=null; renderData();" style="color:#888; border:none; background:none; font-weight:bold; cursor:pointer;">Cancel</button>
-                    </div>`;
-            } else {
-                const showDetails = p.package_details ? `<div style="border: 1px solid #444; background: #111; margin: 6px 0; padding: 10px; font-family: 'Courier New', monospace; font-size: 16px; font-weight: 900; color: #ffcc00; border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); text-align: center; border-left: 4px solid #ffcc00;">${p.package_details}</div>` : '';
-                
-                const showPickupName = p.name ? `<div class="addr"><span style="color:orange; font-weight:900;">Contact:</span> <span style="text-transform:uppercase; color:#fff;">${p.name}</span></div>` : '';
-                const showPickupAddr = p.pickup_location ? `<div class="addr"><span style="color:var(--archive-orange)">Address:</span> <span style="color:#eee;">${p.pickup_location}</span></div>` : '';
-                const showCity = activeCity ? `<div class="addr"><span style="color:var(--archive-orange)">City:</span> <span style="text-transform:uppercase; color:#eee;">${activeCity}</span></div>` : '';
-                
-                const showDropName = p.delivery_name ? `<div class="addr"><span style="color:#ccc; font-weight:900;">Deliver to:</span> <span style="text-transform:uppercase; color:#fff;">${p.delivery_name}</span></div>` : '';
-                const showDropAddr = p.destination ? `<div class="addr"><span style="color:#888">Address:</span> <span style="color:#eee;">${p.destination}</span></div>` : '';
+                    <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
+                    <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
+                `;
+                list.appendChild(card);
+            });
+        }
 
-                const showPO = p.po_number ? `<div><div class="detail-label">PO / REF</div><div class="detail-value" style="font-family:'Courier New', monospace;">${p.po_number}</div></div>` : '';
-                
-                const showNotes = p.other_info ? `
-                    <div onclick="${hasDriverNote ? `clearNoteAlert('${id}')` : ''}">
-                        <div class="detail-label ${hasDriverNote ? 'note-text-glow' : ''}">NOTES ${hasDriverNote ? ' (NEW)' : ''}</div>
-                        <div class="detail-value ${hasDriverNote ? 'note-text-glow' : ''}">${p.other_info}</div>
-                    </div>` : '';
+        processJobs(rawPickups, 'pickup');
+        processJobs(rawDropoffs, 'delivery');
 
-                card.innerHTML = `
-                    <div class="card-body">
-                        <div style="border-left: 4px solid #00ff41; background: rgba(0, 255, 65, 0.05); padding: 8px 12px; margin-bottom: 8px; border-radius: 0 4px 4px 0;">
-                            ${showDropName}
-                            ${showDropAddr}
-                        </div>
-                        ${showDetails}
-                        <div style="border-left: 4px solid #007bff; background: rgba(0, 123, 255, 0.05); padding: 8px 12px; margin-bottom: 2px; border-radius: 0 4px 4px 0;">
-                            ${showPickupName}
-                            ${showPickupAddr}
-                            ${showCity}
-                        </div>
-                        ${(showPO || showNotes) ? `<div class="card-details-grid" style="margin-top:5px;">${showPO}${showNotes}</div>` : ''}
-                    </div>
-                    <div class="card-ctrl">
-                        ${isUnassigned ? 
-                            `<select class="driver-select" onchange="assignDriver('${id}', this.value)"><option value="Unassigned" selected disabled hidden>ASSIGN DRIVER</option>${availableDrivers.map(d => `<option value="${d}">${d}</option>`).join('')}</select>` : 
-                            `<div style="color:var(--active-green); font-weight:900; font-size:16px; text-transform:uppercase; letter-spacing:1px;">${p.assigned_to}</div>
-                             <div class="flex-row">
-                                <button class="edit-btn" onclick="startEditing('${id}')">Edit</button>
-                                <button class="reset-btn" onclick="unassign('${id}')">RESET</button>
-                             </div>`
-                        }
-                        <button onclick="deleteJob('${id}')" style="color:red; border:none; background:none; font-weight:bold; cursor:pointer; font-size:16px;">&times;</button>
-                    </div>`;
-            }
-            list.appendChild(card);
-        });
-
-        lastKnownCompletedId = currentTopArchivedId;
         document.getElementById("stat-pending").innerText = pending;
         document.getElementById("stat-assigned").innerText = assignedCount;
         document.getElementById("stat-note").innerText = noteCount;
         document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
-        document.getElementById("load-more-btn").style.display = "none";
         document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
-        document.getElementById("assigned-box").className = "stat-box";
     }
 </script>
 </body>
