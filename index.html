@@ -341,6 +341,9 @@
 
 <div id="board-panel">
     <div class="history-box">
+        <div id="filter-reset-ui" style="width:100%; text-align:center; display:none; margin-bottom:10px;">
+            <button onclick="clearDriverFilter()" style="background:#222; border:1px solid var(--accent); color:var(--accent); padding:8px 20px; font-weight:900; border-radius:4px; text-transform:uppercase; cursor:pointer;">Back to All</button>
+        </div>
         <div class="archive-column">
             <div class="archive-title" style="color:var(--archive-orange);">Pickups</div>
             <div id="list-pickups"></div>
@@ -394,6 +397,17 @@
     let deliveryData = {};
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
+    let currentDriverFilter = null;
+
+    function filterByDriver(name) {
+        currentDriverFilter = name;
+        renderData();
+    }
+    
+    function clearDriverFilter() {
+        currentDriverFilter = null;
+        renderData();
+    }
 
     function attemptLogin() {
         const user = document.getElementById('login-user').value.trim();
@@ -720,6 +734,9 @@
         const searchTerm = document.getElementById("archive-search").value.toLowerCase();
         
         pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
+
+        const filterUI = document.getElementById('filter-reset-ui');
+        if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
         
         let pending = 0, assignedCount = 0, noteCount = 0;
         let driverStats = {};
@@ -754,6 +771,8 @@
                 // Filter for Archive View (Show all, or filter by search)
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
+
+                if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
 
                 const card = document.createElement("div");
                 card.className = "history-item";
@@ -803,6 +822,8 @@
                 
                 const row = document.createElement("div");
                 row.className = "driver-stat-row";
+                row.style.cursor = "pointer";
+                row.onclick = () => filterByDriver(driver);
                 row.innerHTML = `
                     <div class="ds-name">${driver}</div>
                     <div class="ds-bars">
