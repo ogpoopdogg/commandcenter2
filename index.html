@@ -163,6 +163,13 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
+        
+        @keyframes urgent-pulse {
+            0% { background: #330000; box-shadow: inset 0 0 10px red; border-color: red; }
+            50% { background: #660000; box-shadow: inset 0 0 30px red; border-color: #ff5555; }
+            100% { background: #330000; box-shadow: inset 0 0 10px red; border-color: red; }
+        }
+        .urgent-pickup { animation: urgent-pulse 1s infinite; border: 2px solid red !important; }
 
         input, select, textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 16px; margin-bottom: 6px; box-sizing: border-box; }
         .flex-row { display: flex; gap: 8px; }
@@ -286,11 +293,6 @@
         
         @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes num-pulse { from { text-shadow: 0 0 2px rgba(255,255,255,0); } to { text-shadow: 0 0 8px rgba(255,255,255,0.8); } }
-
-        .new-indicator { margin-top: 5px; background: #007bff; color: #fff; font-weight: 900; font-size: 12px; text-align: center; padding: 4px; border-radius: 4px; box-shadow: 0 0 10px #007bff; animation: pulse-blue-new 1s infinite alternate; display: none; }
-        @keyframes pulse-blue-new { from { box-shadow: 0 0 5px #007bff; transform: scale(0.98); } to { box-shadow: 0 0 15px #00d4ff; transform: scale(1.02); } }
-        .new-entry-glow { border: 2px solid #00d4ff !important; background: rgba(0, 212, 255, 0.1) !important; animation: flash-new 1.5s infinite; }
-        @keyframes flash-new { 0% { box-shadow: 0 0 5px #00d4ff inset; border-color: #00d4ff; } 50% { box-shadow: 0 0 20px #00d4ff inset; border-color: #fff; } 100% { box-shadow: 0 0 5px #00d4ff inset; border-color: #00d4ff; } }
     </style>
 </head>
 <body>
@@ -323,7 +325,6 @@
 
     <div class="stat-box">
         <button id="locate-btn" onclick="openMap()">Driver Map</button>
-        <div id="new-indicator" class="new-indicator">0 NEW</div>
     </div>
 
     <div id="assigned-box" class="stat-box">
@@ -977,10 +978,8 @@
             entries.forEach(([id, p]) => {
                 const assignedTo = p.assigned_to;
                 if(p.status !== 'completed') {
-                    if(!assignedTo || assignedTo === 'Unassigned') {
-                        pending++;
-                        // Highlight new/unassigned entries
-                    } else {
+                    if(!assignedTo || assignedTo === 'Unassigned') pending++;
+                    else {
                         assignedCount++;
                         if(driverStats[assignedTo]) {
                             if(type === 'pickup') driverStats[assignedTo].p++;
@@ -998,10 +997,7 @@
 
                 const card = document.createElement("div");
                 card.className = "history-item";
-                // Add glow if unassigned
-                if (!assignedTo || assignedTo === 'Unassigned') {
-                    card.classList.add('new-entry-glow');
-                }
+                if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) card.classList.add('urgent-pickup');
                 card.onclick = () => viewDetails(id, type);
                 card.style.cursor = "pointer";
                 // Color coding borders based on type
@@ -1066,13 +1062,6 @@
         document.getElementById("stat-note").innerText = noteCount;
         document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
         document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
-        
-        // Update New Indicator
-        const nInd = document.getElementById("new-indicator");
-        if(nInd) {
-            nInd.style.display = pending > 0 ? "block" : "none";
-            nInd.innerText = pending + " NEW";
-        }
     }
 </script>
 </body>
