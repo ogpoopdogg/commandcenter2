@@ -200,7 +200,7 @@
         #archive-search { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: var(--accent); font-weight: bold; border-radius: 4px; font-size: 16px; }
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
-        .modal-content { background: #161616; margin: 15% auto; padding: 20px; width: 85%; max-width: 500px; border: 2px solid var(--accent); color: #eee; border-radius: 8px; }
+        .modal-content { background: #161616; margin: 5% auto; padding: 20px; width: 85%; max-width: 500px; border: 2px solid var(--accent); color: #eee; border-radius: 8px; }
 
         /* LOGIN OVERLAY */
         #login-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
@@ -230,10 +230,11 @@
         .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #1a1a1a; border-radius: 4px; animation: slideIn 0.3s ease-out; border: 1px solid #2a2a2a; }
         .ds-name { color: #fff; font-weight: 900; font-size: 12px; width: 60px; text-transform: uppercase; }
         .ds-bars { flex: 1; display: flex; gap: 5px; margin-left: 10px; height: 18px; }
-        .ds-bar { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #000; border-radius: 3px; min-width: 0; transition: flex 0.5s; overflow: hidden; }
+        .ds-bar { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: #000; border-radius: 3px; min-width: 0; transition: flex 0.5s; overflow: hidden; animation: num-pulse 1.2s infinite alternate; }
         .ds-p { background: var(--accent); box-shadow: 0 0 5px rgba(255, 204, 0, 0.2); }
         .ds-d { background: var(--active-green); box-shadow: 0 0 5px rgba(0, 255, 65, 0.2); }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes num-pulse { from { text-shadow: 0 0 2px rgba(255,255,255,0); } to { text-shadow: 0 0 8px rgba(255,255,255,0.8); } }
     </style>
 </head>
 <body>
@@ -652,32 +653,32 @@
         const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 
         const html = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                 <div style="font-weight:900; font-size:14px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
                 <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:4px 8px; font-weight:bold; cursor:pointer;">DELETE</button>
             </div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
-                <select id="e-driver" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff; font-weight:bold;">${driverOpts}</select>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; font-size:12px;">
+                <select id="e-driver" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-weight:bold; font-size:14px;">${driverOpts}</select>
                 
-                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
                 
-                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
-                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
+                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
                 
-                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
                 
-                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
-                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
+                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
 
-                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
                 
-                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:45px; padding:6px; background:#222; border:1px solid #444; color:#fff; font-family:inherit;">${val(data.other_info)}</textarea>
+                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:35px; padding:5px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:14px;">${val(data.other_info)}</textarea>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:8px; margin-top:10px;">
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:6px; margin-top:8px;">
                 <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:10px; font-weight:bold; cursor:pointer;">CANCEL</button>
-                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:10px; font-weight:900; text-transform:uppercase; cursor:pointer;">SAVE CHANGES</button>
+                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:10px; font-weight:900; text-transform:uppercase; cursor:pointer;">SAVE</button>
             </div>
         `;
         
@@ -761,8 +762,19 @@
                 // Color coding borders based on type
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
-                // Minimal Info: Driver, Contact, City
-                const driverHTML = p.assigned_to ? `<span class="hist-driver">${p.assigned_to}</span>` : `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
+                // Color Map Logic
+                const dColors = {
+                    'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
+                    'Jess': '#FF69B4', 'Alicia': '#9C27B0', 'Kayla': '#E91E63'
+                };
+                const bg = dColors[p.assigned_to] || '#00ff41'; 
+                // Light colors need black text, dark colors need white text
+                const darkText = ['#00ff41', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
+                
+                const driverHTML = p.assigned_to ? 
+                    `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
+                    `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
+                
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
                 card.innerHTML = `
