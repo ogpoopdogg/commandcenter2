@@ -12,12 +12,12 @@
         :root { --accent: #ffcc00; --bg: #0a0a0a; --card: #161616; --text: #eee; --wpg: #2196f3; --brdn: #9c27b0; --active-green: #00ff41; --archive-orange: #ff6600; --note-blue: #00d4ff; --pro-blue: #007bff; }
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
         
-        header { padding: 8px 12px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
         
         .header-logo {
-            height: 22px;
+            height: 24px;
             width: auto;
-            margin-right: 8px;
+            margin-right: 10px;
             vertical-align: middle;
             filter: drop-shadow(0 0 5px var(--accent));
             animation: logo-glow 2s infinite alternate;
@@ -95,8 +95,7 @@
             50% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); border-color: var(--accent); }
             100% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
         }
-        .glow-field { border: 1px solid #444; box-shadow: 0 0 5px rgba(255, 204, 0, 0.1); transition: 0.3s; }
-        .glow-field:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 204, 0, 0.3); }
+        .glow-field { border: 1px solid #444; }
 
         .stats-bar { display: flex; background: #111; padding: 5px; border-bottom: 1px solid #333; justify-content: space-around; align-items: center; }
         #entry-panel { background: #0f0f0f; border-bottom: 2px solid #333; padding: 12px 15px; }
@@ -118,13 +117,6 @@
             100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
         }
 
-        .assigned-glow { border: 2px solid var(--active-green) !important; z-index: 10; }
-        @keyframes green-glow {
-            0% { box-shadow: 0 0 5px var(--active-green), inset 0 0 5px rgba(0, 255, 65, 0.2); transform: scale(1); border-color: #555; }
-            50% { box-shadow: 0 0 25px var(--active-green), inset 0 0 15px rgba(0, 255, 65, 0.4); transform: scale(1.01); border-color: var(--active-green); }
-            100% { box-shadow: 0 0 5px var(--active-green), inset 0 0 5px rgba(0, 255, 65, 0.2); transform: scale(1); border-color: #555; }
-        }
-        
         @keyframes inner-pulse {
             0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
             50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
@@ -237,17 +229,10 @@
         #driver-stats-panel { background: #111; padding: 10px; border-bottom: 2px solid #333; display: flex; flex-direction: column; gap: 5px; }
         .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #1a1a1a; border-radius: 4px; animation: slideIn 0.3s ease-out; border: 1px solid #2a2a2a; }
         .ds-name { color: #fff; font-weight: 900; font-size: 12px; width: 60px; text-transform: uppercase; }
-        .ds-bars { flex: 1; display: flex; align-items: center; gap: 5px; margin-left: 10px; height: 18px; }
-        .ds-bar { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: #fff; text-shadow: 0 0 4px #000; border-radius: 3px; min-width: 0; transition: flex 0.5s; overflow: visible; position: relative; z-index: 1; }
-        .ds-p { background: var(--accent); box-shadow: 0 0 10px rgba(255, 204, 0, 0.4); color: #000; text-shadow: none; }
-        .ds-d { background: var(--active-green); box-shadow: 0 0 10px rgba(0, 255, 65, 0.4); color: #000; text-shadow: none; }
-        
-        @keyframes number-pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        .ds-bar span { animation: number-pop 2s infinite ease-in-out; display: block; }
+        .ds-bars { flex: 1; display: flex; gap: 5px; margin-left: 10px; height: 18px; }
+        .ds-bar { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #000; border-radius: 3px; min-width: 0; transition: flex 0.5s; overflow: hidden; }
+        .ds-p { background: var(--accent); box-shadow: 0 0 5px rgba(255, 204, 0, 0.2); }
+        .ds-d { background: var(--active-green); box-shadow: 0 0 5px rgba(0, 255, 65, 0.2); }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -267,7 +252,7 @@
         <div id="user-display"></div>
         <div style="display: flex; align-items: center; overflow: hidden;">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <span class="shiny-text" style="font-size: 18px; font-weight: 900; white-space: nowrap;">E&C COMMAND CENTER</span>
+            <span class="shiny-text" style="font-size: 20px; font-weight: 900; white-space: nowrap;">E&C COMMAND CENTER</span>
         </div>
     </div>
     <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap;"></div>
@@ -406,11 +391,8 @@
     let rawDropoffs = {};
     let addressData = {};
     let deliveryData = {};
-    let lastKnownCompletedId = null;
-    let editingId = null; 
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
-    let availableDrivers = [];
 
     function attemptLogin() {
         const user = document.getElementById('login-user').value.trim();
@@ -529,19 +511,6 @@
     setMode('pickup');
 
     firebase.auth().signInAnonymously().then(() => {
-        db.ref("driver_secrets").on("value", snap => {
-            availableDrivers = Object.keys(snap.val() || {});
-            const sel = document.getElementById('f-driver');
-            sel.innerHTML = '<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>';
-            availableDrivers.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.innerText = d;
-                sel.appendChild(opt);
-            });
-            renderData();
-        });
-
         db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
         
         db.ref("pickups").on("value", snapshot => {
@@ -552,19 +521,6 @@
         db.ref("dropoffs").on("value", snapshot => {
             rawDropoffs = snapshot.val() || {};
             renderData();
-        });
-        
-        db.ref("dropoffs").limitToLast(1).on("child_added", snapshot => {
-            const newJob = snapshot.val();
-            const isFresh = (Date.now() - newJob.timestamp) < 10000;
-            if (isFresh && newJob.status === 'pending') {
-                alertSound.play();
-                if (Notification.permission === "granted") {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification("🚨 NEW JOB DISPATCHED", { body: `${newJob.destination}`, icon: 'icon-512.png', vibrate: [200, 100, 200], tag: 'new-job' });
-                    });
-                }
-            }
         });
     });
 
@@ -733,69 +689,13 @@
         }
     }
 
-    function startEditing(id) {
-        editingId = id;
-        renderData();
-    }
-
-    function saveEdit(id) {
-        const card = document.querySelector(`[data-id="${id}"]`);
-        const updates = {
-            pickup_location: card.querySelector('.edit-pickup').value,
-            destination: card.querySelector('.edit-drop').value,
-            delivery_name: card.querySelector('.edit-drop-name').value,
-            city: card.querySelector('.edit-city').value,
-            name: card.querySelector('.edit-name').value,
-            po_number: card.querySelector('.edit-po').value,
-            package_details: card.querySelector('.edit-pkg-details').value
-        };
-
-        const newCommandNote = card.querySelector('.edit-info').value.trim();
-        // Check if job exists in pickups or dropoffs
-        let node = rawPickups[id] ? 'pickups' : 'dropoffs';
-        
-        if(newCommandNote && !newCommandNote.includes(`[${currentUser}]`)) {
-            db.ref(node).child(id).child("other_info").once('value', snap => {
-                let existing = snap.val() || "";
-                let combined = existing + (existing ? " | " : "") + `[${currentUser}]: ${newCommandNote}`;
-                updates.other_info = combined;
-                db.ref(node).child(id).update(updates).then(() => {
-                    editingId = null;
-                    renderData();
-                });
-            });
-        } else {
-            updates.other_info = newCommandNote;
-            db.ref(node).child(id).update(updates).then(() => {
-                editingId = null;
-                renderData();
-            });
-        }
-    }
-
-    function unassign(id) {
-        let node = rawPickups[id] ? 'pickups' : 'dropoffs';
-        db.ref(node).child(id).update({ assigned_to: 'Unassigned' });
-    }
-
-    function assignDriver(id, driver) {
-        let node = rawPickups[id] ? 'pickups' : 'dropoffs';
-        db.ref(node).child(id).update({ assigned_to: driver });
-    }
-
-    function clearNoteAlert(id) {
-        let node = rawPickups[id] ? 'pickups' : 'dropoffs';
-        db.ref(node).child(id).update({ driver_edited_note: false });
-    }
-
     function renderData() {
         const pList = document.getElementById("list-pickups"); 
         const dList = document.getElementById("list-deliveries");
-        const list = document.getElementById("job-list");
         const statsPanel = document.getElementById("driver-stats-panel");
         const searchTerm = document.getElementById("archive-search").value.toLowerCase();
         
-        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = ""; list.innerHTML = "";
+        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
         
         let pending = 0, assignedCount = 0, noteCount = 0;
         let driverStats = {};
@@ -810,13 +710,11 @@
         }
 
         function processJobs(obj, type) {
-            const archiveList = type === 'pickup' ? pList : dList;
+            const list = type === 'pickup' ? pList : dList;
             const entries = Object.entries(obj).reverse();
             
             entries.forEach(([id, p]) => {
                 const assignedTo = p.assigned_to;
-                
-                // Active Job Logic
                 if(p.status !== 'completed') {
                     if(!assignedTo || assignedTo === 'Unassigned') pending++;
                     else {
@@ -827,104 +725,24 @@
                         }
                     }
                     if(p.driver_edited_note) noteCount++;
-
-                    // Render Active Card
-                    const isUnassigned = !p.assigned_to || p.assigned_to.toLowerCase() === 'unassigned';
-                    const hasDriverNote = p.driver_edited_note === true;
-                    
-                    const card = document.createElement("div");
-                    card.className = "dispatch-card" + (isUnassigned ? " unassigned-glow" : "") + (hasDriverNote ? " note-highlight" : "");
-                    card.setAttribute('data-id', id);
-                    
-                    if (editingId === id) {
-                        // COMPACT EDIT VIEW
-                        card.innerHTML = `
-                            <div class="card-body" style="padding: 10px;">
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
-                                    <input type="text" class="glow-field edit-name" value="${p.name || ""}" placeholder="Pickup Name" style="width:100%; margin:0;">
-                                    <input type="text" class="glow-field edit-pickup" value="${p.pickup_location}" placeholder="Pickup Addr" style="width:100%; margin:0;">
-                                </div>
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
-                                    <input type="text" class="glow-field edit-drop-name" value="${p.delivery_name || ""}" placeholder="Drop Name" style="width:100%; margin:0;">
-                                    <input type="text" class="glow-field edit-drop" value="${p.destination}" placeholder="Drop Addr" style="width:100%; margin:0;">
-                                </div>
-                                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:5px; margin-bottom:5px;">
-                                    <input type="text" class="glow-field edit-city" value="${p.city || ""}" placeholder="City" style="width:100%; margin:0;">
-                                    <input type="text" class="glow-field edit-pkg-details" value="${p.package_details || ""}" placeholder="Packages" style="width:100%; margin:0;">
-                                </div>
-                                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:5px; margin-bottom:5px;">
-                                    <input type="text" class="glow-field edit-po" value="${p.po_number || ""}" placeholder="PO" style="width:100%; margin:0;">
-                                    <input type="text" class="glow-field edit-info" value="${p.other_info || ""}" placeholder="Notes" style="width:100%; margin:0;">
-                                </div>
-                                <div class="flex-row" style="margin-top:10px;">
-                                    <button class="save-btn" onclick="saveEdit('${id}')" style="flex:1; padding:10px;">SAVE</button>
-                                    <button onclick="editingId=null; renderData();" style="flex:1; background:#333; border:1px solid #555; color:#ccc; border-radius:4px; font-weight:bold; cursor:pointer;">CANCEL</button>
-                                </div>
-                            </div>`;
-                    } else {
-                        // NORMAL VIEW (Replicated from command1/2 logic but unified)
-                        const showDetails = p.package_details ? `<div style="border: 1px solid #444; background: #111; margin: 6px 0; padding: 10px; font-family: 'Courier New', monospace; font-size: 16px; font-weight: 900; color: #ffcc00; border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); text-align: center; border-left: 4px solid #ffcc00;">${p.package_details}</div>` : '';
-                        
-                        const showPickupName = p.name ? `<div class="addr"><span style="color:orange; font-weight:900;">Contact:</span> <span style="text-transform:uppercase; color:#fff;">${p.name}</span></div>` : '';
-                        const showPickupAddr = p.pickup_location ? `<div class="addr"><span style="color:var(--archive-orange)">Address:</span> <span style="color:#eee;">${p.pickup_location}</span></div>` : '';
-                        const showCity = activeCity ? `<div class="addr"><span style="color:var(--archive-orange)">City:</span> <span style="text-transform:uppercase; color:#eee;">${activeCity}</span></div>` : '';
-                        
-                        const showDropName = p.delivery_name ? `<div class="addr"><span style="color:#ccc; font-weight:900;">Deliver to:</span> <span style="text-transform:uppercase; color:#fff;">${p.delivery_name}</span></div>` : '';
-                        const showDropAddr = p.destination ? `<div class="addr"><span style="color:#888">Address:</span> <span style="color:#eee;">${p.destination}</span></div>` : '';
-
-                        const showPO = p.po_number ? `<div><div class="detail-label">PO / REF</div><div class="detail-value" style="font-family:'Courier New', monospace;">${p.po_number}</div></div>` : '';
-                        
-                        const showNotes = p.other_info ? `
-                            <div onclick="${hasDriverNote ? `clearNoteAlert('${id}')` : ''}">
-                                <div class="detail-label ${hasDriverNote ? 'note-text-glow' : ''}">NOTES ${hasDriverNote ? ' (NEW)' : ''}</div>
-                                <div class="detail-value ${hasDriverNote ? 'note-text-glow' : ''}">${p.other_info}</div>
-                            </div>` : '';
-
-                        card.innerHTML = `
-                            <div class="card-body">
-                                <div style="border-left: 4px solid #00ff41; background: rgba(0, 255, 65, 0.05); padding: 8px 12px; margin-bottom: 8px; border-radius: 0 4px 4px 0;">
-                                    ${showPickupName}
-                                    ${showPickupAddr}
-                                    ${showCity}
-                                </div>
-                                ${showDetails}
-                                <div style="border-left: 4px solid #007bff; background: rgba(0, 123, 255, 0.05); padding: 8px 12px; margin-bottom: 2px; border-radius: 0 4px 4px 0;">
-                                    ${showDropName}
-                                    ${showDropAddr}
-                                </div>
-                                ${(showPO || showNotes) ? `<div class="card-details-grid" style="margin-top:5px;">${showPO}${showNotes}</div>` : ''}
-                            </div>
-                            <div class="card-ctrl">
-                                ${isUnassigned ? 
-                                    `<select class="driver-select" onchange="assignDriver('${id}', this.value)"><option value="Unassigned" selected disabled hidden>ASSIGN DRIVER</option>${availableDrivers.map(d => `<option value="${d}">${d}</option>`).join('')}</select>` : 
-                                    `<div style="color:var(--active-green); font-weight:900; font-size:16px; text-transform:uppercase; letter-spacing:1px;">${p.assigned_to}</div>
-                                     <div class="flex-row">
-                                        <button class="edit-btn" onclick="startEditing('${id}')">Edit</button>
-                                        <button class="reset-btn" onclick="unassign('${id}')">RESET</button>
-                                     </div>`
-                                }
-                                <button onclick="deleteJob('${id}', '${type}')" style="color:red; border:none; background:none; font-weight:bold; cursor:pointer; font-size:16px;">&times;</button>
-                            </div>`;
-                    }
-                    list.appendChild(card);
                 }
 
                 // Filter for Archive View (Show all, or filter by search)
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
 
-                const archiveCard = document.createElement("div");
-                archiveCard.className = "history-item";
-                archiveCard.onclick = () => viewDetails(id, type);
-                archiveCard.style.cursor = "pointer";
+                const card = document.createElement("div");
+                card.className = "history-item";
+                card.onclick = () => viewDetails(id, type);
+                card.style.cursor = "pointer";
                 // Color coding borders based on type
-                archiveCard.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
+                card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
                 // Minimal Info: Driver, Contact, City
                 const driverHTML = p.assigned_to ? `<span class="hist-driver">${p.assigned_to}</span>` : `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
-                archiveCard.innerHTML = `
+                card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         ${driverHTML}
                         <div style="font-size:10px; color:#666;">INFO</div>
@@ -932,7 +750,7 @@
                     <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
                     <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
                 `;
-                archiveList.appendChild(archiveCard);
+                list.appendChild(card);
             });
         }
 
@@ -953,8 +771,8 @@
                 row.innerHTML = `
                     <div class="ds-name">${driver}</div>
                     <div class="ds-bars">
-                        ${pCount > 0 ? `<div class="ds-bar ds-p" style="flex:${pFlex};"><span>${pCount}</span></div>` : ''}
-                        ${dCount > 0 ? `<div class="ds-bar ds-d" style="flex:${dFlex};"><span>${dCount}</span></div>` : ''}
+                        ${pCount > 0 ? `<div class="ds-bar ds-p" style="flex:${pFlex};">${pCount}</div>` : ''}
+                        ${dCount > 0 ? `<div class="ds-bar ds-d" style="flex:${dFlex};">${dCount}</div>` : ''}
                     </div>
                 `;
                 statsPanel.appendChild(row);
