@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>E&C COMMAND CENTER</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffcc00">
+    
+    <style>
+        :root { --accent: #ffcc00; --bg: #0a0a0a; --card: #161616; --text: #eee; --wpg: #2196f3; --brdn: #9c27b0; --active-green: #00ff41; --archive-orange: #ff6600; --note-blue: #00d4ff; --pro-blue: #007bff; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
+        
+        header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        
+        .header-logo {
+            height: 24px;
+            width: auto;
+            margin-right: 10px;
+            vertical-align: middle;
+            filter: drop-shadow(0 0 5px var(--accent));
+            animation: logo-glow 2s infinite alternate;
+        }
+
+        @keyframes logo-glow {
+            from { filter: drop-shadow(0 0 2px var(--accent)); transform: scale(1); }
+            to { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.05); }
+        }
+
+        /* GREEN DOT PULSING ANIMATION */
+        @keyframes dot-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pulsing-dot {
+            animation: dot-pulse 2s infinite ease-in-out;
+        }
+
+        /* LOCATE DRIVERS BUTTON */
+        #locate-btn {
+            background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
+            color: #000080;
+            border: none;
+            border-radius: 4px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 0;
+            width: 100%;
+            height: 42px;
+            cursor: pointer;
+            font-size: 11px;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite;
+        }
+
+        /* MAP MODAL */
+        #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
+        #map { width: 100%; height: 100%; }
+        .close-map { position: absolute; top: 20px; right: 20px; z-index: 3001; background: red; color: white; border: none; padding: 10px 20px; font-weight: 900; border-radius: 5px; cursor: pointer; }
+
+        #install-btn { 
+            display: none; 
+            background: var(--pro-blue); 
+            color: #fff; 
+            border: none; 
+            padding: 8px 14px; 
+            font-size: 11px; 
+            font-weight: 900; 
+            border-radius: 4px; 
+            cursor: pointer;
+            text-transform: uppercase;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite, fadeIn 0.5s ease-in;
+            z-index: 1002;
+        }
+
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes subtle-glow {
+            0% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
+            50% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); border-color: var(--accent); }
+            100% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
+        }
+        .glow-field { border: 1px solid #444; }
+
+        .stats-bar { display: flex; background: #111; padding: 5px; border-bottom: 1px solid #333; justify-content: space-around; align-items: center; }
+        #entry-panel { background: #0f0f0f; border-bottom: 2px solid #333; padding: 12px 15px; }
+        #board-panel { padding: 15px; flex: 1; }
+        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0 5px; transition: all 0.3s; }
+        .stat-label { display: block; font-size: 11px; color: #888; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-number { font-family: 'Courier New', monospace; font-weight: 900; line-height: 1; }
+        #stat-pending { font-size: 24px; color: var(--accent); }
+        #stat-assigned { font-size: 24px; color: var(--active-green); }
+        #stat-note { font-size: 24px; color: var(--note-blue); }
+        
+        .high-alert { background: #1a1a00 !important; border: 2px solid var(--active-green); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); animation: alert-glow 0.6s infinite alternate; }
+        @keyframes alert-glow { from { border-color: #333; } to { border-color: var(--active-green); } }
+        
+        .unassigned-glow { border: 2px solid var(--accent) !important; z-index: 10; animation: pro-glow 1.2s infinite ease-in-out; }
+        @keyframes pro-glow {
+            0% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
+            50% { box-shadow: 0 0 25px var(--accent), inset 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.01); border-color: var(--accent); }
+            100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
+        }
+
+        @keyframes inner-pulse {
+            0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+            50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
+            100% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+        }
+
+        .shiny-text {
+            background: linear-gradient(to right, var(--accent) 20%, #fff 50%, var(--accent) 80%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: text-shine 3s linear infinite;
+        }
+        @keyframes text-shine { to { background-position: 200% center; } }
+
+        details > summary { list-style: none; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
+
+        .note-highlight { border: 2px solid var(--note-blue) !important; animation: note-glow 1.5s infinite; }
+        .note-text-glow { color: var(--note-blue) !important; font-weight: 900; animation: text-pulse 1.5s infinite; cursor: pointer; }
+        @keyframes note-glow {
+            0% { box-shadow: 0 0 5px var(--note-blue); }
+            50% { box-shadow: 0 0 20px var(--note-blue); }
+            100% { box-shadow: 0 0 5px var(--note-blue); }
+        }
+        @keyframes text-pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        input, select, textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 16px; margin-bottom: 6px; box-sizing: border-box; }
+        .flex-row { display: flex; gap: 8px; }
+        .driver-select { width: 100%; background: #000; color: var(--accent); border: 1px solid #555; font-weight: bold; padding: 10px; border-radius: 4px; }
+        button.primary { width: 100%; padding: 18px; background: var(--accent); color: #000; font-weight: 900; border: none; cursor: pointer; border-radius: 4px; text-transform: uppercase; font-size: 18px; animation: inner-pulse 2s infinite; }
+        
+        .dispatch-card { background: #111; border: 1px solid #444; border-left: 6px solid var(--accent); margin-bottom: 30px; border-radius: 4px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.7); overflow: hidden; position: relative; }
+        .card-body { padding: 15px; }
+        .card-ctrl { background: #1c1c1c; padding: 12px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 0 0 8px 8px; }
+        .addr { font-weight: 800; font-size: 17px; margin: 6px 0; }
+        .loc-tag { font-size: 16px; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; background: #333; color: #fff; border: 1px solid #555; display: inline-block; margin-bottom: 8px; }
+        .pkg-badge { font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 5px; border-radius: 3px; margin-left: 10px; vertical-align: middle; }
+        .reset-btn { background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        
+        .edit-btn { background: #444; color: var(--accent); border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .save-btn { background: var(--active-green); color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .edit-input { animation: subtle-glow 3s infinite ease-in-out; }
+
+        .history-box { margin-top: 30px; border-top: 2px dashed #333; padding: 15px; background: #080808; display: flex; gap: 15px; flex-wrap: wrap; }
+        .archive-column { flex: 1; min-width: 300px; border-right: 1px dashed #333; padding-right: 10px; }
+        .archive-column:last-child { border-right: none; padding-right: 0; }
+        .archive-title { font-size: 14px; font-weight: 900; color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
+
+        .new-entry-pop { animation: archive-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; z-index: 10; }
+        @keyframes archive-pop {
+            0% { transform: scale(0.5) translateY(-20px); opacity: 0; background: var(--active-green); box-shadow: 0 0 50px var(--active-green); }
+            50% { transform: scale(1.05); background: #333; box-shadow: 0 0 20px var(--active-green); }
+            100% { transform: scale(1); opacity: 1; background: #111; box-shadow: none; }
+        }
+
+        .hist-driver { background: var(--active-green); color: #000; font-weight: 900; padding: 3px 8px; border-radius: 3px; font-size: 13px; text-transform: uppercase; }
+        .hist-time { font-size: 11px; color: var(--accent); margin-top: 8px; font-family: monospace; font-weight: bold; }
+        .hist-city { font-size: 14px; font-weight: 900; background: #2a2a2a; color: #fff; padding: 3px 8px; border-radius: 4px; margin-right: 10px; vertical-align: middle; text-transform: uppercase; border: 1px solid #444; }
+        .hist-name { font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
+        
+        .driver-map-label {
+            color: #ffff00 !important;
+            font-weight: 900;
+            font-size: 14px;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+
+        .card-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; font-size: 18px; }
+        .detail-label { color: #888; text-transform: uppercase; font-size: 14px; font-weight: 900; margin-bottom: 2px; }
+        .detail-value { color: #fff; margin-bottom: 5px; font-weight: 500; }
+
+        .more-btn { width: 100%; padding: 15px; background: #222; color: var(--accent); border: 1px solid #444; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        
+        #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 2px solid var(--accent); padding: 10px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
+        #archive-search { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: var(--accent); font-weight: bold; border-radius: 4px; font-size: 16px; }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: #161616; margin: 15% auto; padding: 20px; width: 85%; max-width: 500px; border: 2px solid var(--accent); color: #eee; border-radius: 8px; }
+
+        /* LOGIN OVERLAY */
+        #login-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        .login-box { width: 100%; max-width: 350px; background: #111; padding: 30px; border-radius: 15px; border: 1px solid #333; text-align: center; }
+        .login-input { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 18px; outline: none; }
+        .login-submit { width: 100%; padding: 15px; margin-top: 15px; background: var(--accent); border: none; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        #user-display { color: var(--active-green); font-size: 12px; font-weight: 900; text-transform: uppercase; animation: fadeIn 1s ease-out; margin-bottom: 5px; }
+
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: #1a1a1a; border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; color: #eee; font-weight: bold; }
+        .suggestion-item:hover { background: var(--accent); color: #000; }
+
+        @keyframes voice-glow {
+            0% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
+            50% { filter: drop-shadow(0 0 8px var(--active-green)); transform: scale(1.1); fill: #fff; }
+            100% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
+        }
+        .voice-active { animation: voice-glow 1.5s infinite; fill: var(--active-green) !important; }
+        
+        .mode-switch-container { display: flex; margin-bottom: 10px; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
+        .mode-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; font-size: 14px; background: #111; color: #555; transition: 0.3s; }
+        .mode-btn.active-mode { background: var(--accent); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; }
+
+        /* GRAPH INDICATOR STYLES */
+        #driver-stats-panel { background: #111; padding: 10px; border-bottom: 2px solid #333; display: flex; flex-direction: column; gap: 5px; }
+        .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #1a1a1a; border-radius: 4px; animation: slideIn 0.3s ease-out; border: 1px solid #2a2a2a; }
+        .ds-name { color: #fff; font-weight: 900; font-size: 12px; width: 60px; text-transform: uppercase; }
+        .ds-bars { flex: 1; display: flex; gap: 5px; margin-left: 10px; height: 18px; }
+        .ds-bar { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #000; border-radius: 3px; min-width: 0; transition: flex 0.5s; overflow: hidden; }
+        .ds-p { background: var(--accent); box-shadow: 0 0 5px rgba(255, 204, 0, 0.2); }
+        .ds-d { background: var(--active-green); box-shadow: 0 0 5px rgba(0, 255, 65, 0.2); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div id="login-overlay">
+    <div class="login-box">
+        <h2 style="color: var(--accent); font-weight: 900;">COMMAND LOGIN</h2>
+        <input type="text" id="login-user" class="login-input" placeholder="Username" autofocus>
+        <input type="password" id="login-pin" class="login-input" placeholder="Pin">
+        <button class="login-submit" onclick="attemptLogin()">Authorize</button>
+    </div>
+</div>
+
+<header>
+    <div style="display: flex; flex-direction: column; width: 100%;">
+        <div id="user-display"></div>
+        <div style="display: flex; align-items: center; overflow: hidden;">
+            <img src="icon-512.png" class="header-logo" alt="E&C Logo">
+            <span class="shiny-text" style="font-size: 20px; font-weight: 900; white-space: nowrap;">E&C COMMAND CENTER</span>
+        </div>
+    </div>
+    <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap;"></div>
+</header>
+
+<div class="stats-bar">
+    <div id="pending-box" class="stat-box" onclick="requestNotifyPermission()" style="cursor:pointer;">
+        <span class="stat-label">Pending</span>
+        <div id="stat-pending" class="stat-number">0</div>
+    </div>
+
+    <div class="stat-box">
+        <button id="locate-btn" onclick="openMap()">Driver Map</button>
+    </div>
+
+    <div id="assigned-box" class="stat-box">
+        <span class="stat-label">Assigned</span>
+        <div id="stat-assigned" class="stat-number">0</div>
+    </div>
+    <div id="note-box" class="stat-box" style="display:none;"><span class="stat-label">Note</span><div id="stat-note" class="stat-number">0</div></div>
+</div>
+
+<div id="entry-panel">
+    <div class="mode-switch-container">
+        <button class="mode-btn active-mode" id="btn-mode-pickup" onclick="setMode('pickup')">Schedule Pickup</button>
+        <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Schedule Delivery</button>
+    </div>
+
+    <div style="position:relative; margin-bottom: 8px;">
+        <div style="position:absolute; right:10px; top:12px; z-index:10; font-size:11px; font-weight:bold; cursor:pointer; color: #757575;" onclick="resetFormFields()">RESET</div>
+    </div>
+
+    <div id="top-input-section"></div>
+    
+    <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
+
+    <div class="flex-row">
+        <input type="text" id="f-po" placeholder="PO / Reference" style="flex: 1;">
+        <input type="text" id="f-info" placeholder="Driver Notes..." style="flex: 1.5;">
+    </div>
+
+    <div id="bottom-input-section" style="margin-top: 8px;"></div>
+
+    <select id="f-driver" class="driver-select" style="margin-bottom: 8px; border: 1px solid var(--accent);">
+        <option value="Unassigned" selected disabled hidden>Assign Driver</option>
+        <option value="Unassigned">UNASSIGNED</option>
+        <option value="Matt">Matt</option>
+        <option value="Touch">Touch</option>
+        <option value="Julian">Julian</option>
+        <option value="Jess">Jess</option>
+        <option value="Alicia">Alicia</option>
+        <option value="Kayla">Kayla</option>
+    </select>
+    <div style="display: flex; gap: 8px;">
+        <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
+        <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #000; border: 1px solid #fff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: inner-pulse 2s infinite;"><svg id="mic-icon" viewBox="0 0 24 24" width="28" height="28" style="fill: #fff; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+    </div>
+</div>
+
+<div id="driver-stats-panel"></div>
+
+<div style="display:none;">
+    <div id="group-pickup">
+        <div style="position:relative;">
+            <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
+            <div id="suggestions" class="suggestions-box"></div>
+        </div>
+        <div class="flex-row">
+            <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
+            <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+        </div>
+    </div>
+
+    <div id="group-drop">
+        <div style="position:relative;">
+            <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
+            <div id="drop-suggestions" class="suggestions-box"></div>
+        </div>
+        <div class="flex-row">
+            <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
+            <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+        </div>
+    </div>
+</div>
+
+<div id="board-panel">
+    <div class="history-box">
+        <div class="archive-column">
+            <div class="archive-title" style="color:var(--archive-orange);">Pickups</div>
+            <div id="list-pickups"></div>
+        </div>
+        <div class="archive-column">
+            <div class="archive-title" style="color:#00ff41;">Deliveries</div>
+            <div id="list-deliveries"></div>
+        </div>
+    </div>
+</div>
+
+<div id="search-footer">
+    <input type="text" id="archive-search" placeholder="SEARCH ARCHIVE" onkeyup="renderData()" onkeydown="handleSearchKey(event)">
+    <button id="install-btn">Install App</button>
+</div>
+
+<div id="map-modal">
+    <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
+    <div id="map"></div>
+</div>
+
+<div id="detailsModal" class="modal" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h2 id="m-title" style="color:var(--accent); margin-top:0;">Job Details</h2>
+        <div id="m-body"></div>
+        <div id="m-note-section" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+            <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px;"></textarea>
+            <button class="save-btn" id="m-note-save" style="width: 100%; padding: 12px; font-size: 14px;">Add Note to Job</button>
+        </div>
+        <button class="primary" style="margin-top:20px; padding:10px; background:#444;" onclick="document.getElementById('detailsModal').style.display='none'">DONE</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ"></script>
+
+<script>
+    firebase.initializeApp({
+        apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
+        authDomain: "eandccourier-36fcc.firebaseapp.com",
+        databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
+        projectId: "eandccourier-36fcc"
+    });
+
+    const db = firebase.database();
+    let rawPickups = {};
+    let rawDropoffs = {};
+    let addressData = {};
+    let deliveryData = {};
+    let currentUser = localStorage.getItem('ec_command_user');
+    let currentMode = 'pickup';
+
+    function attemptLogin() {
+        const user = document.getElementById('login-user').value.trim();
+        const pin = document.getElementById('login-pin').value.trim();
+        if(!user || !pin) return;
+        db.ref("command_secrets").child(user).once('value', s => {
+            if(s.exists() && s.val().toString() === pin) {
+                localStorage.setItem('ec_command_user', user);
+                currentUser = user;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('user-display').innerText = `Logged in as: ${user}`;
+            } else {
+                alert("Invalid Credentials");
+            }
+        });
+    }
+
+    if(currentUser) {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
+    }
+
+    function formatTime12(ts) {
+        if (!ts) return '--:--';
+        const d = new Date(ts);
+        if (isNaN(d.getTime())) return '--:--';
+        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    // MAP LOGIC
+    let mainMap;
+    let mapMarkers = {};
+
+    function openMap() {
+        document.getElementById('map-modal').style.display = 'block';
+        if (!mainMap) {
+            mainMap = new google.maps.Map(document.getElementById("map"), {
+                gestureHandling: "greedy",
+                styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
+            });
+        }
+        
+        db.ref('driver_locations').on('value', (snapshot) => {
+            const drivers = snapshot.val();
+            const bounds = new google.maps.LatLngBounds();
+            let hasDrivers = false;
+
+            for (let name in drivers) {
+                const driver = drivers[name];
+                const pos = { lat: driver.lat, lng: driver.lng };
+                const updateTS = driver.gps_timestamp || driver.timestamp || driver.last_seen;
+                const timeStr = formatTime12(updateTS);
+                const d = new Date(updateTS);
+                const dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+                const markerLabelText = `${name}\n${timeStr} | ${dateStr}`;
+                
+                bounds.extend(pos);
+                hasDrivers = true;
+
+                if (mapMarkers[name]) {
+                    mapMarkers[name].setPosition(pos);
+                    mapMarkers[name].setLabel({ text: markerLabelText, className: "pulsing-dot driver-map-label" });
+                } else {
+                    mapMarkers[name] = new google.maps.Marker({
+                        position: pos, map: mainMap,
+                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00ff41', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
+                        label: { text: markerLabelText, className: "pulsing-dot driver-map-label" },
+                        title: name
+                    });
+                }
+            }
+            if (hasDrivers) {
+                mainMap.fitBounds(bounds);
+                google.maps.event.addListenerOnce(mainMap, 'idle', () => { if (mainMap.getZoom() > 16) mainMap.setZoom(16); });
+            }
+        });
+    }
+
+    function closeMap() {
+        document.getElementById('map-modal').style.display = 'none';
+        db.ref('driver_locations').off();
+    }
+
+    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+    function requestNotifyPermission() {
+        if ("Notification" in window) Notification.requestPermission();
+    }
+
+    function updateClock() { document.getElementById('clock').innerText = formatTime12(new Date()); }
+    setInterval(updateClock, 1000); updateClock();
+
+    function setMode(mode) {
+        currentMode = mode;
+        const top = document.getElementById('top-input-section');
+        const bot = document.getElementById('bottom-input-section');
+        const grpPickup = document.getElementById('group-pickup');
+        const grpDrop = document.getElementById('group-drop');
+        const btnPickup = document.getElementById('btn-mode-pickup');
+        const btnDelivery = document.getElementById('btn-mode-delivery');
+
+        if(mode === 'pickup') {
+            top.appendChild(grpPickup);
+            bot.appendChild(grpDrop);
+            btnPickup.classList.add('active-mode');
+            btnDelivery.classList.remove('active-mode', 'delivery-mode');
+        } else {
+            top.appendChild(grpDrop);
+            bot.appendChild(grpPickup);
+            btnPickup.classList.remove('active-mode');
+            btnDelivery.classList.add('active-mode', 'delivery-mode');
+        }
+    }
+
+    // Initialize Mode
+    setMode('pickup');
+
+    firebase.auth().signInAnonymously().then(() => {
+        db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
+        
+        db.ref("pickups").on("value", snapshot => {
+            rawPickups = snapshot.val() || {};
+            renderData();
+        });
+
+        db.ref("dropoffs").on("value", snapshot => {
+            rawDropoffs = snapshot.val() || {};
+            renderData();
+        });
+    });
+
+    function handleSearchKey(e) {
+        if (e.key === "Enter") {
+            e.target.blur();
+            document.getElementById('board-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function resetFormFields() {
+        ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.value = "";
+        });
+    }
+
+    function startVoiceEntry() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) return alert("Voice API not supported");
+        
+        const rec = new Speech();
+        rec.lang = 'en-US';
+        rec.start();
+        
+        const icon = document.getElementById('mic-icon');
+        icon.classList.add('voice-active');
+        
+        rec.onresult = (e) => {
+            let cmdStr = e.results[0][0].transcript.toLowerCase();
+            if (cmdStr.trim() === "dispatch") { createJob(); return; }
+            
+            // Basic number conversion
+            const numWords = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
+            Object.keys(numWords).forEach(word => {
+                const reg = new RegExp(`\\b${word}\\b`, 'g');
+                cmdStr = cmdStr.replace(reg, numWords[word]);
+            });
+
+            // Logic to populate fields (simplified for merged app)
+            let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess|alicia|kayla)\b/);
+            if (drvMatch) {
+                let dName = drvMatch[1].charAt(0).toUpperCase() + drvMatch[1].slice(1);
+                document.getElementById('f-driver').value = dName;
+            }
+        };
+        
+        rec.onend = () => { icon.classList.remove('voice-active'); };
+    }
+
+    function handleNameInput(val) {
+        const box = document.getElementById('suggestions');
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectClient('${k}')">${k}</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function selectClient(name) {
+        const data = addressData[name];
+        if(!data) return;
+        document.getElementById('f-name').value = name;
+        document.getElementById('f-pickup').value = data.address || "";
+        document.getElementById('f-city').value = data.city || "";
+        document.getElementById('suggestions').style.display = 'none';
+    }
+
+    function handleDropNameInput(val) {
+        const box = document.getElementById('drop-suggestions');
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectDropClient('${k}')">${k}</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function selectDropClient(name) {
+        const data = addressData[name];
+        if(!data) return;
+        document.getElementById('f-drop-name').value = name;
+        document.getElementById('f-drop-address').value = data.address || "";
+        document.getElementById('f-drop-city').value = data.city || "";
+        document.getElementById('drop-suggestions').style.display = 'none';
+    }
+
+    function createJob() {
+        const pickup = document.getElementById('f-pickup').value;
+        const drop = document.getElementById('f-drop-address').value + (document.getElementById('f-drop-city').value ? ", " + document.getElementById('f-drop-city').value : "");
+        const city = document.getElementById('f-city').value;
+        const name = document.getElementById('f-name').value;
+        const dropName = document.getElementById('f-drop-name').value;
+        const assigned = document.getElementById('f-driver').value;
+        const infoRaw = document.getElementById('f-info').value;
+        const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
+
+        if(!pickup || !name || !dropName) return alert("Please fill in main contacts and addresses");
+
+        const jobData = {
+            city: city, pickup_location: pickup, destination: drop,
+            delivery_name: dropName,
+            package_details: document.getElementById('f-pkg-details').value,
+            po_number: document.getElementById('f-po').value,
+            name: name,
+            other_info: info,
+            status: 'pending', 
+            assigned_to: assigned, 
+            timestamp: Date.now()
+        };
+
+        const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
+        db.ref(targetNode).push(jobData);
+        
+        // Save addresses for autosuggest
+        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city });
+        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value });
+
+        resetFormFields();
+        document.getElementById('f-driver').value = "Unassigned";
+    }
+
+    function viewDetails(id, type) {
+        const isPickup = type === 'pickup';
+        const data = isPickup ? rawPickups[id] : rawDropoffs[id];
+        if(!data) return;
+
+        const created = data.timestamp ? new Date(data.timestamp).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "N/A";
+        const finished = data.completed_at ? new Date(data.completed_at).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "Pending";
+        
+        document.getElementById('m-body').innerHTML = `
+            <div style="background:${isPickup?'#ffcc00':'#00ff41'}; color:#000; padding:5px; font-weight:900; text-align:center; margin-bottom:10px;">${isPickup?'PICKUP':'DELIVERY'}</div>
+            <p><strong>Pickup:</strong> ${data.pickup_location} (${data.city})</p>
+            <p><strong>Drop:</strong> ${data.destination}</p>
+            <p><strong>Driver:</strong> ${data.assigned_to}</p>
+            <hr style="border:0; border-top:1px solid #333">
+            <p><strong>Details:</strong> ${data.package_details || "-"}</p>
+            <p><strong>PO:</strong> ${data.po_number || "-"}</p>
+            <p><strong>Contact:</strong> ${data.name || "-"}</p>
+            <p id="m-display-notes"><strong>Notes:</strong> ${data.other_info || "None"}</p>
+            <p class="hist-time">Created: ${created}</p>
+            <p class="hist-time">Finished: ${finished}</p>
+            <button onclick="deleteJob('${id}', '${type}')" style="background:red; color:white; border:none; padding:8px; border-radius:4px; margin-top:10px;">DELETE JOB</button>
+        `;
+        
+        const saveBtn = document.getElementById('m-note-save');
+        saveBtn.onclick = () => {
+            const noteInput = document.getElementById('m-note-input');
+            const newNote = noteInput.value.trim();
+            if(!newNote) return;
+            const updatedNotes = (data.other_info ? data.other_info + " | " : "") + `[${currentUser}]: ` + newNote;
+            const node = isPickup ? 'pickups' : 'dropoffs';
+            db.ref(node).child(id).update({ other_info: updatedNotes }).then(() => {
+                document.getElementById('m-display-notes').innerHTML = `<strong>Notes:</strong> ${updatedNotes}`;
+                noteInput.value = "";
+            });
+        };
+
+        document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function deleteJob(id, type) {
+        if(confirm("Delete this dispatch completely?")) {
+            const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+            db.ref(node).child(id).remove();
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+    }
+
+    function renderData() {
+        const pList = document.getElementById("list-pickups"); 
+        const dList = document.getElementById("list-deliveries");
+        const statsPanel = document.getElementById("driver-stats-panel");
+        const searchTerm = document.getElementById("archive-search").value.toLowerCase();
+        
+        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
+        
+        let pending = 0, assignedCount = 0, noteCount = 0;
+        let driverStats = {};
+
+        // INIT DRIVERS from Select
+        const driverOptions = document.getElementById('f-driver').options;
+        for(let i=0; i<driverOptions.length; i++){
+            const dVal = driverOptions[i].value;
+            if(dVal !== 'Unassigned' && dVal !== 'Assign Driver') {
+                driverStats[dVal] = { p: 0, d: 0 };
+            }
+        }
+
+        function processJobs(obj, type) {
+            const list = type === 'pickup' ? pList : dList;
+            const entries = Object.entries(obj).reverse();
+            
+            entries.forEach(([id, p]) => {
+                const assignedTo = p.assigned_to;
+                if(p.status !== 'completed') {
+                    if(!assignedTo || assignedTo === 'Unassigned') pending++;
+                    else {
+                        assignedCount++;
+                        if(driverStats[assignedTo]) {
+                            if(type === 'pickup') driverStats[assignedTo].p++;
+                            else driverStats[assignedTo].d++;
+                        }
+                    }
+                    if(p.driver_edited_note) noteCount++;
+                }
+
+                // Filter for Archive View (Show all, or filter by search)
+                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
+                if(searchTerm && !textSearch.includes(searchTerm)) return;
+
+                const card = document.createElement("div");
+                card.className = "history-item";
+                card.onclick = () => viewDetails(id, type);
+                card.style.cursor = "pointer";
+                // Color coding borders based on type
+                card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
+                
+                // Minimal Info: Driver, Contact, City
+                const driverHTML = p.assigned_to ? `<span class="hist-driver">${p.assigned_to}</span>` : `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
+                const contact = type === 'pickup' ? p.name : p.delivery_name;
+                
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        ${driverHTML}
+                        <div style="font-size:10px; color:#666;">INFO</div>
+                    </div>
+                    <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
+                    <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        processJobs(rawPickups, 'pickup');
+        processJobs(rawDropoffs, 'delivery');
+
+        // RENDER DRIVER STATS
+        Object.keys(driverStats).forEach(driver => {
+            const pCount = driverStats[driver].p;
+            const dCount = driverStats[driver].d;
+            if(pCount > 0 || dCount > 0) {
+                const total = pCount + dCount;
+                const pFlex = total > 0 ? (pCount / total) : 0;
+                const dFlex = total > 0 ? (dCount / total) : 0;
+                
+                const row = document.createElement("div");
+                row.className = "driver-stat-row";
+                row.innerHTML = `
+                    <div class="ds-name">${driver}</div>
+                    <div class="ds-bars">
+                        ${pCount > 0 ? `<div class="ds-bar ds-p" style="flex:${pFlex};">${pCount}</div>` : ''}
+                        ${dCount > 0 ? `<div class="ds-bar ds-d" style="flex:${dFlex};">${dCount}</div>` : ''}
+                    </div>
+                `;
+                statsPanel.appendChild(row);
+            }
+        });
+
+        document.getElementById("stat-pending").innerText = pending;
+        document.getElementById("stat-assigned").innerText = assignedCount;
+        document.getElementById("stat-note").innerText = noteCount;
+        document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
+        document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
+    }
+</script>
+</body>
+</html>
