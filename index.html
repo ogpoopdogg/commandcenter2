@@ -653,32 +653,32 @@
         const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 
         const html = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <div style="font-weight:900; font-size:14px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
-                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:4px 8px; font-weight:bold; cursor:pointer;">DELETE</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div style="font-weight:900; font-size:18px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
+                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:8px 12px; font-weight:bold; cursor:pointer; font-size:12px;">DELETE</button>
             </div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; font-size:12px;">
-                <select id="e-driver" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-weight:bold; font-size:14px;">${driverOpts}</select>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:16px;">
+                <select id="e-driver" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-weight:bold; font-size:16px;">${driverOpts}</select>
                 
-                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
+                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
                 
-                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
-                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
+                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
                 
-                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
+                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
                 
-                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
-                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
+                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
 
-                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:5px; background:#222; border:1px solid #444; color:#fff; font-size:14px;">
+                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
                 
-                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:35px; padding:5px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:14px;">${val(data.other_info)}</textarea>
+                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:60px; padding:12px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:16px;">${val(data.other_info)}</textarea>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:6px; margin-top:8px;">
-                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:10px; font-weight:bold; cursor:pointer;">CANCEL</button>
-                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:10px; font-weight:900; text-transform:uppercase; cursor:pointer;">SAVE</button>
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px; margin-top:15px;">
+                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:15px; font-weight:bold; cursor:pointer; font-size:14px;">CANCEL</button>
+                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:15px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:14px;">SAVE</button>
             </div>
         `;
         
