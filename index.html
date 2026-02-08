@@ -54,6 +54,22 @@
             box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
             animation: pulse-blue 2s infinite;
         }
+        
+        .route-btn {
+            background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
+            color: #000080;
+            border: none;
+            border-radius: 3px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 9px;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+            animation: pulse-blue 2s infinite;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
 
         /* MAP MODAL */
         #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
@@ -380,7 +396,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry"></script>
 
 <script>
     firebase.initializeApp({
@@ -440,6 +456,8 @@
     // MAP LOGIC
     let mainMap;
     let mapMarkers = {};
+    let activePolyline = null;
+    let listeningRef = null;
 
     function openMap() {
         document.getElementById('map-modal').style.display = 'block';
@@ -486,9 +504,61 @@
         });
     }
 
+    function viewDriverRoute(name, e) {
+        if(e) e.stopPropagation();
+        document.getElementById('map-modal').style.display = 'block';
+        
+        if (!mainMap) {
+            mainMap = new google.maps.Map(document.getElementById("map"), {
+                gestureHandling: "greedy",
+                styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
+            });
+        }
+        
+        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
+        if(listeningRef) { listeningRef.off(); listeningRef = null; }
+        db.ref('driver_locations').off();
+
+        listeningRef = db.ref(`driver_locations/${name}`);
+        listeningRef.on('value', snap => {
+            const data = snap.val();
+            for(let k in mapMarkers) mapMarkers[k].setMap(null);
+            mapMarkers = {};
+
+            if(!data) return;
+
+            const pos = { lat: data.lat, lng: data.lng };
+            const timeStr = formatTime12(data.gps_timestamp || Date.now());
+
+            const marker = new google.maps.Marker({
+                position: pos, map: mainMap,
+                icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00ff41', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7 },
+                label: { text: `${name} ${timeStr}`, className: "pulsing-dot driver-map-label" }
+            });
+            mapMarkers[name] = marker;
+
+            if(data.active_route && !activePolyline) {
+                 const path = google.maps.geometry.encoding.decodePath(data.active_route);
+                 activePolyline = new google.maps.Polyline({
+                     path: path, geodesic: true,
+                     strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5,
+                     map: mainMap
+                 });
+                 const bounds = new google.maps.LatLngBounds();
+                 path.forEach(p => bounds.extend(p));
+                 mainMap.fitBounds(bounds);
+            } else if (!activePolyline) {
+                 mainMap.setCenter(pos);
+                 mainMap.setZoom(15);
+            }
+        });
+    }
+
     function closeMap() {
         document.getElementById('map-modal').style.display = 'none';
         db.ref('driver_locations').off();
+        if(listeningRef) { listeningRef.off(); listeningRef = null; }
+        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
     }
 
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -825,7 +895,10 @@
                 row.style.cursor = "pointer";
                 row.onclick = () => filterByDriver(driver);
                 row.innerHTML = `
-                    <div class="ds-name">${driver}</div>
+                    <div style="display:flex; align-items:center;">
+                        <div class="ds-name">${driver}</div>
+                        <button class="route-btn" onclick="viewDriverRoute('${driver}', event)">View Current Route</button>
+                    </div>
                     <div class="ds-bars">
                         ${pCount > 0 ? `<div class="ds-bar ds-p" style="flex:${pFlex};">${pCount}</div>` : ''}
                         ${dCount > 0 ? `<div class="ds-bar ds-d" style="flex:${dFlex};">${dCount}</div>` : ''}
