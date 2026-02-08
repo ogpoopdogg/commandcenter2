@@ -406,8 +406,11 @@
     let rawDropoffs = {};
     let addressData = {};
     let deliveryData = {};
+    let lastKnownCompletedId = null;
+    let editingId = null; 
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
+    let availableDrivers = [];
 
     function attemptLogin() {
         const user = document.getElementById('login-user').value.trim();
@@ -526,6 +529,19 @@
     setMode('pickup');
 
     firebase.auth().signInAnonymously().then(() => {
+        db.ref("driver_secrets").on("value", snap => {
+            availableDrivers = Object.keys(snap.val() || {});
+            const sel = document.getElementById('f-driver');
+            sel.innerHTML = '<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>';
+            availableDrivers.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.innerText = d;
+                sel.appendChild(opt);
+            });
+            renderData();
+        });
+
         db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
         
         db.ref("pickups").on("value", snapshot => {
@@ -536,6 +552,19 @@
         db.ref("dropoffs").on("value", snapshot => {
             rawDropoffs = snapshot.val() || {};
             renderData();
+        });
+        
+        db.ref("dropoffs").limitToLast(1).on("child_added", snapshot => {
+            const newJob = snapshot.val();
+            const isFresh = (Date.now() - newJob.timestamp) < 10000;
+            if (isFresh && newJob.status === 'pending') {
+                alertSound.play();
+                if (Notification.permission === "granted") {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification("🚨 NEW JOB DISPATCHED", { body: `${newJob.destination}`, icon: 'icon-512.png', vibrate: [200, 100, 200], tag: 'new-job' });
+                    });
+                }
+            }
         });
     });
 
@@ -835,12 +864,16 @@
                     } else {
                         // NORMAL VIEW (Replicated from command1/2 logic but unified)
                         const showDetails = p.package_details ? `<div style="border: 1px solid #444; background: #111; margin: 6px 0; padding: 10px; font-family: 'Courier New', monospace; font-size: 16px; font-weight: 900; color: #ffcc00; border-radius: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); text-align: center; border-left: 4px solid #ffcc00;">${p.package_details}</div>` : '';
+                        
                         const showPickupName = p.name ? `<div class="addr"><span style="color:orange; font-weight:900;">Contact:</span> <span style="text-transform:uppercase; color:#fff;">${p.name}</span></div>` : '';
                         const showPickupAddr = p.pickup_location ? `<div class="addr"><span style="color:var(--archive-orange)">Address:</span> <span style="color:#eee;">${p.pickup_location}</span></div>` : '';
-                        const showCity = p.city ? `<div class="addr"><span style="color:var(--archive-orange)">City:</span> <span style="text-transform:uppercase; color:#eee;">${p.city}</span></div>` : '';
+                        const showCity = activeCity ? `<div class="addr"><span style="color:var(--archive-orange)">City:</span> <span style="text-transform:uppercase; color:#eee;">${activeCity}</span></div>` : '';
+                        
                         const showDropName = p.delivery_name ? `<div class="addr"><span style="color:#ccc; font-weight:900;">Deliver to:</span> <span style="text-transform:uppercase; color:#fff;">${p.delivery_name}</span></div>` : '';
                         const showDropAddr = p.destination ? `<div class="addr"><span style="color:#888">Address:</span> <span style="color:#eee;">${p.destination}</span></div>` : '';
+
                         const showPO = p.po_number ? `<div><div class="detail-label">PO / REF</div><div class="detail-value" style="font-family:'Courier New', monospace;">${p.po_number}</div></div>` : '';
+                        
                         const showNotes = p.other_info ? `
                             <div onclick="${hasDriverNote ? `clearNoteAlert('${id}')` : ''}">
                                 <div class="detail-label ${hasDriverNote ? 'note-text-glow' : ''}">NOTES ${hasDriverNote ? ' (NEW)' : ''}</div>
@@ -863,7 +896,7 @@
                             </div>
                             <div class="card-ctrl">
                                 ${isUnassigned ? 
-                                    `<select class="driver-select" onchange="assignDriver('${id}', this.value)"><option value="Unassigned" selected disabled hidden>ASSIGN DRIVER</option>${Object.keys(driverStats).map(d => `<option value="${d}">${d}</option>`).join('')}</select>` : 
+                                    `<select class="driver-select" onchange="assignDriver('${id}', this.value)"><option value="Unassigned" selected disabled hidden>ASSIGN DRIVER</option>${availableDrivers.map(d => `<option value="${d}">${d}</option>`).join('')}</select>` : 
                                     `<div style="color:var(--active-green); font-weight:900; font-size:16px; text-transform:uppercase; letter-spacing:1px;">${p.assigned_to}</div>
                                      <div class="flex-row">
                                         <button class="edit-btn" onclick="startEditing('${id}')">Edit</button>
