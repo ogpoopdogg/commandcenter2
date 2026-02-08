@@ -647,38 +647,61 @@
         const data = isPickup ? rawPickups[id] : rawDropoffs[id];
         if(!data) return;
 
-        const created = data.timestamp ? new Date(data.timestamp).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "N/A";
-        const finished = data.completed_at ? new Date(data.completed_at).toLocaleString([], { hour: 'numeric', minute: '2-digit', hour12: true, month: 'short', day: 'numeric' }) : "Pending";
-        
-        document.getElementById('m-body').innerHTML = `
-            <div style="background:${isPickup?'#ffcc00':'#00ff41'}; color:#000; padding:5px; font-weight:900; text-align:center; margin-bottom:10px;">${isPickup?'PICKUP':'DELIVERY'}</div>
-            <p><strong>Pickup:</strong> ${data.pickup_location} (${data.city})</p>
-            <p><strong>Drop:</strong> ${data.destination}</p>
-            <p><strong>Driver:</strong> ${data.assigned_to}</p>
-            <hr style="border:0; border-top:1px solid #333">
-            <p><strong>Details:</strong> ${data.package_details || "-"}</p>
-            <p><strong>PO:</strong> ${data.po_number || "-"}</p>
-            <p><strong>Contact:</strong> ${data.name || "-"}</p>
-            <p id="m-display-notes"><strong>Notes:</strong> ${data.other_info || "None"}</p>
-            <p class="hist-time">Created: ${created}</p>
-            <p class="hist-time">Finished: ${finished}</p>
-            <button onclick="deleteJob('${id}', '${type}')" style="background:red; color:white; border:none; padding:8px; border-radius:4px; margin-top:10px;">DELETE JOB</button>
+        const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
+        const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alicia', 'Kayla'];
+        const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
+
+        const html = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="font-weight:900; font-size:14px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
+                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:4px 8px; font-weight:bold; cursor:pointer;">DELETE</button>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                <select id="e-driver" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff; font-weight:bold;">${driverOpts}</select>
+                
+                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                
+                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                
+                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                
+                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:6px; background:#222; border:1px solid #444; color:#fff;">
+
+                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:6px; background:#222; border:1px solid #444; color:#fff;">
+                
+                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:45px; padding:6px; background:#222; border:1px solid #444; color:#fff; font-family:inherit;">${val(data.other_info)}</textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:8px; margin-top:10px;">
+                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:10px; font-weight:bold; cursor:pointer;">CANCEL</button>
+                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:10px; font-weight:900; text-transform:uppercase; cursor:pointer;">SAVE CHANGES</button>
+            </div>
         `;
         
-        const saveBtn = document.getElementById('m-note-save');
-        saveBtn.onclick = () => {
-            const noteInput = document.getElementById('m-note-input');
-            const newNote = noteInput.value.trim();
-            if(!newNote) return;
-            const updatedNotes = (data.other_info ? data.other_info + " | " : "") + `[${currentUser}]: ` + newNote;
-            const node = isPickup ? 'pickups' : 'dropoffs';
-            db.ref(node).child(id).update({ other_info: updatedNotes }).then(() => {
-                document.getElementById('m-display-notes').innerHTML = `<strong>Notes:</strong> ${updatedNotes}`;
-                noteInput.value = "";
-            });
-        };
-
+        const modalContent = document.querySelector('#detailsModal .modal-content');
+        modalContent.innerHTML = html;
         document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function saveEdit(id, type) {
+        const updates = {
+            assigned_to: document.getElementById('e-driver').value,
+            package_details: document.getElementById('e-pkg').value,
+            po_number: document.getElementById('e-po').value,
+            name: document.getElementById('e-name').value,
+            pickup_location: document.getElementById('e-pickup').value,
+            city: document.getElementById('e-city').value,
+            delivery_name: document.getElementById('e-drop-name').value,
+            destination: document.getElementById('e-drop').value,
+            other_info: document.getElementById('e-note').value
+        };
+        const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+        db.ref(node).child(id).update(updates).then(() => {
+            document.getElementById('detailsModal').style.display = 'none';
+        });
     }
 
     function deleteJob(id, type) {
