@@ -132,6 +132,17 @@
             100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
         }
 
+        /* PENDING PULSE */
+        @keyframes blue-pulse {
+            0% { box-shadow: 0 0 5px #00d4ff; border-color: #00d4ff; }
+            50% { box-shadow: 0 0 20px #00d4ff; border-color: #fff; }
+            100% { box-shadow: 0 0 5px #00d4ff; border-color: #00d4ff; }
+        }
+        .pending-pulse {
+            border: 2px solid #00d4ff !important;
+            animation: blue-pulse 1s infinite alternate;
+        }
+
         @keyframes inner-pulse {
             0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
             50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
@@ -362,7 +373,6 @@
         <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
         <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #000; border: 1px solid #fff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: inner-pulse 2s infinite;"><svg id="mic-icon" viewBox="0 0 24 24" width="28" height="28" style="fill: #fff; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
     </div>
-    <div id="dispatch-feed" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;"></div>
 </div>
 
 <div id="driver-stats-panel"></div>
@@ -937,11 +947,9 @@
         const pList = document.getElementById("list-pickups"); 
         const dList = document.getElementById("list-deliveries");
         const statsPanel = document.getElementById("driver-stats-panel");
-        const feed = document.getElementById("dispatch-feed");
         const searchTerm = document.getElementById("archive-search").value.toLowerCase();
         
-        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = ""; 
-        if(feed) feed.innerHTML = "";
+        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
 
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
@@ -970,10 +978,8 @@
             
             entries.forEach(([id, p]) => {
                 const assignedTo = p.assigned_to;
-                const isPending = !assignedTo || assignedTo === 'Unassigned';
-
                 if(p.status !== 'completed') {
-                    if(isPending) pending++;
+                    if(!assignedTo || assignedTo === 'Unassigned') pending++;
                     else {
                         assignedCount++;
                         if(driverStats[assignedTo]) {
@@ -986,62 +992,47 @@
 
                 // Filter for Archive View (Show all, or filter by search)
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
-                const matchesSearch = !searchTerm || textSearch.includes(searchTerm);
-                const matchesDriver = !currentDriverFilter || p.assigned_to === currentDriverFilter;
+                if(searchTerm && !textSearch.includes(searchTerm)) return;
 
-                if(!matchesSearch || !matchesDriver) return;
+                if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
 
-                // POPULATE DISPATCH FEED (PENDING ONLY)
-                if(isPending && p.status !== 'completed' && feed) {
-                    const dCard = document.createElement("div");
-                    dCard.className = "dispatch-card";
-                    if(type === 'delivery') dCard.style.borderLeftColor = "var(--active-green)";
-                    
-                    const mainAddr = type === 'pickup' ? p.pickup_location : p.destination;
-                    const mainName = type === 'pickup' ? p.name : p.delivery_name;
-                    
-                    dCard.innerHTML = `
-                        <div class="card-body">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div class="loc-tag" style="background:${type==='pickup'?'#333':'#1a1a00'}; color:${type==='pickup'?'#fff':'var(--active-green)'}; border:1px solid ${type==='pickup'?'#555':'var(--active-green)'};">${type.toUpperCase()}</div>
-                                <div style="font-size:11px; font-weight:900; color:#666;">${formatTime12(p.timestamp)}</div>
-                            </div>
-                            <div class="addr" style="color:#fff; margin-top:8px;">${mainAddr || 'No Address'}</div>
-                            <div style="font-size:14px; color:#aaa; font-weight:bold;">${mainName || 'No Name'}</div>
-                            <div style="font-size:13px; color:#888; margin-top:4px;">${p.package_details ? `<span class="pkg-badge" style="margin-left:0;">${p.package_details}</span>` : ''}</div>
-                            ${p.other_info ? `<div style="margin-top:8px; font-style:italic; color:var(--note-blue); font-size:12px; border-top:1px solid #333; padding-top:4px;">${p.other_info}</div>` : ''}
-                        </div>
-                        <div class="card-ctrl">
-                            <div style="font-size:11px; font-weight:bold; color:#555;">${p.city || ''}</div>
-                            <button class="edit-btn" onclick="viewDetails('${id}', '${type}')">EDIT / ASSIGN</button>
-                        </div>
-                    `;
-                    feed.appendChild(dCard);
-                }
-
-                // POPULATE ARCHIVE LIST
                 const card = document.createElement("div");
                 card.className = "history-item";
+                
+                // Add pulse if pending
+                const isPending = !p.assigned_to || p.assigned_to === 'Unassigned';
+                if(isPending) card.classList.add('pending-pulse');
+
                 card.onclick = () => viewDetails(id, type);
                 card.style.cursor = "pointer";
+                // Color coding borders based on type
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
+                // Color Map Logic
                 const bg = dColors[p.assigned_to] || '#00ff41'; 
+                // Light colors need black text, dark colors need white text
                 const darkText = ['#00ff41', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
                 
-                const driverHTML = p.assigned_to && p.assigned_to !== 'Unassigned' ? 
+                const driverHTML = p.assigned_to ? 
                     `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
                     `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
-                
-                const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         ${driverHTML}
                         <div style="font-size:10px; color:#666;">INFO</div>
                     </div>
-                    <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
-                    <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
+                    <div style="margin-top:6px; padding-top:6px; border-top:1px solid #222;">
+                        <div style="font-size:10px; color:#aaa;">PICKUP</div>
+                        <div class="hist-name" style="color:#fff;">${p.name || '-'}</div>
+                        <div style="font-size:11px; color:#888;">${p.pickup_location || '-'}</div>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <div style="font-size:10px; color:#aaa;">DROP</div>
+                        <div class="hist-name" style="color:#fff;">${p.delivery_name || '-'}</div>
+                        <div style="font-size:11px; color:#888;">${p.destination || '-'}</div>
+                    </div>
+                    <div style="margin-top:4px; font-size:11px; color:#666; text-align:right;">${p.city || ''}</div>
                 `;
                 list.appendChild(card);
             });
@@ -1054,28 +1045,23 @@
         Object.keys(driverStats).forEach(driver => {
             const pCount = driverStats[driver].p;
             const dCount = driverStats[driver].d;
-            if(pCount > 0 || dCount > 0) {
-                const total = pCount + dCount;
-                const pFlex = total > 0 ? (pCount / total) : 0;
-                const dFlex = total > 0 ? (dCount / total) : 0;
-                
-                const color = dColors[driver] || '#fff';
+            
+            const color = dColors[driver] || '#fff';
 
-                const row = document.createElement("div");
-                row.className = "driver-stat-row";
-                row.style.cursor = "pointer";
-                row.onclick = () => filterByDriver(driver);
-                row.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <div class="ds-name" style="color:${color};">${driver}</div>
-                    </div>
-                    <div class="stat-info">
-                        ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
-                        ${dCount > 0 ? `<div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>` : ''}
-                    </div>
-                `;
-                statsPanel.appendChild(row);
-            }
+            const row = document.createElement("div");
+            row.className = "driver-stat-row";
+            row.style.cursor = "pointer";
+            row.onclick = () => filterByDriver(driver);
+            row.innerHTML = `
+                <div style="display:flex; align-items:center;">
+                    <div class="ds-name" style="color:${color};">${driver}</div>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>
+                    <div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>
+                </div>
+            `;
+            statsPanel.appendChild(row);
         });
 
         document.getElementById("stat-pending").innerText = pending;
