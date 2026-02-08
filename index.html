@@ -833,7 +833,7 @@
         const dropName = document.getElementById('f-drop-name').value;
         const assigned = document.getElementById('f-driver').value;
         const infoRaw = document.getElementById('f-info').value;
-        const info = infoRaw ? `(${currentUser}) ${infoRaw}` : "";
+        const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
 
         if(!pickup || !name || !dropName) return alert("Please fill in main contacts and addresses");
 
@@ -916,7 +916,7 @@
             city: document.getElementById('e-city').value,
             delivery_name: document.getElementById('e-drop-name').value,
             destination: document.getElementById('e-drop').value,
-            other_info: noteVal ? `(${currentUser}) ${noteVal}` : ""
+            other_info: noteVal
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(node).child(id).update(updates).then(() => {
