@@ -46,17 +46,8 @@
         }
 
         /* PULSING DOT ANIMATION FOR MAP */
-        @keyframes dot-pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
-        .pulsing-dot { animation: dot-pulse 1.5s infinite ease-in-out !important; }
-
-        /* MAP DRIVER NAME OVERLAY */
-        .map-driver-name {
-            position: absolute; top: 50px; left: 10px; z-index: 5;
-            color: #fff; font-weight: 900; font-size: 24px;
-            text-shadow: 2px 2px 0 #000; text-transform: uppercase;
-            background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px;
-            border: 1px solid var(--accent);
-        }
+        @keyframes dot-pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+        .pulsing-dot { animation: dot-pulse 3s infinite ease-in-out !important; }
 
         /* LOCATE DRIVERS BUTTON */
         #locate-btn {
@@ -574,13 +565,6 @@
         // Clear previous markers & controls
         for(let k in mapMarkers) { if(mapMarkers[k]) mapMarkers[k].setMap(null); }
         mapMarkers = {};
-        mainMap.controls[google.maps.ControlPosition.TOP_LEFT].clear();
-
-        // Add Name Overlay
-        const nameDiv = document.createElement('div');
-        nameDiv.className = "map-driver-name";
-        nameDiv.innerText = name;
-        mainMap.controls[google.maps.ControlPosition.TOP_LEFT].push(nameDiv);
 
         listeningRef = db.ref(`driver_locations/${name}`);
         listeningRef.on('value', snap => {
