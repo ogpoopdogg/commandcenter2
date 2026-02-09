@@ -8,33 +8,32 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
     
-    <style>
+   <style>
     :root {
         /* E&C Courier — Gold / Black / White Professional Theme */
 
         /* Core surfaces */
-        --bg: #0b0b0b;            /* Near-black background (not pure black, easier on eyes) */
-        --card: #141414;          /* Slightly lifted black for cards */
-        --border: #262626;        /* Subtle neutral border */
+        --bg: #1a1a1a;            /* Graphite black background (neutral, slightly gray) */
+        --card: #141414;          /* Deeper black cards layered above bg */
+        --border: #2b2b2b;        /* Subtle neutral border with separation */
 
         /* Text */
         --text: #ffffff;          /* Primary white text */
-        --text-muted: #b3b3b3;    /* Muted gray for secondary info */
+        --text-muted: #b8b8b8;    /* Muted gray for secondary info */
 
         /* Brand accent (Gold) */
         --accent: #d4af37;        /* Classic metallic gold */
         --accent-soft: #e6c96a;   /* Softer gold for hovers / highlights */
 
-        /* Status colors (kept restrained, still readable) */
-        --active-green: #2ecc71;  /* Confirmed / active */
-        --archive-orange: #f39c12;/* Archived / pending */
-        --note-blue: #4aa3df;     /* Informational notes */
-        --pro-blue: #1f6feb;      /* Primary action (buttons/links) */
-        --danger: #e74c3c;        /* Errors / critical states */
+        /* Status colors (restrained, operationally clear) */
+        --active-green: #2ecc71;  
+        --archive-orange: #f39c12;
+        --note-blue: #4aa3df;
+        --pro-blue: #1f6feb;
+        --danger: #e74c3c;
     }
 
-
-        /* FIX: Prevent side-to-side scrolling */
+ /* FIX: Prevent side-to-side scrolling */
         html, body {
             overflow-x: hidden;
             width: 100%;
