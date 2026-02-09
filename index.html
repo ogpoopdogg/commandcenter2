@@ -6,300 +6,352 @@
     <title>E&C COMMAND CENTER</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffcc00">
+    <meta name="theme-color" content="#cca300">
     
     <style>
-        :root { --accent: #ffcc00; --bg: #0a0a0a; --card: #161616; --text: #eee; --wpg: #2196f3; --brdn: #9c27b0; --active-green: #00ff41; --archive-orange: #ff6600; --note-blue: #00d4ff; --pro-blue: #007bff; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
+        /* UPDATED COLORS: Dimmed down for professional look, less neon */
+        :root { 
+            --accent: #cca300;       /* Was #ffcc00 */
+            --bg: #0a0a0a; 
+            --card: #141414; 
+            --text: #e0e0e0; 
+            --wpg: #1976d2; 
+            --brdn: #7b1fa2; 
+            --active-green: #00b32d; /* Was #00ff41 */
+            --archive-orange: #cc5200; /* Was #ff6600 */
+            --note-blue: #0099cc;    /* Was #00d4ff */
+            --pro-blue: #0056b3; 
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; /* More professional font stack */
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            padding-bottom: 100px; /* Increased bottom padding */
+        }
         
-        header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        header { 
+            padding: 15px 20px; 
+            background: #000; 
+            border-bottom: 2px solid var(--accent); /* Thinner border */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
         
         .header-logo {
-            height: 24px;
+            height: 28px;
             width: auto;
-            margin-right: 10px;
+            margin-right: 12px;
             vertical-align: middle;
-            filter: drop-shadow(0 0 5px var(--accent));
-            animation: logo-glow 2s infinite alternate;
+            filter: drop-shadow(0 0 3px var(--accent));
         }
 
+        /* ANIMATIONS KEPT BUT TONED DOWN */
         @keyframes logo-glow {
-            from { filter: drop-shadow(0 0 2px var(--accent)); transform: scale(1); }
-            to { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.05); }
+            from { filter: drop-shadow(0 0 1px var(--accent)); transform: scale(1); }
+            to { filter: drop-shadow(0 0 5px var(--accent)); transform: scale(1.02); }
         }
 
-        /* GREEN DOT PULSING ANIMATION */
         @keyframes dot-pulse {
             0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 0.8; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .pulsing-dot {
-            animation: dot-pulse 2s infinite ease-in-out;
-        }
+        .pulsing-dot { animation: dot-pulse 2s infinite ease-in-out; }
 
-        /* LOCATE DRIVERS BUTTON */
         #locate-btn {
             background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
-            color: #000080;
-            border: none;
-            border-radius: 4px;
-            font-weight: 900;
+            color: #002244;
+            border: 1px solid #444;
+            border-radius: 6px;
+            font-weight: 800;
             text-transform: uppercase;
             padding: 0;
             width: 100%;
-            height: 42px;
+            height: 50px; /* Taller */
             cursor: pointer;
-            font-size: 11px;
-            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
-            animation: pulse-blue 2s infinite;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
+        #locate-btn:active { transform: scale(0.98); }
         
         .route-btn {
             background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
-            color: #000080;
+            color: #002244;
             border: 1px solid var(--accent);
-            border-radius: 4px;
-            font-weight: 900;
+            border-radius: 6px;
+            font-weight: 800;
             text-transform: uppercase;
-            padding: 8px 20px;
+            padding: 10px 24px;
             cursor: pointer;
             font-size: 13px;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
-            animation: pulse-blue 2s infinite;
             white-space: nowrap;
         }
 
-        /* MAP MODAL */
         #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
         #map { width: 100%; height: 100%; }
-        .close-map { position: absolute; top: 20px; right: 20px; z-index: 3001; background: red; color: white; border: none; padding: 10px 20px; font-weight: 900; border-radius: 5px; cursor: pointer; }
+        .close-map { position: absolute; top: 20px; right: 20px; z-index: 3001; background: #b71c1c; color: white; border: none; padding: 12px 24px; font-weight: 800; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
         #install-btn { 
             display: none; 
             background: var(--pro-blue); 
             color: #fff; 
             border: none; 
-            padding: 8px 14px; 
-            font-size: 11px; 
-            font-weight: 900; 
-            border-radius: 4px; 
+            padding: 10px 16px; 
+            font-size: 12px; 
+            font-weight: 800; 
+            border-radius: 6px; 
             cursor: pointer;
             text-transform: uppercase;
             position: absolute;
-            right: 10px;
-            bottom: 10px;
-            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
-            animation: pulse-blue 2s infinite, fadeIn 0.5s ease-in;
+            right: 15px;
+            bottom: 15px;
             z-index: 1002;
         }
 
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         @keyframes subtle-glow {
-            0% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
-            50% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); border-color: var(--accent); }
-            100% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
+            0% { box-shadow: 0 0 2px rgba(204, 163, 0, 0.1); border-color: #333; }
+            50% { box-shadow: 0 0 8px rgba(204, 163, 0, 0.2); border-color: var(--accent); }
+            100% { box-shadow: 0 0 2px rgba(204, 163, 0, 0.1); border-color: #333; }
         }
-        .glow-field { border: 1px solid #444; }
+        .glow-field { border: 1px solid #333; transition: border-color 0.3s; }
+        .glow-field:focus { border-color: var(--accent); outline: none; }
 
-        .stats-bar { display: flex; background: #111; padding: 5px; border-bottom: 1px solid #333; justify-content: space-around; align-items: center; }
-        #entry-panel { background: #0f0f0f; border-bottom: 2px solid #333; padding: 12px 15px; }
-        #board-panel { padding: 15px; flex: 1; }
-        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0 5px; transition: all 0.3s; }
-        .stat-label { display: block; font-size: 11px; color: #888; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
-        .stat-number { font-family: 'Courier New', monospace; font-weight: 900; line-height: 1; }
-        #stat-pending { font-size: 24px; color: var(--accent); }
-        #stat-assigned { font-size: 24px; color: var(--active-green); }
-        #stat-note { font-size: 24px; color: var(--note-blue); }
+        .stats-bar { display: flex; background: #0f0f0f; padding: 10px; border-bottom: 1px solid #222; justify-content: space-around; align-items: center; gap: 10px; }
+        #entry-panel { background: #0a0a0a; border-bottom: 1px solid #222; padding: 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        #board-panel { padding: 20px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         
-        .high-alert { background: #1a1a00 !important; border: 2px solid var(--active-green); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); animation: alert-glow 0.6s infinite alternate; }
-        @keyframes alert-glow { from { border-color: #333; } to { border-color: var(--active-green); } }
+        .stat-box { 
+            text-align: center; 
+            flex: 1; 
+            position: relative; 
+            border-radius: 8px; 
+            margin: 0; 
+            padding: 8px;
+            background: #161616;
+            border: 1px solid #222;
+        }
+        .stat-label { display: block; font-size: 10px; color: #777; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
+        .stat-number { font-family: 'Segoe UI', sans-serif; font-weight: 800; line-height: 1; }
+        #stat-pending { font-size: 22px; color: var(--accent); }
+        #stat-assigned { font-size: 22px; color: var(--active-green); }
+        #stat-note { font-size: 22px; color: var(--note-blue); }
         
-        .unassigned-glow { border: 2px solid var(--accent) !important; z-index: 10; animation: pro-glow 1.2s infinite ease-in-out; }
-        @keyframes pro-glow {
-            0% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
-            50% { box-shadow: 0 0 25px var(--accent), inset 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.01); border-color: var(--accent); }
-            100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
-        }
-
-        @keyframes inner-pulse {
-            0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
-            50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
-            100% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
-        }
+        .high-alert { background: #1a1a00 !important; border: 1px solid var(--active-green); }
+        .unassigned-glow { border: 1px solid var(--accent) !important; z-index: 10; box-shadow: 0 0 10px rgba(204, 163, 0, 0.2); }
 
         .shiny-text {
-            background: linear-gradient(to right, var(--accent) 20%, #fff 50%, var(--accent) 80%);
+            background: linear-gradient(to right, var(--accent) 20%, #ccc 50%, var(--accent) 80%);
             background-size: 200% auto;
             color: transparent;
             -webkit-background-clip: text;
             background-clip: text;
-            animation: text-shine 3s linear infinite;
+            animation: text-shine 5s linear infinite;
         }
         @keyframes text-shine { to { background-position: 200% center; } }
 
-        details > summary { list-style: none; outline: none; }
-        details > summary::-webkit-details-marker { display: none; }
-
-        .note-highlight { border: 2px solid var(--note-blue) !important; animation: note-glow 1.5s infinite; }
-        .note-text-glow { color: var(--note-blue) !important; font-weight: 900; animation: text-pulse 1.5s infinite; cursor: pointer; }
-        @keyframes note-glow {
-            0% { box-shadow: 0 0 5px var(--note-blue); }
-            50% { box-shadow: 0 0 20px var(--note-blue); }
-            100% { box-shadow: 0 0 5px var(--note-blue); }
+        /* INCREASED SPACING FOR INPUTS */
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px 14px; 
+            background: #141414; 
+            border: 1px solid #333; 
+            color: #e0e0e0; 
+            border-radius: 6px; 
+            font-size: 15px; 
+            margin-bottom: 12px; 
+            box-sizing: border-box; 
+            transition: border 0.2s;
         }
-        @keyframes text-pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            outline: none;
+            background: #1a1a1a;
         }
         
-        @keyframes urgent-pulse {
-            0% { background: #330000; box-shadow: inset 0 0 10px red; border-color: red; }
-            50% { background: #660000; box-shadow: inset 0 0 30px red; border-color: #ff5555; }
-            100% { background: #330000; box-shadow: inset 0 0 10px red; border-color: red; }
+        .flex-row { display: flex; gap: 12px; }
+        .driver-select { 
+            width: 100%; 
+            background: #111; 
+            color: var(--accent); 
+            border: 1px solid #444; 
+            font-weight: 600; 
+            padding: 14px; 
+            border-radius: 6px; 
+            margin-bottom: 12px;
         }
-        .urgent-pickup { animation: urgent-pulse 1s infinite; border: 2px solid red !important; }
-
-        input, select, textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 16px; margin-bottom: 6px; box-sizing: border-box; }
-        .flex-row { display: flex; gap: 8px; }
-        .driver-select { width: 100%; background: #000; color: var(--accent); border: 1px solid #555; font-weight: bold; padding: 10px; border-radius: 4px; }
         
         button.primary {
             width: 100%;
-            padding: 18px;
-            background: #1a1a1a;
-            color: #fff;
-            font-weight: 900;
+            padding: 16px;
+            background: #1c1c1c;
+            color: #ddd;
+            font-weight: 800;
             border: 1px solid #333;
-            border-bottom: 2px solid var(--accent);
+            border-bottom: 3px solid var(--accent);
             cursor: pointer;
             border-radius: 6px;
             text-transform: uppercase;
-            font-size: 16px;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-size: 15px;
+            letter-spacing: 1.5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
         button.primary:hover {
-            background: #222;
+            background: #252525;
             border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.1);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
         button.primary:active {
             transform: translateY(1px);
         }
-        
-        .dispatch-card { background: #111; border: 1px solid #444; border-left: 6px solid var(--accent); margin-bottom: 30px; border-radius: 4px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.7); overflow: hidden; position: relative; }
-        .card-body { padding: 15px; }
-        .card-ctrl { background: #1c1c1c; padding: 12px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 0 0 8px 8px; }
-        .addr { font-weight: 800; font-size: 17px; margin: 6px 0; }
-        .loc-tag { font-size: 16px; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; background: #333; color: #fff; border: 1px solid #555; display: inline-block; margin-bottom: 8px; }
-        .pkg-badge { font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 5px; border-radius: 3px; margin-left: 10px; vertical-align: middle; }
-        .reset-btn { background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
-        
-        .edit-btn { background: #444; color: var(--accent); border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
-        .save-btn { background: var(--active-green); color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 11px; text-transform: uppercase; }
-        .edit-input { animation: subtle-glow 3s infinite ease-in-out; }
 
-        .history-box { margin-top: 30px; border-top: 2px dashed #333; padding: 15px; background: #080808; display: flex; gap: 15px; flex-wrap: wrap; }
-        .archive-column { flex: 1; min-width: 300px; border-right: 1px dashed #333; padding-right: 10px; }
+        .history-box { 
+            margin-top: 20px; 
+            border-top: 1px solid #222; 
+            padding-top: 20px; 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+        }
+        .archive-column { flex: 1; min-width: 300px; border-right: 1px solid #222; padding-right: 20px; }
         .archive-column:last-child { border-right: none; padding-right: 0; }
-        .archive-title { font-size: 14px; font-weight: 900; color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-
-        .new-entry-pop { animation: archive-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; z-index: 10; }
-        @keyframes archive-pop {
-            0% { transform: scale(0.5) translateY(-20px); opacity: 0; background: var(--active-green); box-shadow: 0 0 50px var(--active-green); }
-            50% { transform: scale(1.05); background: #333; box-shadow: 0 0 20px var(--active-green); }
-            100% { transform: scale(1); opacity: 1; background: #111; box-shadow: none; }
+        .archive-title { 
+            font-size: 13px; 
+            font-weight: 800; 
+            color: #666; 
+            text-transform: uppercase; 
+            margin-bottom: 15px; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 8px; 
+            letter-spacing: 1px;
         }
 
-        .hist-driver { background: var(--active-green); color: #000; font-weight: 900; padding: 3px 8px; border-radius: 3px; font-size: 13px; text-transform: uppercase; }
-        .hist-time { font-size: 11px; color: var(--accent); margin-top: 8px; font-family: monospace; font-weight: bold; }
-        .hist-city { font-size: 14px; font-weight: 900; background: #2a2a2a; color: #fff; padding: 3px 8px; border-radius: 4px; margin-right: 10px; vertical-align: middle; text-transform: uppercase; border: 1px solid #444; }
-        .hist-name { font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
+        /* CARD UPDATES FOR SLEEK LOOK */
+        .history-item {
+            background: #141414;
+            border: 1px solid #222;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .history-item:hover {
+            background: #1a1a1a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .hist-driver { font-weight: 800; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hist-time { font-size: 11px; color: #777; margin-top: 8px; font-family: monospace; font-weight: bold; }
+        .hist-name { font-size: 14px; color: #ccc; text-transform: uppercase; font-weight: 700; margin-top: 5px; }
         
-        .driver-map-label {
-            color: #ffff00 !important;
-            font-weight: 900;
-            font-size: 14px;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        .urgent-pickup { border: 1px solid #b71c1c !important; box-shadow: inset 0 0 10px rgba(183, 28, 28, 0.2); }
+
+        #search-footer { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: #000; 
+            border-top: 1px solid #333; 
+            padding: 15px; 
+            box-sizing: border-box; 
+            z-index: 1001; 
+            display: flex; 
+            align-items: center; 
         }
-
-        .driver-route-label {
-            color: #00ff41 !important;
-            font-weight: 900;
-            font-size: 15px;
-            font-family: system-ui, -apple-system, sans-serif;
-            text-transform: uppercase;
-            text-shadow: 0 0 5px rgba(0,0,0,0.9);
-            letter-spacing: 0.5px;
+        #archive-search { 
+            width: 100%; 
+            padding: 14px; 
+            background: #111; 
+            border: 1px solid #333; 
+            color: #ddd; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            font-size: 15px; 
         }
+        #archive-search:focus { border-color: var(--accent); }
 
-        .card-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; font-size: 18px; }
-        .detail-label { color: #888; text-transform: uppercase; font-size: 14px; font-weight: 900; margin-bottom: 2px; }
-        .detail-value { color: #fff; margin-bottom: 5px; font-weight: 500; }
-
-        .more-btn { width: 100%; padding: 15px; background: #222; color: var(--accent); border: 1px solid #444; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
-        
-        #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 2px solid var(--accent); padding: 10px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
-        #archive-search { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: var(--accent); font-weight: bold; border-radius: 4px; font-size: 16px; }
-
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
-        .modal-content { background: #161616; margin: 5% auto; padding: 20px; width: 85%; max-width: 500px; border: 2px solid var(--accent); color: #eee; border-radius: 8px; }
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(2px); }
+        .modal-content { 
+            background: #181818; 
+            margin: 5% auto; 
+            padding: 30px; 
+            width: 90%; 
+            max-width: 550px; 
+            border: 1px solid var(--accent); 
+            color: #eee; 
+            border-radius: 8px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
         /* LOGIN OVERLAY */
-        #login-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
-        .login-box { width: 100%; max-width: 350px; background: #111; padding: 30px; border-radius: 15px; border: 1px solid #333; text-align: center; }
-        .login-input { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 18px; outline: none; }
-        .login-submit { width: 100%; padding: 15px; margin-top: 15px; background: var(--accent); border: none; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
-        #user-display { color: var(--active-green); font-size: 12px; font-weight: 900; text-transform: uppercase; animation: fadeIn 1s ease-out; margin-bottom: 5px; }
+        #login-overlay { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        .login-box { width: 100%; max-width: 350px; background: #111; padding: 40px; border-radius: 12px; border: 1px solid #222; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-input { width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none; }
+        .login-submit { width: 100%; padding: 14px; margin-top: 20px; background: var(--accent); border: none; color: #000; font-weight: 800; font-size: 16px; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+        #user-display { color: var(--active-green); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
 
-        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: #1a1a1a; border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; }
-        .suggestion-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; color: #eee; font-weight: bold; }
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: #1c1c1c; border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .suggestion-item { padding: 14px; border-bottom: 1px solid #333; cursor: pointer; color: #ddd; font-weight: 500; font-size: 14px; }
         .suggestion-item:hover { background: var(--accent); color: #000; }
 
-        @keyframes voice-glow {
-            0% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
-            50% { filter: drop-shadow(0 0 8px var(--active-green)); transform: scale(1.1); fill: #fff; }
-            100% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
-        }
-        .voice-active { animation: voice-glow 1.5s infinite; fill: var(--active-green) !important; }
+        .voice-active { fill: var(--active-green) !important; filter: drop-shadow(0 0 5px var(--active-green)); }
         
-        .mode-switch-container { display: flex; margin-bottom: 10px; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
-        .mode-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; font-size: 14px; background: #111; color: #555; transition: 0.3s; }
-        .mode-btn.active-mode { background: var(--accent); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; }
+        .mode-switch-container { display: flex; margin-bottom: 15px; background: #111; border-radius: 6px; padding: 4px; border: 1px solid #222; }
+        .mode-btn { 
+            flex: 1; 
+            padding: 12px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            font-size: 13px; 
+            background: transparent; 
+            color: #666; 
+            border-radius: 4px;
+            transition: 0.2s; 
+        }
+        .mode-btn.active-mode { background: var(--accent); color: #000; }
+        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
 
         /* GRAPH INDICATOR STYLES */
-        #driver-stats-panel { background: #111; padding: 10px; border-bottom: 2px solid #333; display: flex; flex-direction: column; gap: 5px; }
-        .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #1a1a1a; border-radius: 4px; animation: slideIn 0.3s ease-out; border: 1px solid #2a2a2a; }
-        .ds-name { color: #fff; font-weight: 900; font-size: 16px; width: 80px; text-transform: uppercase; }
+        #driver-stats-panel { background: #0f0f0f; padding: 15px; border-bottom: 1px solid #222; display: flex; flex-direction: column; gap: 8px; }
+        .driver-stat-row { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 10px 15px; 
+            background: #161616; 
+            border-radius: 6px; 
+            border: 1px solid #2a2a2a; 
+            transition: transform 0.2s;
+        }
+        .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
+        .ds-name { color: #ddd; font-weight: 700; font-size: 14px; width: 80px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-        .stat-item { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; display: flex; align-items: center; gap: 5px; background: #111; padding: 4px 8px; border-radius: 4px; border: 1px solid #222; }
-        .stat-val-p { color: var(--accent); font-size: 14px; font-weight: 900; animation: num-pulse 2s infinite alternate; }
-        .stat-val-d { color: var(--active-green); font-size: 14px; font-weight: 900; animation: num-pulse 2s infinite alternate; }
+        .stat-item { font-size: 10px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: #0a0a0a; padding: 5px 10px; border-radius: 4px; border: 1px solid #222; }
+        .stat-val-p { color: var(--accent); font-size: 13px; font-weight: 800; }
+        .stat-val-d { color: var(--active-green); font-size: 13px; font-weight: 800; }
         
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes num-pulse { from { text-shadow: 0 0 2px rgba(255,255,255,0); } to { text-shadow: 0 0 8px rgba(255,255,255,0.8); } }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2 style="color: var(--accent); font-weight: 900;">COMMAND LOGIN</h2>
+        <h2 style="color: var(--accent); font-weight: 900; letter-spacing: 1px; margin-top:0;">COMMAND LOGIN</h2>
         <input type="text" id="login-user" class="login-input" placeholder="Username" autofocus>
         <input type="password" id="login-pin" class="login-input" placeholder="Pin">
         <button class="login-submit" onclick="attemptLogin()">Authorize</button>
@@ -311,10 +363,10 @@
         <div id="user-display"></div>
         <div style="display: flex; align-items: center; overflow: hidden;">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <span class="shiny-text" style="font-size: 20px; font-weight: 900; white-space: nowrap;">E&C COMMAND CENTER</span>
+            <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
         </div>
     </div>
-    <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap;"></div>
+    <div id="clock" style="font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums;"></div>
 </header>
 
 <div class="stats-bar">
@@ -340,8 +392,8 @@
         <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Schedule Delivery</button>
     </div>
 
-    <div style="position:relative; margin-bottom: 8px;">
-        <div style="position:absolute; right:10px; top:12px; z-index:10; font-size:11px; font-weight:bold; cursor:pointer; color: #757575;" onclick="resetFormFields()">RESET</div>
+    <div style="position:relative; margin-bottom: 15px;">
+        <div style="position:absolute; right:0; top:-25px; z-index:10; font-size:10px; font-weight:bold; cursor:pointer; color: #666; text-transform: uppercase;" onclick="resetFormFields()">RESET FIELDS</div>
     </div>
 
     <div id="top-input-section"></div>
@@ -353,9 +405,9 @@
         <input type="text" id="f-info" placeholder="Driver Notes..." style="flex: 1.5;">
     </div>
 
-    <div id="bottom-input-section" style="margin-top: 8px;"></div>
+    <div id="bottom-input-section" style="margin-top: 5px;"></div>
 
-    <select id="f-driver" class="driver-select" style="margin-bottom: 8px; border: 1px solid var(--accent);">
+    <select id="f-driver" class="driver-select" style="margin-bottom: 15px; border: 1px solid var(--accent);">
         <option value="Unassigned" selected disabled hidden>Assign Driver</option>
         <option value="Unassigned">UNASSIGNED</option>
         <option value="Matt">Matt</option>
@@ -365,9 +417,9 @@
         <option value="Alicia">Alicia</option>
         <option value="Kayla">Kayla</option>
     </select>
-    <div style="display: flex; gap: 8px;">
+    <div style="display: flex; gap: 12px;">
         <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
-        <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #000; border: 1px solid #fff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: inner-pulse 2s infinite;"><svg id="mic-icon" viewBox="0 0 24 24" width="28" height="28" style="fill: #fff; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+        <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #111; border: 1px solid #444; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
     </div>
 </div>
 
@@ -399,11 +451,11 @@
 
 <div id="board-panel">
     <div class="history-box">
-        <div id="filter-reset-ui" style="width:100%; text-align:center; display:none; margin-bottom:10px;">
-            <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:20px; font-weight:900; padding:8px 20px; border-radius:30px; text-transform:uppercase; background:#111; box-shadow: 0 0 10px rgba(255,255,255,0.1);"></div>
-            <div style="display:flex; justify-content:center; gap:10px;">
+        <div id="filter-reset-ui" style="width:100%; text-align:center; display:none; margin-bottom:15px;">
+            <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:20px; font-weight:900; padding:8px 24px; border-radius:30px; text-transform:uppercase; background:#111; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
+            <div style="display:flex; justify-content:center; gap:15px;">
                 <button id="view-route-btn" class="route-btn" style="display:none;">View Current Route</button>
-                <button onclick="clearDriverFilter()" style="background:#222; border:1px solid var(--accent); color:var(--accent); padding:8px 20px; font-weight:900; border-radius:4px; text-transform:uppercase; cursor:pointer;">Back to All</button>
+                <button onclick="clearDriverFilter()" style="background:#222; border:1px solid var(--accent); color:var(--accent); padding:10px 24px; font-weight:800; border-radius:6px; text-transform:uppercase; cursor:pointer;">Back to All</button>
             </div>
         </div>
         <div class="archive-column">
@@ -411,13 +463,13 @@
             <div id="list-pickups"></div>
         </div>
         <div class="archive-column">
-            <div class="archive-title" style="color:#00ff41;">Deliveries</div>
+            <div class="archive-title" style="color:var(--active-green);">Deliveries</div>
             <div id="list-deliveries"></div>
         </div>
     </div>
-    <div style="margin-top: 20px; padding: 10px; border-top: 2px dashed #333;">
-        <div class="archive-title" style="color: #777;">ARCHIVE (COMPLETED)</div>
-        <div id="list-archive" style="display: flex; flex-direction: column; gap: 6px;"></div>
+    <div style="margin-top: 30px; padding: 15px; border-top: 2px dashed #222;">
+        <div class="archive-title" style="color: #666; border-bottom:none;">ARCHIVE (COMPLETED)</div>
+        <div id="list-archive" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
 </div>
 
@@ -433,14 +485,9 @@
 
 <div id="detailsModal" class="modal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h2 id="m-title" style="color:var(--accent); margin-top:0;">Job Details</h2>
+        <h2 id="m-title" style="color:var(--accent); margin-top:0; font-size: 18px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Job Details</h2>
         <div id="m-body"></div>
-        <div id="m-note-section" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
-            <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px;"></textarea>
-            <button class="save-btn" id="m-note-save" style="width: 100%; padding: 12px; font-size: 14px;">Add Note to Job</button>
         </div>
-        <button class="primary" style="margin-top:20px; padding:10px; background:#444;" onclick="document.getElementById('detailsModal').style.display='none'">DONE</button>
-    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -567,7 +614,7 @@
                 } else {
                     mapMarkers[name] = new google.maps.Marker({
                         position: pos, map: mainMap,
-                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00ff41', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
+                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
                         label: { text: markerLabelText, className: "pulsing-dot driver-map-label" },
                         title: name
                     });
@@ -617,7 +664,7 @@
                     position: pos, map: mainMap,
                     icon: { 
                         path: google.maps.SymbolPath.CIRCLE, 
-                        fillColor: '#00ff41', 
+                        fillColor: '#00b32d', 
                         fillOpacity: 1, 
                         strokeWeight: 2, 
                         strokeColor: '#ffffff', 
@@ -640,15 +687,10 @@
                  const bounds = new google.maps.LatLngBounds();
                  path.forEach(p => bounds.extend(p));
                  
-                 // Add job markers to the map if they are part of the active route
-                 // This assumes jobs are geocoded, or we can use the path points if they match known jobs
-                 // Simplified: Show all pending jobs for this driver on the route map
-                 
                  const driverJobs = [];
                  Object.values(rawPickups).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'pickup'}); });
                  Object.values(rawDropoffs).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'drop'}); });
                  
-                 // Geocode addresses to place markers on route (simple approximation)
                  const geocoder = new google.maps.Geocoder();
                  
                  driverJobs.forEach((job, index) => {
@@ -663,7 +705,7 @@
                                 position: results[0].geometry.location,
                                 label: { 
                                     text: label, 
-                                    color: "#00ff41", 
+                                    color: "#00b32d", 
                                     fontWeight: "bold",
                                     fontSize: "12px",
                                     className: "driver-map-label"
@@ -671,13 +713,12 @@
                                 icon: {
                                     path: google.maps.SymbolPath.CIRCLE,
                                     scale: 5,
-                                    fillColor: job.type === 'pickup' ? '#ff9800' : '#00ff41',
+                                    fillColor: job.type === 'pickup' ? '#cc5200' : '#00b32d',
                                     fillOpacity: 1,
                                     strokeWeight: 1,
                                     strokeColor: 'white'
                                 }
                             });
-                            // Keep track to remove later if needed
                             const key = `job_${index}`;
                             mapMarkers[key] = marker;
                         }
@@ -698,7 +739,6 @@
         if(listeningRef) { listeningRef.off(); listeningRef = null; }
         if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
         
-        // Clear all markers including job markers
         for(let k in mapMarkers) {
              if(mapMarkers[k]) mapMarkers[k].setMap(null);
         }
@@ -882,34 +922,40 @@
         const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alicia', 'Kayla'];
         const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 
+        // UPDATED: EDIT FORM STRUCTURE TO MATCH MAIN DISPATCH FORM EXACTLY
         const html = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <div style="font-weight:900; font-size:18px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
-                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:8px 12px; font-weight:bold; cursor:pointer; font-size:12px;">DELETE</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
+                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #b71c1c; color:#ff5555; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px;">DELETE</button>
             </div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:16px;">
-                <select id="e-driver" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-weight:bold; font-size:16px;">${driverOpts}</select>
-                
-                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+            <div style="display:flex; flex-direction:column; gap:0;">
+                <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name" style="margin-bottom:12px;">
+                <div class="flex-row">
+                    <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2;">
+                    <input id="e-city" value="${val(data.city)}" placeholder="City" style="flex:1;">
+                </div>
 
-                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions" style="margin-bottom:12px;">
                 
-                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:60px; padding:12px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:16px;">${val(data.other_info)}</textarea>
-                <input id="e-add-note" placeholder="Add Driver Note" style="grid-column:span 2; padding:12px; background:#1a1a1a; border:1px solid var(--accent); color:#fff; font-size:16px;">
+                <div class="flex-row">
+                    <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="flex:1;">
+                    <textarea id="e-note" placeholder="Driver Notes" style="flex:1.5; height:auto; padding:12px;">${val(data.other_info)}</textarea>
+                </div>
+                <input id="e-add-note" placeholder="Add New Note (Appends to above)" style="margin-bottom:12px;">
+
+                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name" style="margin-bottom:12px;">
+                <div class="flex-row">
+                    <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="flex:2;">
+                    <div style="flex:1; background:#222; border:1px solid #333; display:flex; align-items:center; justify-content:center; border-radius:6px; color:#555; font-size:11px; margin-bottom:12px;">(City in Addr)</div>
+                </div>
+
+                <select id="e-driver" class="driver-select" style="margin-bottom:12px;">${driverOpts}</select>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px; margin-top:15px;">
-                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:15px; font-weight:bold; cursor:pointer; font-size:14px;">CANCEL</button>
-                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:15px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:14px;">SAVE</button>
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px; margin-top:15px;">
+                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#222; color:#ccc; border:1px solid #333; padding:16px; font-weight:700; cursor:pointer; font-size:14px; border-radius:6px;">CANCEL</button>
+                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:16px; font-weight:800; text-transform:uppercase; cursor:pointer; font-size:14px; border-radius:6px;">SAVE</button>
             </div>
         `;
         
@@ -993,11 +1039,11 @@
                 if(p.status === 'completed') {
                     // Render to Archive
                     const card = document.createElement("div");
-                    card.className = "history-item";
+                    card.className = "history-item"; // Added class for CSS
                     card.onclick = () => viewDetails(id, type);
                     card.style.cursor = "pointer";
                     card.style.borderLeft = "4px solid #333";
-                    card.style.background = "#111";
+                    card.style.background = "#141414";
                     card.style.opacity = "0.7";
                     
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
@@ -1006,11 +1052,11 @@
 
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:900; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
-                            <span style="font-size:10px; color:#00ff41; font-weight:bold;">DONE ${doneTime}</span>
+                            <span style="font-weight:800; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
+                            <span style="font-size:10px; color:#00b32d; font-weight:bold;">DONE ${doneTime}</span>
                         </div>
-                        <div style="color:#666; font-size:13px; font-weight:bold;">${contact || 'No Contact'}</div>
-                        <div style="color:#444; font-size:11px;">${p.city || ''}</div>
+                        <div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${contact || 'No Contact'}</div>
+                        <div style="color:#555; font-size:11px;">${p.city || ''}</div>
                     `;
                     document.getElementById("list-archive").appendChild(card);
                     return; // Skip adding to main list
@@ -1028,7 +1074,7 @@
                 if(p.driver_edited_note) noteCount++;
 
                 const card = document.createElement("div");
-                card.className = "history-item";
+                card.className = "history-item"; // Added class for CSS
                 if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) card.classList.add('urgent-pickup');
                 card.onclick = () => viewDetails(id, type);
                 card.style.cursor = "pointer";
@@ -1036,22 +1082,22 @@
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
                 // Color Map Logic
-                const bg = dColors[p.assigned_to] || '#00ff41'; 
+                const bg = dColors[p.assigned_to] || '#00b32d'; 
                 // Light colors need black text, dark colors need white text
-                const darkText = ['#00ff41', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
+                const darkText = ['#00b32d', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
                 
                 const driverHTML = p.assigned_to ? 
                     `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
-                    `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
+                    `<span style="color:#cc5200; font-weight:800; font-size:11px;">UNASSIGNED</span>`;
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         ${driverHTML}
-                        <div style="font-size:10px; color:#666;">INFO</div>
+                        <div style="font-size:10px; color:#666; font-weight:700;">DETAILS</div>
                     </div>
-                    <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
+                    <div class="hist-name">${contact || 'No Contact'}</div>
                     <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
                 `;
                 list.appendChild(card);
