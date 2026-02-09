@@ -36,6 +36,13 @@
             margin-right: 10px;
             vertical-align: middle;
             filter: drop-shadow(0 0 5px var(--accent));
+            animation: slow-shine 4s infinite ease-in-out !important;
+        }
+        
+        @keyframes slow-shine {
+            0% { filter: drop-shadow(0 0 5px var(--accent)) brightness(1); }
+            50% { filter: drop-shadow(0 0 15px var(--accent)) brightness(1.3); }
+            100% { filter: drop-shadow(0 0 5px var(--accent)) brightness(1); }
         }
 
         .pulsing-dot {
@@ -106,7 +113,16 @@
         
         .high-alert { background: #1a1a00 !important; border: 2px solid var(--active-green); }
         
-        .unassigned-glow { border: 2px solid var(--accent) !important; z-index: 10; }
+        .unassigned-glow { 
+            border: 2px solid var(--accent) !important; 
+            z-index: 10; 
+            box-shadow: 0 0 20px var(--accent) !important;
+            animation: pending-pulse 1s infinite alternate !important;
+        }
+        @keyframes pending-pulse {
+            from { transform: scale(1); box-shadow: 0 0 10px var(--accent); }
+            to { transform: scale(1.05); box-shadow: 0 0 25px var(--accent); }
+        }
 
         .shiny-text {
             background: none;
@@ -203,7 +219,7 @@
             letter-spacing: 0.5px;
         }
         
-        .history-item { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 8px; }
+        .history-item { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
 
         .card-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; font-size: 18px; }
         .detail-label { color: #888; text-transform: uppercase; font-size: 14px; font-weight: 900; margin-bottom: 2px; }
@@ -839,24 +855,25 @@
                 <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:8px 12px; font-weight:bold; cursor:pointer; font-size:12px;">DELETE</button>
             </div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:16px;">
-                <select id="e-driver" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-weight:bold; font-size:16px;">${driverOpts}</select>
-                
-                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-
-                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:60px; padding:12px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:16px;">${val(data.other_info)}</textarea>
-                <input id="e-add-note" placeholder="Add Driver Note" style="grid-column:span 2; padding:12px; background:#1a1a1a; border:1px solid var(--accent); color:#fff; font-size:16px;">
+            <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions" style="width:100%; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
+            
+            <div class="flex-row">
+                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Reference" style="flex:1; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
+                <input id="e-add-note" placeholder="Add Driver Note" style="flex:1.5; padding:12px; background:#1a1a1a; border:1px solid var(--accent); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
             </div>
+
+            <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name" style="width:100%; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
+            <div class="flex-row">
+                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
+                <input id="e-city" value="${val(data.city)}" placeholder="City/Town" style="flex:1; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
+            </div>
+
+            <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name" style="width:100%; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
+            <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="width:100%; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-size:14px; margin-bottom:12px; border-radius:6px;">
+            
+            <textarea id="e-note" placeholder="Driver Notes" style="width:100%; height:60px; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-family:inherit; font-size:14px; margin-bottom:12px; border-radius:6px;">${val(data.other_info)}</textarea>
+
+            <select id="e-driver" style="width:100%; padding:12px; background:#121212; border:1px solid var(--border); color:#fff; font-weight:bold; font-size:16px; border-radius:6px;">${driverOpts}</select>
 
             <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px; margin-top:15px;">
                 <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:15px; font-weight:bold; cursor:pointer; font-size:14px;">CANCEL</button>
@@ -948,8 +965,9 @@
                     card.onclick = () => viewDetails(id, type);
                     card.style.cursor = "pointer";
                     card.style.borderLeft = "4px solid #333";
-                    card.style.background = "#111";
-                    card.style.opacity = "0.7";
+                    card.style.background = "#1c1c1c";
+                    card.style.opacity = "1";
+                    card.style.border = "1px solid #333";
                     
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
                     // Format Date
@@ -957,11 +975,11 @@
 
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:900; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
+                            <span style="font-weight:900; color:#888; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
                             <span style="font-size:10px; color:#00ff41; font-weight:bold;">DONE ${doneTime}</span>
                         </div>
-                        <div style="color:#666; font-size:13px; font-weight:bold;">${contact || 'No Contact'}</div>
-                        <div style="color:#444; font-size:11px;">${p.city || ''}</div>
+                        <div style="color:#ccc; font-size:13px; font-weight:bold;">${contact || 'No Contact'}</div>
+                        <div style="color:#999; font-size:11px;">${p.city || ''}</div>
                     `;
                     document.getElementById("list-archive").appendChild(card);
                     return; // Skip adding to main list
@@ -1032,8 +1050,8 @@
                         <div class="ds-name" style="color:${color};">${driver}</div>
                     </div>
                     <div class="stat-info">
-                        ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
-                        ${dCount > 0 ? `<div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>` : ''}
+                        ${pCount > 0 ? `<div class=\"stat-item\">Pickups <span class=\"stat-val-p\">${pCount}</span></div>` : ''}
+                        ${dCount > 0 ? `<div class=\"stat-item\">Deliveries <span class=\"stat-val-d\">${dCount}</span></div>` : ''}
                     </div>
                 `;
                 statsPanel.appendChild(row);
