@@ -677,12 +677,12 @@
 
                 if (mapMarkers[name]) {
                     mapMarkers[name].setPosition(pos);
-                    mapMarkers[name].setLabel({ text: markerLabelText, className: "driver-map-label" });
+                    mapMarkers[name].setLabel({ text: markerLabelText, className: "driver-map-label", color: "#39ff14", fontWeight: "bold" });
                 } else {
                     mapMarkers[name] = new google.maps.Marker({
                         position: pos, map: mainMap,
-                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#10b981', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
-                        label: { text: markerLabelText, className: "driver-map-label" },
+                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#10b981', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -20) },
+                        label: { text: markerLabelText, className: "driver-map-label", color: "#39ff14", fontWeight: "bold" },
                         title: name
                     });
                 }
@@ -781,7 +781,8 @@
                                     fillColor: job.type === 'pickup' ? '#f59e0b' : '#10b981',
                                     fillOpacity: 1,
                                     strokeWeight: 1,
-                                    strokeColor: 'white'
+                                    strokeColor: 'white',
+                                    labelOrigin: new google.maps.Point(0, -12)
                                 }
                             });
                             const key = `job_${index}`;
@@ -975,6 +976,33 @@
         document.getElementById('f-driver').value = "Unassigned";
     }
 
+    // New Helper Functions for Edit Form Auto-Populate
+    function handleEditInput(val, type) {
+        const boxId = type === 'pickup' ? 'e-suggestions-p' : 'e-suggestions-d';
+        const box = document.getElementById(boxId);
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectEditClient('${k}', '${type}')">${k}</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function selectEditClient(name, type) {
+        const data = addressData[name];
+        if(!data) return;
+        if(type === 'pickup') {
+            document.getElementById('e-name').value = name;
+            document.getElementById('e-pickup').value = data.address || "";
+            document.getElementById('e-city').value = data.city || "";
+            document.getElementById('e-suggestions-p').style.display = 'none';
+        } else {
+            document.getElementById('e-drop-name').value = name;
+            document.getElementById('e-drop').value = data.address || ""; 
+            document.getElementById('e-drop-city').value = data.city || "";
+            document.getElementById('e-suggestions-d').style.display = 'none';
+        }
+    }
+
     // FIX: Match Edit form line for line with Dispatch
     function viewDetails(id, type) {
         const isPickup = type === 'pickup';
@@ -1005,7 +1033,10 @@
 
                 <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
 
-                <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business / Name">
+                <div style="position:relative;">
+                    <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business / Name" autocomplete="off" oninput="handleEditInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('e-suggestions-p').style.display='none', 200)">
+                    <div id="e-suggestions-p" class="suggestions-box"></div>
+                </div>
                 <div class="flex-row">
                     <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2;">
                     <input id="e-city" value="${val(data.city)}" placeholder="City" style="flex:1;">
@@ -1013,7 +1044,10 @@
 
                 <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
 
-                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact / Name">
+                <div style="position:relative;">
+                    <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact / Name" autocomplete="off" oninput="handleEditInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('e-suggestions-d').style.display='none', 200)">
+                    <div id="e-suggestions-d" class="suggestions-box"></div>
+                </div>
                 <div class="flex-row">
                     <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address (Full)" style="flex:2;">
                      <input id="e-drop-city" placeholder="City (Opt)" style="flex:1;"> 
@@ -1116,13 +1150,14 @@
                     
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
                     const doneTime = p.completed_at ? formatTime12(p.completed_at) : formatTime12(p.timestamp);
+                    const typeLabel = type === 'pickup' ? '<span style="color:var(--accent); margin-right:5px; font-size:10px; font-weight:700;">PICKUP</span>' : '<span style="color:var(--active-green); margin-right:5px; font-size:10px; font-weight:700;">DELIVERY</span>';
 
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-weight:700; color:#94a3b8; font-size:11px;">${p.assigned_to || 'Unassigned'}</span>
                             <span style="font-size:10px; color:#10b981; font-weight:600;">DONE ${doneTime}</span>
                         </div>
-                        <div style="color:#e2e8f0; font-size:13px; font-weight:600; margin-top:4px;">${contact || 'No Contact'}</div>
+                        <div style="color:#e2e8f0; font-size:13px; font-weight:600; margin-top:4px;">${typeLabel} ${contact || 'No Contact'}</div>
                         <div style="color:#94a3b8; font-size:11px;">${p.city || ''}</div>
                     `;
                     document.getElementById("list-archive").appendChild(card);
