@@ -25,6 +25,16 @@
             --danger: #ef4444;
         }
 
+        /* FIX: Prevent side-to-side scrolling */
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+            box-sizing: border-box;
+        }
+        
+        * { box-sizing: border-box; }
+
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background: var(--bg); 
@@ -38,14 +48,16 @@
             -webkit-font-smoothing: antialiased;
         }
         
-        /* HEADER */
+        /* HEADER - FIX: One line timestamp */
         header { 
-            padding: 16px 24px; 
+            padding: 12px 20px; 
             background: var(--card) !important; 
             border-bottom: 1px solid var(--border) !important; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            flex-wrap: nowrap;
+            white-space: nowrap;
             position: relative; 
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
@@ -61,7 +73,7 @@
         .shiny-text {
             background: none;
             color: var(--text);
-            font-size: 16px !important;
+            font-size: 18px !important;
             font-weight: 700 !important;
             letter-spacing: -0.5px;
             animation: none;
@@ -69,12 +81,13 @@
 
         #clock {
             font-variant-numeric: tabular-nums;
-            color: var(--text-muted) !important;
-            font-weight: 500 !important;
-            font-size: 13px !important;
+            color: var(--accent) !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
             background: rgba(0,0,0,0.2);
-            padding: 4px 8px;
+            padding: 6px 12px;
             border-radius: 4px;
+            margin-left: auto;
         }
 
         /* STATS BAR */
@@ -204,6 +217,7 @@
             padding: 4px;
             border-radius: 8px;
             border: 1px solid var(--border);
+            position: relative;
         }
         .mode-btn { 
             flex: 1; 
@@ -362,12 +376,14 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
-        #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: var(--bg); }
+        #map-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: var(--bg); }
+        #map { width: 100%; height: 100%; }
+        
         .close-map { 
             position: absolute; 
             top: 20px; 
             right: 20px; 
-            z-index: 3001; 
+            z-index: 10000; 
             background: var(--danger); 
             color: white; 
             border: none; 
@@ -420,12 +436,9 @@
 </div>
 
 <header>
-    <div style="display: flex; flex-direction: column; width: 100%;">
-        <div id="user-display" style="font-size: 10px; color: var(--active-green); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;"></div>
-        <div style="display: flex; align-items: center; overflow: hidden;">
-            <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <span class="shiny-text" style="font-size: 18px; font-weight: 700; color: var(--text);">E&C COMMAND</span>
-        </div>
+    <div style="display: flex; align-items: center; overflow: hidden;">
+        <img src="icon-512.png" class="header-logo" alt="E&C Logo">
+        <span class="shiny-text">E&C COMMAND</span>
     </div>
     <div id="clock"></div>
 </header>
@@ -448,13 +461,12 @@
 </div>
 
 <div id="entry-panel">
-    <div class="mode-switch-container">
-        <button class="mode-btn active-mode" id="btn-mode-pickup" onclick="setMode('pickup')">Schedule Pickup</button>
-        <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Schedule Delivery</button>
-    </div>
-
-    <div style="position:relative; margin-bottom: 8px;">
-        <div style="position:absolute; right:10px; top:-40px; z-index:10; font-size:10px; font-weight:600; cursor:pointer; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;" onclick="resetFormFields()">Reset Form</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div class="mode-switch-container" style="margin-bottom:0; flex:1; margin-right:10px;">
+            <button class="mode-btn active-mode" id="btn-mode-pickup" onclick="setMode('pickup')">Pickup</button>
+            <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Delivery</button>
+        </div>
+        <div style="font-size:11px; font-weight:600; cursor:pointer; color: var(--text-muted); text-transform: uppercase; padding:8px;" onclick="resetFormFields()">Reset</div>
     </div>
 
     <div id="top-input-section"></div>
@@ -547,11 +559,11 @@
     <div class="modal-content" onclick="event.stopPropagation()">
         <h2 id="m-title" style="color:var(--text); margin-top:0; font-size: 16px; text-transform: uppercase;">Job Details</h2>
         <div id="m-body"></div>
-        <div id="m-note-section" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px; margin-bottom: 12px;"></textarea>
-            <button class="save-btn primary" id="m-note-save" style="width: 100%; padding: 12px; font-size: 13px;">Add Note to Job</button>
+        
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button onclick="document.getElementById('detailsModal').style.display='none'" style="flex:1; background:var(--card); color:var(--text-muted); border:1px solid var(--border); padding:12px; font-weight:600; cursor:pointer; font-size:13px; border-radius:6px;">CANCEL</button>
+            <button id="m-save-btn" style="flex:1; background:var(--pro-blue); color:white; border:none; padding:12px; font-weight:600; cursor:pointer; font-size:13px; border-radius:6px;">SAVE CHANGES</button>
         </div>
-        <button style="width: 100%; margin-top:12px; padding:12px; background:transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="document.getElementById('detailsModal').style.display='none'">CLOSE</button>
     </div>
 </div>
 
@@ -584,6 +596,7 @@
         const routeBtn = document.getElementById("view-route-btn");
         if(routeBtn) {
             routeBtn.style.display = "inline-block";
+            // FIX: Pass function properly
             routeBtn.onclick = (e) => viewDriverRoute(name, e);
         }
 
@@ -614,7 +627,6 @@
                 localStorage.setItem('ec_command_user', user);
                 currentUser = user;
                 document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('user-display').innerText = `Officer: ${user}`;
             } else {
                 alert("Invalid Credentials");
             }
@@ -623,7 +635,6 @@
 
     if(currentUser) {
         document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('user-display').innerText = `Officer: ${currentUser}`;
     }
 
     function formatTime12(ts) {
@@ -640,6 +651,7 @@
     let listeningRef = null;
 
     function openMap() {
+        // FIX: Ensure display is block
         document.getElementById('map-modal').style.display = 'block';
         if (!mainMap) {
             mainMap = new google.maps.Map(document.getElementById("map"), {
@@ -658,8 +670,6 @@
                 const pos = { lat: driver.lat, lng: driver.lng };
                 const updateTS = driver.gps_timestamp || driver.timestamp || driver.last_seen;
                 const timeStr = formatTime12(updateTS);
-                const d = new Date(updateTS);
-                const dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
                 const markerLabelText = `${name}\n${timeStr}`;
                 
                 bounds.extend(pos);
@@ -933,7 +943,6 @@
         const dropAddr = document.getElementById('f-drop-address').value;
         const dropCity = document.getElementById('f-drop-city').value;
         const drop = dropAddr + (dropCity ? ", " + dropCity : "");
-        // Fix for delivery city issue: use the drop city if in delivery mode or if pickup city is empty but drop city exists
         const cityFieldVal = document.getElementById('f-city').value;
         const city = cityFieldVal || dropCity;
         const name = document.getElementById('f-name').value;
@@ -966,6 +975,7 @@
         document.getElementById('f-driver').value = "Unassigned";
     }
 
+    // FIX: Match Edit form line for line with Dispatch
     function viewDetails(id, type) {
         const isPickup = type === 'pickup';
         const data = isPickup ? rawPickups[id] : rawDropoffs[id];
@@ -986,10 +996,12 @@
                 
                 <div class="flex-row">
                     <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Reference" style="flex:1;">
-                    <input id="e-add-note" placeholder="Add Driver Note" style="flex:1.5;">
+                    <div style="flex:1.5; display:flex; flex-direction:column; gap:4px;">
+                        <input id="e-add-note" placeholder="Add Driver Note">
+                        <div style="font-size:10px; color:var(--text-muted); max-height:40px; overflow-y:auto; background:var(--bg); padding:4px;">${val(data.other_info)}</div>
+                        <input type="hidden" id="e-old-note" value="${val(data.other_info)}">
+                    </div>
                 </div>
-                
-                <textarea id="e-note" placeholder="Existing Driver Notes" style="height:50px; font-family:inherit;">${val(data.other_info)}</textarea>
 
                 <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
 
@@ -1002,26 +1014,34 @@
                 <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
 
                 <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact / Name">
-                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address (Full)">
+                <div class="flex-row">
+                    <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address (Full)" style="flex:2;">
+                     <input id="e-drop-city" placeholder="City (Opt)" style="flex:1;"> 
+                </div>
                 
                 <select id="e-driver" class="driver-select" style="margin-top:10px;">${driverOpts}</select>
             </div>
-
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button onclick="document.getElementById('detailsModal').style.display='none'" style="flex:1; background:var(--card); color:var(--text-muted); border:1px solid var(--border); padding:12px; font-weight:600; cursor:pointer; font-size:13px; border-radius:6px;">CANCEL</button>
-                <button onclick="saveEdit('${id}', '${type}')" style="flex:1; background:var(--pro-blue); color:white; border:none; padding:12px; font-weight:600; cursor:pointer; font-size:13px; border-radius:6px;">SAVE CHANGES</button>
-            </div>
         `;
         
-        const modalContent = document.querySelector('#detailsModal .modal-content');
-        modalContent.innerHTML = html;
+        const mBody = document.getElementById('m-body');
+        mBody.innerHTML = html;
         document.getElementById('detailsModal').style.display = 'block';
+
+        // Bind Save Button
+        const saveBtn = document.getElementById('m-save-btn');
+        saveBtn.onclick = () => saveEdit(id, type);
     }
 
     function saveEdit(id, type) {
-        let noteVal = document.getElementById('e-note').value;
+        const oldNote = document.getElementById('e-old-note').value;
         const addVal = document.getElementById('e-add-note').value;
-        if(addVal.trim()) noteVal = (noteVal ? noteVal + " " : "") + `[${currentUser}]: ${addVal.trim()}`;
+        let finalNote = oldNote;
+        if(addVal.trim()) finalNote = (oldNote ? oldNote + " " : "") + `[${currentUser}]: ${addVal.trim()}`;
+
+        // Combine Drop Address + City if City is populated
+        let dest = document.getElementById('e-drop').value;
+        const dCity = document.getElementById('e-drop-city').value;
+        if(dCity && !dest.includes(dCity)) dest += ", " + dCity;
 
         const updates = {
             assigned_to: document.getElementById('e-driver').value,
@@ -1031,8 +1051,8 @@
             pickup_location: document.getElementById('e-pickup').value,
             city: document.getElementById('e-city').value,
             delivery_name: document.getElementById('e-drop-name').value,
-            destination: document.getElementById('e-drop').value,
-            other_info: noteVal
+            destination: dest,
+            other_info: finalNote
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(node).child(id).update(updates).then(() => {
@@ -1128,7 +1148,6 @@
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
                 const bg = dColors[p.assigned_to] || '#10b981'; 
-                const darkText = false;
                 
                 const driverHTML = p.assigned_to ? 
                     `<span class="hist-driver" style="background:${bg}; color:#fff;">${p.assigned_to}</span>` : 
