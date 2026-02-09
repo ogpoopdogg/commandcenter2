@@ -415,6 +415,10 @@
             <div id="list-deliveries"></div>
         </div>
     </div>
+    <div style="margin-top: 20px; padding: 10px; border-top: 2px dashed #333;">
+        <div class="archive-title" style="color: #777;">ARCHIVE (COMPLETED)</div>
+        <div id="list-archive" style="display: flex; flex-direction: column; gap: 6px;"></div>
+    </div>
 </div>
 
 <div id="search-footer">
@@ -951,6 +955,7 @@
         const searchTerm = document.getElementById("archive-search").value.toLowerCase();
         
         pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
+        document.getElementById("list-archive").innerHTML = "";
 
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
@@ -978,24 +983,49 @@
             const entries = Object.entries(obj).reverse();
             
             entries.forEach(([id, p]) => {
-                const assignedTo = p.assigned_to;
-                if(p.status !== 'completed') {
-                    if(!assignedTo || assignedTo === 'Unassigned') pending++;
-                    else {
-                        assignedCount++;
-                        if(driverStats[assignedTo]) {
-                            if(type === 'pickup') driverStats[assignedTo].p++;
-                            else driverStats[assignedTo].d++;
-                        }
-                    }
-                    if(p.driver_edited_note) noteCount++;
-                }
-
-                // Filter for Archive View (Show all, or filter by search)
+                // Filter logic
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
 
                 if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
+
+                // Status check
+                if(p.status === 'completed') {
+                    // Render to Archive
+                    const card = document.createElement("div");
+                    card.className = "history-item";
+                    card.onclick = () => viewDetails(id, type);
+                    card.style.cursor = "pointer";
+                    card.style.borderLeft = "4px solid #333";
+                    card.style.background = "#111";
+                    card.style.opacity = "0.7";
+                    
+                    const contact = type === 'pickup' ? p.name : p.delivery_name;
+                    // Format Date
+                    const doneTime = p.completed_at ? formatTime12(p.completed_at) : formatTime12(p.timestamp);
+
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:900; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
+                            <span style="font-size:10px; color:#00ff41; font-weight:bold;">DONE ${doneTime}</span>
+                        </div>
+                        <div style="color:#666; font-size:13px; font-weight:bold;">${contact || 'No Contact'}</div>
+                        <div style="color:#444; font-size:11px;">${p.city || ''}</div>
+                    `;
+                    document.getElementById("list-archive").appendChild(card);
+                    return; // Skip adding to main list
+                }
+
+                const assignedTo = p.assigned_to;
+                if(!assignedTo || assignedTo === 'Unassigned') pending++;
+                else {
+                    assignedCount++;
+                    if(driverStats[assignedTo]) {
+                        if(type === 'pickup') driverStats[assignedTo].p++;
+                        else driverStats[assignedTo].d++;
+                    }
+                }
+                if(p.driver_edited_note) noteCount++;
 
                 const card = document.createElement("div");
                 card.className = "history-item";
