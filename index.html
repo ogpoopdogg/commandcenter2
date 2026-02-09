@@ -601,6 +601,7 @@
     let currentDriverFilter = null;
     let changedJobs = new Map();
     let selfEditIds = new Set();
+    let viewedState = JSON.parse(localStorage.getItem('ec_viewed_state') || '{}');
 
     function filterByDriver(name) {
         currentDriverFilter = name;
@@ -857,18 +858,45 @@
 
     setMode('pickup');
 
-    function compareData(oldD, newD) {
-        if(!oldD) return;
+    function compareData(newD) {
+        if(!newD) return;
         Object.keys(newD).forEach(key => {
-            if(selfEditIds.has(key)) { selfEditIds.delete(key); return; }
-            const o = oldD[key];
-            const n = newD[key];
-            if(!o) { changedJobs.set(key, ['new']); return; } 
+            const current = newD[key];
+            
+            // Handle Self Edits: Update viewed state silently so no animation
+            if(selfEditIds.has(key)) { 
+                viewedState[key] = current;
+                localStorage.setItem('ec_viewed_state', JSON.stringify(viewedState));
+                selfEditIds.delete(key); 
+                changedJobs.delete(key);
+                return; 
+            }
+
+            const viewed = viewedState[key];
+            
+            // New Job (never seen)
+            if(!viewed) { 
+                changedJobs.set(key, ['new']); 
+                return; 
+            } 
+            
+            // Compare fields
             const diffs = [];
-            ['name','delivery_name','city','assigned_to','other_info','pickup_location','destination'].forEach(f => {
-                if(o[f] !== n[f]) diffs.push(f);
+            ['name','delivery_name','city','assigned_to','other_info','pickup_location','destination','package_details','po_number'].forEach(f => {
+                const v1 = (current[f] || '').toString().trim();
+                const v2 = (viewed[f] || '').toString().trim();
+                if(v1 !== v2) diffs.push(f);
             });
-            if(diffs.length > 0) changedJobs.set(key, diffs);
+            
+            // Status changes (like DNP/DND)
+            if(current.status !== viewed.status) diffs.push('status');
+
+            if(diffs.length > 0) {
+                changedJobs.set(key, diffs);
+            } else {
+                // If data matches viewed state (e.g. after reload), ensure no animation
+                changedJobs.delete(key);
+            }
         });
     }
 
@@ -877,14 +905,14 @@
         
         db.ref("pickups").on("value", snapshot => {
             const val = snapshot.val() || {};
-            compareData(rawPickups, val);
+            compareData(val);
             rawPickups = val;
             renderData();
         });
 
         db.ref("dropoffs").on("value", snapshot => {
             const val = snapshot.val() || {};
-            compareData(rawDropoffs, val);
+            compareData(val);
             rawDropoffs = val;
             renderData();
         });
@@ -1038,12 +1066,14 @@
 
     // FIX: Match Edit form line for line with Dispatch
     function viewDetails(id, type) {
-        // Clear change notification on view
-        if(changedJobs.has(id)) { changedJobs.delete(id); renderData(); }
-
         const isPickup = type === 'pickup';
         const data = isPickup ? rawPickups[id] : rawDropoffs[id];
         if(!data) return;
+
+        // Mark as viewed
+        viewedState[id] = data;
+        localStorage.setItem('ec_viewed_state', JSON.stringify(viewedState));
+        if(changedJobs.has(id)) { changedJobs.delete(id); renderData(); }
 
         const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
         const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alicia', 'Kayla'];
@@ -1055,41 +1085,41 @@
                 <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:6px 10px; font-weight:600; cursor:pointer; font-size:11px; border-radius:4px;">DELETE</button>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages / Items / Dimensions">
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages / Items / Dimensions" style="padding:8px; margin-bottom:8px; font-size:13px;">
                 
                 <div class="flex-row">
-                    <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Reference" style="flex:1;">
+                    <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Reference" style="flex:1; padding:8px; margin-bottom:8px; font-size:13px;">
                     <div style="flex:1.5; display:flex; flex-direction:column; gap:4px;">
-                        <input id="e-add-note" placeholder="Add Driver Note">
-                        <div style="font-size:16px; color:var(--text-muted); max-height:40px; overflow-y:auto; background:var(--bg); padding:4px;">${val(data.other_info)}</div>
+                        <input id="e-add-note" placeholder="Add Driver Note" style="padding:8px; margin-bottom:0; font-size:13px;">
+                        <div style="min-height:20px; height:auto; overflow:visible; white-space:pre-wrap; background:var(--bg); padding:8px; border-radius:6px; border:1px solid var(--border); color:var(--text-muted); font-size:13px; line-height:1.4;">${val(data.other_info)}</div>
                         <input type="hidden" id="e-old-note" value="${val(data.other_info)}">
                     </div>
                 </div>
 
-                <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
+                <div style="margin: 4px 0; border-top: 1px solid #334155;"></div>
 
                 <div style="position:relative;">
-                    <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business / Name" autocomplete="off" oninput="handleEditInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('e-suggestions-p').style.display='none', 200)">
+                    <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business / Name" autocomplete="off" oninput="handleEditInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('e-suggestions-p').style.display='none', 200)" style="padding:8px; margin-bottom:8px; font-size:13px;">
                     <div id="e-suggestions-p" class="suggestions-box"></div>
                 </div>
                 <div class="flex-row">
-                    <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2;">
-                    <input id="e-city" value="${val(data.city)}" placeholder="City" style="flex:1;">
+                    <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2; padding:8px; margin-bottom:8px; font-size:13px;">
+                    <input id="e-city" value="${val(data.city)}" placeholder="City" style="flex:1; padding:8px; margin-bottom:8px; font-size:13px;">
                 </div>
 
-                <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
+                <div style="margin: 4px 0; border-top: 1px solid #334155;"></div>
 
                 <div style="position:relative;">
-                    <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact / Name" autocomplete="off" oninput="handleEditInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('e-suggestions-d').style.display='none', 200)">
+                    <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact / Name" autocomplete="off" oninput="handleEditInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('e-suggestions-d').style.display='none', 200)" style="padding:8px; margin-bottom:8px; font-size:13px;">
                     <div id="e-suggestions-d" class="suggestions-box"></div>
                 </div>
                 <div class="flex-row">
-                    <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address (Full)" style="flex:2;">
-                     <input id="e-drop-city" placeholder="City" style="flex:1;"> 
+                    <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address (Full)" style="flex:2; padding:8px; margin-bottom:8px; font-size:13px;">
+                     <input id="e-drop-city" placeholder="City" style="flex:1; padding:8px; margin-bottom:8px; font-size:13px;"> 
                 </div>
                 
-                <select id="e-driver" class="driver-select" style="margin-top:10px;">${driverOpts}</select>
+                <select id="e-driver" class="driver-select" style="margin-top:4px; padding:8px; font-size:13px;">${driverOpts}</select>
             </div>
         `;
         
@@ -1128,6 +1158,9 @@
         selfEditIds.add(id);
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(node).child(id).update(updates).then(() => {
+            // Update viewed state immediately to prevent self-change animation
+            viewedState[id] = { ...viewedState[id], ...updates }; 
+            localStorage.setItem('ec_viewed_state', JSON.stringify(viewedState));
             document.getElementById('detailsModal').style.display = 'none';
         });
     }
