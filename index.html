@@ -9,21 +9,30 @@
     <meta name="theme-color" content="#1e293b">
     
     <style>
-        :root {
-            /* Modern, Professional Palette (Dark Slate & Amber) */
-            --bg: #0f172a;         /* Deep slate background */
-            --card: #1e293b;       /* Lighter slate for cards */
-            --border: #334155;     /* Subtle border */
-            --text: #f8fafc;       /* High contrast text */
-            --text-muted: #94a3b8; /* Secondary text */
-            
-            --accent: #f59e0b;     /* Professional Amber/Gold */
-            --active-green: #10b981; /* Modern Emerald */
-            --archive-orange: #f97316;
-            --note-blue: #0ea5e9;  /* Sky blue */
-            --pro-blue: #3b82f6;   /* Primary Action Blue */
-            --danger: #ef4444;
-        }
+    :root {
+        /* E&C Courier — Gold / Black / White Professional Theme */
+
+        /* Core surfaces */
+        --bg: #0b0b0b;            /* Near-black background (not pure black, easier on eyes) */
+        --card: #141414;          /* Slightly lifted black for cards */
+        --border: #262626;        /* Subtle neutral border */
+
+        /* Text */
+        --text: #ffffff;          /* Primary white text */
+        --text-muted: #b3b3b3;    /* Muted gray for secondary info */
+
+        /* Brand accent (Gold) */
+        --accent: #d4af37;        /* Classic metallic gold */
+        --accent-soft: #e6c96a;   /* Softer gold for hovers / highlights */
+
+        /* Status colors (kept restrained, still readable) */
+        --active-green: #2ecc71;  /* Confirmed / active */
+        --archive-orange: #f39c12;/* Archived / pending */
+        --note-blue: #4aa3df;     /* Informational notes */
+        --pro-blue: #1f6feb;      /* Primary action (buttons/links) */
+        --danger: #e74c3c;        /* Errors / critical states */
+    }
+
 
         /* FIX: Prevent side-to-side scrolling */
         html, body {
