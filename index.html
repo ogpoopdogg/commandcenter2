@@ -6,300 +6,413 @@
     <title>E&C COMMAND CENTER</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffcc00">
+    <meta name="theme-color" content="#1e293b">
     
     <style>
-        :root { --accent: #ffcc00; --bg: #0a0a0a; --card: #161616; --text: #eee; --wpg: #2196f3; --brdn: #9c27b0; --active-green: #00ff41; --archive-orange: #ff6600; --note-blue: #00d4ff; --pro-blue: #007bff; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 80px; }
+        :root {
+            /* Modern, Professional Palette (Dark Slate & Amber) */
+            --bg: #0f172a;         /* Deep slate background */
+            --card: #1e293b;       /* Lighter slate for cards */
+            --border: #334155;     /* Subtle border */
+            --text: #f8fafc;       /* High contrast text */
+            --text-muted: #94a3b8; /* Secondary text */
+            
+            --accent: #f59e0b;     /* Professional Amber/Gold */
+            --active-green: #10b981; /* Modern Emerald */
+            --archive-orange: #f97316;
+            --note-blue: #0ea5e9;  /* Sky blue */
+            --pro-blue: #3b82f6;   /* Primary Action Blue */
+            --danger: #ef4444;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            padding-bottom: 80px; 
+            -webkit-font-smoothing: antialiased;
+        }
         
-        header { padding: 10px 15px; background: #000; border-bottom: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; }
+        /* HEADER */
+        header { 
+            padding: 16px 24px; 
+            background: var(--card) !important; 
+            border-bottom: 1px solid var(--border) !important; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: relative; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
         
         .header-logo {
             height: 24px;
             width: auto;
-            margin-right: 10px;
+            margin-right: 12px;
             vertical-align: middle;
-            filter: drop-shadow(0 0 5px var(--accent));
-            animation: logo-glow 2s infinite alternate;
-        }
-
-        @keyframes logo-glow {
-            from { filter: drop-shadow(0 0 2px var(--accent)); transform: scale(1); }
-            to { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.05); }
-        }
-
-        /* GREEN DOT PULSING ANIMATION */
-        @keyframes dot-pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .pulsing-dot {
-            animation: dot-pulse 2s infinite ease-in-out;
-        }
-
-        /* LOCATE DRIVERS BUTTON */
-        #locate-btn {
-            background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
-            color: #000080;
-            border: none;
-            border-radius: 4px;
-            font-weight: 900;
-            text-transform: uppercase;
-            padding: 0;
-            width: 100%;
-            height: 42px;
-            cursor: pointer;
-            font-size: 11px;
-            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
-            animation: pulse-blue 2s infinite;
-        }
-        
-        .route-btn {
-            background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover;
-            color: #000080;
-            border: 1px solid var(--accent);
-            border-radius: 4px;
-            font-weight: 900;
-            text-transform: uppercase;
-            padding: 8px 20px;
-            cursor: pointer;
-            font-size: 13px;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
-            animation: pulse-blue 2s infinite;
-            white-space: nowrap;
-        }
-
-        /* MAP MODAL */
-        #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
-        #map { width: 100%; height: 100%; }
-        .close-map { position: absolute; top: 20px; right: 20px; z-index: 3001; background: red; color: white; border: none; padding: 10px 20px; font-weight: 900; border-radius: 5px; cursor: pointer; }
-
-        #install-btn { 
-            display: none; 
-            background: var(--pro-blue); 
-            color: #fff; 
-            border: none; 
-            padding: 8px 14px; 
-            font-size: 11px; 
-            font-weight: 900; 
-            border-radius: 4px; 
-            cursor: pointer;
-            text-transform: uppercase;
-            position: absolute;
-            right: 10px;
-            bottom: 10px;
-            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
-            animation: pulse-blue 2s infinite, fadeIn 0.5s ease-in;
-            z-index: 1002;
-        }
-
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes subtle-glow {
-            0% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
-            50% { box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); border-color: var(--accent); }
-            100% { box-shadow: 0 0 2px rgba(255, 204, 0, 0.1); border-color: #444; }
-        }
-        .glow-field { border: 1px solid #444; }
-
-        .stats-bar { display: flex; background: #111; padding: 5px; border-bottom: 1px solid #333; justify-content: space-around; align-items: center; }
-        #entry-panel { background: #0f0f0f; border-bottom: 2px solid #333; padding: 12px 15px; }
-        #board-panel { padding: 15px; flex: 1; }
-        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0 5px; transition: all 0.3s; }
-        .stat-label { display: block; font-size: 11px; color: #888; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
-        .stat-number { font-family: 'Courier New', monospace; font-weight: 900; line-height: 1; }
-        #stat-pending { font-size: 24px; color: var(--accent); }
-        #stat-assigned { font-size: 24px; color: var(--active-green); }
-        #stat-note { font-size: 24px; color: var(--note-blue); }
-        
-        .high-alert { background: #1a1a00 !important; border: 2px solid var(--active-green); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); animation: alert-glow 0.6s infinite alternate; }
-        @keyframes alert-glow { from { border-color: #333; } to { border-color: var(--active-green); } }
-        
-        .unassigned-glow { border: 2px solid var(--accent) !important; z-index: 10; animation: pro-glow 1.2s infinite ease-in-out; }
-        @keyframes pro-glow {
-            0% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
-            50% { box-shadow: 0 0 25px var(--accent), inset 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.01); border-color: var(--accent); }
-            100% { box-shadow: 0 0 5px var(--accent), inset 0 0 5px rgba(255, 204, 0, 0.2); transform: scale(1); border-color: #555; }
-        }
-
-        @keyframes inner-pulse {
-            0% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
-            50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.4); }
-            100% { box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+            filter: drop-shadow(0 0 2px rgba(255,255,255,0.1));
         }
 
         .shiny-text {
-            background: linear-gradient(to right, var(--accent) 20%, #fff 50%, var(--accent) 80%);
-            background-size: 200% auto;
-            color: transparent;
-            -webkit-background-clip: text;
-            background-clip: text;
-            animation: text-shine 3s linear infinite;
+            background: none;
+            color: var(--text);
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.5px;
+            animation: none;
         }
-        @keyframes text-shine { to { background-position: 200% center; } }
 
-        details > summary { list-style: none; outline: none; }
-        details > summary::-webkit-details-marker { display: none; }
-
-        .note-highlight { border: 2px solid var(--note-blue) !important; animation: note-glow 1.5s infinite; }
-        .note-text-glow { color: var(--note-blue) !important; font-weight: 900; animation: text-pulse 1.5s infinite; cursor: pointer; }
-        @keyframes note-glow {
-            0% { box-shadow: 0 0 5px var(--note-blue); }
-            50% { box-shadow: 0 0 20px var(--note-blue); }
-            100% { box-shadow: 0 0 5px var(--note-blue); }
+        #clock {
+            font-variant-numeric: tabular-nums;
+            color: var(--text-muted) !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            background: rgba(0,0,0,0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
         }
-        @keyframes text-pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+
+        /* STATS BAR */
+        .stats-bar { 
+            display: flex; 
+            background: var(--bg) !important; 
+            padding: 16px 24px; 
+            border-bottom: 1px solid var(--border) !important; 
+            justify-content: space-between; 
+            gap: 12px;
+        }
+        .stat-box { 
+            text-align: center; 
+            flex: 1; 
+            position: relative; 
+            border-radius: 8px; 
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 10px;
+            transition: all 0.2s; 
+        }
+        .stat-box:hover {
+            border-color: var(--pro-blue);
+        }
+        .stat-label { 
+            display: block; 
+            font-size: 10px; 
+            color: var(--text-muted); 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            margin-bottom: 4px; 
+            letter-spacing: 0.5px;
+        }
+        .stat-number { 
+            font-family: -apple-system, sans-serif; 
+            font-weight: 700; 
+            line-height: 1; 
+            font-size: 20px;
         }
         
-        @keyframes urgent-pulse {
-            0% { background: #330000; box-shadow: inset 0 0 10px red; border-color: red; }
-            50% { background: #660000; box-shadow: inset 0 0 30px red; border-color: #ff5555; }
-            100% { background: #330000; box-shadow: inset 0 0 10px red; border-color: red; }
-        }
-        .urgent-pickup { animation: urgent-pulse 1s infinite; border: 2px solid red !important; }
+        #stat-pending { color: var(--text); font-size: 20px; }
+        #stat-assigned { color: var(--text); font-size: 20px; }
+        #stat-note { color: var(--note-blue); font-size: 20px; }
 
-        input, select, textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 16px; margin-bottom: 6px; box-sizing: border-box; }
-        .flex-row { display: flex; gap: 8px; }
-        .driver-select { width: 100%; background: #000; color: var(--accent); border: 1px solid #555; font-weight: bold; padding: 10px; border-radius: 4px; }
+        /* BUTTONS & MAP TRIGGERS */
+        #locate-btn {
+            background: var(--card) !important;
+            color: var(--pro-blue);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 42px;
+            cursor: pointer;
+            font-size: 11px;
+            box-shadow: none;
+            animation: none;
+            transition: all 0.2s;
+        }
+        #locate-btn:hover {
+            background: var(--pro-blue) !important;
+            color: white;
+        }
         
+        .route-btn {
+            background: var(--card) !important;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            box-shadow: none;
+            animation: none;
+        }
+
+        /* FORMS & INPUTS */
+        #entry-panel { 
+            background: var(--card) !important; 
+            border-bottom: 1px solid var(--border) !important; 
+            padding: 24px; 
+            margin: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            background: var(--bg); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            border-radius: 6px; 
+            font-size: 14px; 
+            margin-bottom: 12px; 
+            box-sizing: border-box; 
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--pro-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .driver-select { 
+            background: var(--bg); 
+            color: var(--text); 
+            border: 1px solid var(--border) !important; 
+            font-weight: 500; 
+            padding: 12px; 
+            border-radius: 6px; 
+        }
+
+        .glow-field { border: 1px solid var(--border); }
+        
+        /* MODE SWITCH */
+        .mode-switch-container { 
+            display: flex; 
+            margin-bottom: 16px; 
+            background: var(--bg);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .mode-btn { 
+            flex: 1; 
+            padding: 10px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            font-size: 12px; 
+            background: transparent; 
+            color: var(--text-muted); 
+            transition: 0.2s; 
+            border-radius: 6px;
+        }
+        .mode-btn.active-mode { 
+            background: var(--card); 
+            color: var(--text); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .mode-btn.active-mode.delivery-mode { 
+            background: var(--active-green) !important; 
+            color: white; 
+        }
+
+        /* PRIMARY ACTIONS */
         button.primary {
             width: 100%;
-            padding: 18px;
-            background: #1a1a1a;
+            padding: 14px;
+            background: var(--pro-blue);
             color: #fff;
-            font-weight: 900;
-            border: 1px solid #333;
-            border-bottom: 2px solid var(--accent);
+            font-weight: 600;
+            border: none;
+            border-bottom: none;
             cursor: pointer;
             border-radius: 6px;
             text-transform: uppercase;
-            font-size: 16px;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         button.primary:hover {
-            background: #222;
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.1);
+            background: #2563eb;
             transform: translateY(-1px);
         }
-        button.primary:active {
-            transform: translateY(1px);
-        }
         
-        .dispatch-card { background: #111; border: 1px solid #444; border-left: 6px solid var(--accent); margin-bottom: 30px; border-radius: 4px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.7); overflow: hidden; position: relative; }
-        .card-body { padding: 15px; }
-        .card-ctrl { background: #1c1c1c; padding: 12px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 0 0 8px 8px; }
-        .addr { font-weight: 800; font-size: 17px; margin: 6px 0; }
-        .loc-tag { font-size: 16px; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; background: #333; color: #fff; border: 1px solid #555; display: inline-block; margin-bottom: 8px; }
-        .pkg-badge { font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 5px; border-radius: 3px; margin-left: 10px; vertical-align: middle; }
-        .reset-btn { background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
-        
-        .edit-btn { background: #444; color: var(--accent); border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
-        .save-btn { background: var(--active-green); color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 11px; text-transform: uppercase; }
-        .edit-input { animation: subtle-glow 3s infinite ease-in-out; }
-
-        .history-box { margin-top: 30px; border-top: 2px dashed #333; padding: 15px; background: #080808; display: flex; gap: 15px; flex-wrap: wrap; }
-        .archive-column { flex: 1; min-width: 300px; border-right: 1px dashed #333; padding-right: 10px; }
-        .archive-column:last-child { border-right: none; padding-right: 0; }
-        .archive-title { font-size: 14px; font-weight: 900; color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-
-        .new-entry-pop { animation: archive-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; z-index: 10; }
-        @keyframes archive-pop {
-            0% { transform: scale(0.5) translateY(-20px); opacity: 0; background: var(--active-green); box-shadow: 0 0 50px var(--active-green); }
-            50% { transform: scale(1.05); background: #333; box-shadow: 0 0 20px var(--active-green); }
-            100% { transform: scale(1); opacity: 1; background: #111; box-shadow: none; }
+        #voice-btn {
+            background: var(--bg) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 6px !important;
+            animation: none !important;
         }
+        #voice-btn:hover { border-color: var(--pro-blue) !important; }
+        #mic-icon { fill: var(--text-muted) !important; }
+        .voice-active { fill: var(--danger) !important; animation: none !important; }
 
-        .hist-driver { background: var(--active-green); color: #000; font-weight: 900; padding: 3px 8px; border-radius: 3px; font-size: 13px; text-transform: uppercase; }
-        .hist-time { font-size: 11px; color: var(--accent); margin-top: 8px; font-family: monospace; font-weight: bold; }
-        .hist-city { font-size: 14px; font-weight: 900; background: #2a2a2a; color: #fff; padding: 3px 8px; border-radius: 4px; margin-right: 10px; vertical-align: middle; text-transform: uppercase; border: 1px solid #444; }
-        .hist-name { font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
+        /* LISTS & CARDS */
+        #board-panel { padding: 0 24px 24px 24px; flex: 1; }
         
-        .driver-map-label {
-            color: #ffff00 !important;
-            font-weight: 900;
-            font-size: 14px;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        .history-box { 
+            margin-top: 24px; 
+            border-top: none; 
+            padding: 0; 
+            background: transparent; 
+            display: flex; 
+            gap: 24px; 
+            flex-wrap: wrap; 
         }
-
-        .driver-route-label {
-            color: #00ff41 !important;
-            font-weight: 900;
-            font-size: 15px;
-            font-family: system-ui, -apple-system, sans-serif;
-            text-transform: uppercase;
-            text-shadow: 0 0 5px rgba(0,0,0,0.9);
-            letter-spacing: 0.5px;
+        .archive-column { 
+            flex: 1; 
+            min-width: 300px; 
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .archive-title { 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: var(--text-muted) !important; 
+            text-transform: uppercase; 
+            margin-bottom: 16px; 
+            border-bottom: 1px solid var(--border); 
+            padding-bottom: 8px; 
+            letter-spacing: 1px;
         }
 
-        .card-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; font-size: 18px; }
-        .detail-label { color: #888; text-transform: uppercase; font-size: 14px; font-weight: 900; margin-bottom: 2px; }
-        .detail-value { color: #fff; margin-bottom: 5px; font-weight: 500; }
-
-        .more-btn { width: 100%; padding: 15px; background: #222; color: var(--accent); border: 1px solid #444; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
-        
-        #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 2px solid var(--accent); padding: 10px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
-        #archive-search { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: var(--accent); font-weight: bold; border-radius: 4px; font-size: 16px; }
-
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
-        .modal-content { background: #161616; margin: 5% auto; padding: 20px; width: 85%; max-width: 500px; border: 2px solid var(--accent); color: #eee; border-radius: 8px; }
-
-        /* LOGIN OVERLAY */
-        #login-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
-        .login-box { width: 100%; max-width: 350px; background: #111; padding: 30px; border-radius: 15px; border: 1px solid #333; text-align: center; }
-        .login-input { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 18px; outline: none; }
-        .login-submit { width: 100%; padding: 15px; margin-top: 15px; background: var(--accent); border: none; color: #000; font-weight: 900; font-size: 18px; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
-        #user-display { color: var(--active-green); font-size: 12px; font-weight: 900; text-transform: uppercase; animation: fadeIn 1s ease-out; margin-bottom: 5px; }
-
-        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: #1a1a1a; border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; }
-        .suggestion-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; color: #eee; font-weight: bold; }
-        .suggestion-item:hover { background: var(--accent); color: #000; }
-
-        @keyframes voice-glow {
-            0% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
-            50% { filter: drop-shadow(0 0 8px var(--active-green)); transform: scale(1.1); fill: #fff; }
-            100% { filter: drop-shadow(0 0 2px var(--active-green)); transform: scale(1); fill: var(--active-green); }
+        .history-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
         }
-        .voice-active { animation: voice-glow 1.5s infinite; fill: var(--active-green) !important; }
+        .history-item:hover { border-color: var(--text-muted); }
         
-        .mode-switch-container { display: flex; margin-bottom: 10px; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
-        .mode-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; font-size: 14px; background: #111; color: #555; transition: 0.3s; }
-        .mode-btn.active-mode { background: var(--accent); color: #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; }
+        .hist-driver { 
+            background: var(--border) !important; 
+            color: var(--text) !important; 
+            font-weight: 600; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-size: 10px; 
+            text-transform: uppercase; 
+        }
+        .hist-city { font-size: 12px; font-weight: 500; background: transparent; color: var(--text-muted); padding: 0; border: none; }
+        .hist-name { font-size: 14px; color: var(--text); font-weight: 600; margin-top: 4px;}
+        
+        .urgent-pickup { 
+            background: rgba(239, 68, 68, 0.1) !important; 
+            border-color: var(--danger) !important; 
+            animation: none !important; 
+        }
+        .unassigned-glow { border-color: var(--accent) !important; animation: none; }
 
-        /* GRAPH INDICATOR STYLES */
-        #driver-stats-panel { background: #111; padding: 10px; border-bottom: 2px solid #333; display: flex; flex-direction: column; gap: 5px; }
-        .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #1a1a1a; border-radius: 4px; animation: slideIn 0.3s ease-out; border: 1px solid #2a2a2a; }
-        .ds-name { color: #fff; font-weight: 900; font-size: 16px; width: 80px; text-transform: uppercase; }
-        .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-        .stat-item { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; display: flex; align-items: center; gap: 5px; background: #111; padding: 4px 8px; border-radius: 4px; border: 1px solid #222; }
-        .stat-val-p { color: var(--accent); font-size: 14px; font-weight: 900; animation: num-pulse 2s infinite alternate; }
-        .stat-val-d { color: var(--active-green); font-size: 14px; font-weight: 900; animation: num-pulse 2s infinite alternate; }
+        /* DRIVER STATS ROW */
+        #driver-stats-panel { 
+            background: transparent; 
+            padding: 0 24px; 
+            border-bottom: none; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            margin-bottom: 24px;
+        }
+        .driver-stat-row { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 8px 12px; 
+            background: var(--card); 
+            border-radius: 6px; 
+            border: 1px solid var(--border); 
+            transition: 0.2s;
+        }
+        .driver-stat-row:hover { border-color: var(--pro-blue); }
         
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes num-pulse { from { text-shadow: 0 0 2px rgba(255,255,255,0); } to { text-shadow: 0 0 8px rgba(255,255,255,0.8); } }
+        .ds-name { color: var(--text); font-weight: 600; font-size: 13px; width: 80px; text-transform: uppercase; }
+        .stat-item { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); }
+        .stat-val-p { color: var(--accent); font-size: 12px; font-weight: 700; animation: none; }
+        .stat-val-d { color: var(--active-green); font-size: 12px; font-weight: 700; animation: none; }
+
+        /* MODALS & OVERLAYS */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+        .modal-content { 
+            background: var(--card); 
+            margin: 5% auto; 
+            padding: 24px; 
+            width: 85%; 
+            max-width: 500px; 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            border-radius: 12px; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: var(--bg); }
+        .close-map { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 3001; 
+            background: var(--danger); 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 12px;
+        }
+
+        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+        .login-box { width: 100%; max-width: 350px; background: var(--card); padding: 32px; border-radius: 16px; border: 1px solid var(--border); text-align: center; }
+        .login-submit { width: 100%; padding: 12px; margin-top: 16px; background: var(--pro-blue); border: none; color: white; font-weight: 600; font-size: 14px; border-radius: 6px; cursor: pointer; text-transform: uppercase; }
+
+        #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); padding: 12px 24px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; gap: 12px; }
+        #archive-search { width: 100%; padding: 10px 16px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-weight: 500; border-radius: 20px; font-size: 14px; margin: 0; }
+        #archive-search:focus { border-color: var(--pro-blue); }
+
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--border); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; border-radius: 6px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .suggestion-item { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text-muted); font-size: 13px; font-weight: 500; }
+        .suggestion-item:hover { background: var(--bg); color: var(--pro-blue); }
+
+        /* UTILITY */
+        .flex-row { display: flex; gap: 12px; }
+        details > summary { list-style: none; outline: none; }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        @media (max-width: 600px) {
+            #board-panel { padding: 0 16px 24px 16px; }
+            .history-box { gap: 16px; margin-top: 16px; }
+            .archive-column { min-width: 100%; }
+            #entry-panel { padding: 16px; margin: 16px; }
+        }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2 style="color: var(--accent); font-weight: 900;">COMMAND LOGIN</h2>
+        <h2 style="color: var(--text); font-weight: 700; font-size: 18px; margin-top:0;">COMMAND LOGIN</h2>
         <input type="text" id="login-user" class="login-input" placeholder="Username" autofocus>
         <input type="password" id="login-pin" class="login-input" placeholder="Pin">
         <button class="login-submit" onclick="attemptLogin()">Authorize</button>
@@ -308,13 +421,13 @@
 
 <header>
     <div style="display: flex; flex-direction: column; width: 100%;">
-        <div id="user-display"></div>
+        <div id="user-display" style="font-size: 10px; color: var(--active-green); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;"></div>
         <div style="display: flex; align-items: center; overflow: hidden;">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <span class="shiny-text" style="font-size: 20px; font-weight: 900; white-space: nowrap;">E&C COMMAND CENTER</span>
+            <span class="shiny-text" style="font-size: 18px; font-weight: 700; color: var(--text);">E&C COMMAND</span>
         </div>
     </div>
-    <div id="clock" style="font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap;"></div>
+    <div id="clock"></div>
 </header>
 
 <div class="stats-bar">
@@ -341,21 +454,21 @@
     </div>
 
     <div style="position:relative; margin-bottom: 8px;">
-        <div style="position:absolute; right:10px; top:12px; z-index:10; font-size:11px; font-weight:bold; cursor:pointer; color: #757575;" onclick="resetFormFields()">RESET</div>
+        <div style="position:absolute; right:10px; top:-40px; z-index:10; font-size:10px; font-weight:600; cursor:pointer; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;" onclick="resetFormFields()">Reset Form</div>
     </div>
 
     <div id="top-input-section"></div>
     
-    <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
+    <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages / Items / Dimensions">
 
     <div class="flex-row">
         <input type="text" id="f-po" placeholder="PO / Reference" style="flex: 1;">
         <input type="text" id="f-info" placeholder="Driver Notes..." style="flex: 1.5;">
     </div>
 
-    <div id="bottom-input-section" style="margin-top: 8px;"></div>
+    <div id="bottom-input-section" style="margin-top: 0px;"></div>
 
-    <select id="f-driver" class="driver-select" style="margin-bottom: 8px; border: 1px solid var(--accent);">
+    <select id="f-driver" class="driver-select" style="margin-bottom: 12px; margin-top: 12px;">
         <option value="Unassigned" selected disabled hidden>Assign Driver</option>
         <option value="Unassigned">UNASSIGNED</option>
         <option value="Matt">Matt</option>
@@ -365,9 +478,9 @@
         <option value="Alicia">Alicia</option>
         <option value="Kayla">Kayla</option>
     </select>
-    <div style="display: flex; gap: 8px;">
-        <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch</button>
-        <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #000; border: 1px solid #fff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: inner-pulse 2s infinite;"><svg id="mic-icon" viewBox="0 0 24 24" width="28" height="28" style="fill: #fff; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+    <div style="display: flex; gap: 12px;">
+        <button class="primary" onclick="createJob()" style="flex: 1;">Dispatch Job</button>
+        <button id="voice-btn" onclick="startVoiceEntry()" style="width: 50px; display: flex; align-items: center; justify-content: center;"><svg id="mic-icon" viewBox="0 0 24 24" width="20" height="20" style="transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
     </div>
 </div>
 
@@ -376,23 +489,23 @@
 <div style="display:none;">
     <div id="group-pickup">
         <div style="position:relative;">
-            <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
+            <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business / Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
             <div id="suggestions" class="suggestions-box"></div>
         </div>
         <div class="flex-row">
             <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
-            <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+            <input type="text" id="f-city" class="glow-field" placeholder="City" style="flex: 1;">
         </div>
     </div>
 
     <div id="group-drop">
         <div style="position:relative;">
-            <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
+            <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact / Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
             <div id="drop-suggestions" class="suggestions-box"></div>
         </div>
         <div class="flex-row">
             <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
-            <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
+            <input type="text" id="f-drop-city" class="glow-field" placeholder="City" style="flex: 1;">
         </div>
     </div>
 </div>
@@ -400,30 +513,29 @@
 <div id="board-panel">
     <div class="history-box">
         <div id="filter-reset-ui" style="width:100%; text-align:center; display:none; margin-bottom:10px;">
-            <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:20px; font-weight:900; padding:8px 20px; border-radius:30px; text-transform:uppercase; background:#111; box-shadow: 0 0 10px rgba(255,255,255,0.1);"></div>
+            <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:16px; font-weight:700; padding:8px 20px; border-radius:30px; text-transform:uppercase; background:var(--card); color: var(--text);"></div>
             <div style="display:flex; justify-content:center; gap:10px;">
                 <button id="view-route-btn" class="route-btn" style="display:none;">View Current Route</button>
-                <button onclick="clearDriverFilter()" style="background:#222; border:1px solid var(--accent); color:var(--accent); padding:8px 20px; font-weight:900; border-radius:4px; text-transform:uppercase; cursor:pointer;">Back to All</button>
+                <button onclick="clearDriverFilter()" style="background:var(--card); border:1px solid var(--border); color:var(--text); padding:8px 20px; font-weight:600; border-radius:4px; text-transform:uppercase; cursor:pointer;">Back to All</button>
             </div>
         </div>
         <div class="archive-column">
-            <div class="archive-title" style="color:var(--archive-orange);">Pickups</div>
+            <div class="archive-title" style="color:var(--accent);">Pickups</div>
             <div id="list-pickups"></div>
         </div>
         <div class="archive-column">
-            <div class="archive-title" style="color:#00ff41;">Deliveries</div>
+            <div class="archive-title" style="color:var(--active-green);">Deliveries</div>
             <div id="list-deliveries"></div>
         </div>
     </div>
-    <div style="margin-top: 20px; padding: 10px; border-top: 2px dashed #333;">
-        <div class="archive-title" style="color: #777;">ARCHIVE (COMPLETED)</div>
+    <div style="margin-top: 20px; padding: 10px; border-top: 1px dashed var(--border);">
+        <div class="archive-title" style="color: var(--text-muted);">Today's Completed Jobs</div>
         <div id="list-archive" style="display: flex; flex-direction: column; gap: 6px;"></div>
     </div>
 </div>
 
 <div id="search-footer">
-    <input type="text" id="archive-search" placeholder="SEARCH ARCHIVE" onkeyup="renderData()" onkeydown="handleSearchKey(event)">
-    <button id="install-btn">Install App</button>
+    <input type="text" id="archive-search" placeholder="Search History..." onkeyup="renderData()" onkeydown="handleSearchKey(event)">
 </div>
 
 <div id="map-modal">
@@ -433,13 +545,13 @@
 
 <div id="detailsModal" class="modal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h2 id="m-title" style="color:var(--accent); margin-top:0;">Job Details</h2>
+        <h2 id="m-title" style="color:var(--text); margin-top:0; font-size: 16px; text-transform: uppercase;">Job Details</h2>
         <div id="m-body"></div>
-        <div id="m-note-section" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
-            <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px;"></textarea>
-            <button class="save-btn" id="m-note-save" style="width: 100%; padding: 12px; font-size: 14px;">Add Note to Job</button>
+        <div id="m-note-section" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <textarea id="m-note-input" placeholder="Enter additional note..." style="font-size: 14px; height: 60px; margin-bottom: 12px;"></textarea>
+            <button class="save-btn primary" id="m-note-save" style="width: 100%; padding: 12px; font-size: 13px;">Add Note to Job</button>
         </div>
-        <button class="primary" style="margin-top:20px; padding:10px; background:#444;" onclick="document.getElementById('detailsModal').style.display='none'">DONE</button>
+        <button style="width: 100%; margin-top:12px; padding:12px; background:transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="document.getElementById('detailsModal').style.display='none'">CLOSE</button>
     </div>
 </div>
 
@@ -479,14 +591,6 @@
         if(label) {
             label.innerText = name;
             label.style.display = "block";
-            const dColors = {
-                'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
-                'Jess': '#FF69B4', 'Alicia': '#9C27B0', 'Kayla': '#E91E63'
-            };
-            const c = dColors[name] || '#ffffff';
-            label.style.borderColor = c;
-            label.style.color = c;
-            label.style.boxShadow = `0 0 15px ${c}`;
         }
     }
     
@@ -510,7 +614,7 @@
                 localStorage.setItem('ec_command_user', user);
                 currentUser = user;
                 document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('user-display').innerText = `Logged in as: ${user}`;
+                document.getElementById('user-display').innerText = `Officer: ${user}`;
             } else {
                 alert("Invalid Credentials");
             }
@@ -519,7 +623,7 @@
 
     if(currentUser) {
         document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
+        document.getElementById('user-display').innerText = `Officer: ${currentUser}`;
     }
 
     function formatTime12(ts) {
@@ -556,19 +660,19 @@
                 const timeStr = formatTime12(updateTS);
                 const d = new Date(updateTS);
                 const dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
-                const markerLabelText = `${name}\n${timeStr} | ${dateStr}`;
+                const markerLabelText = `${name}\n${timeStr}`;
                 
                 bounds.extend(pos);
                 hasDrivers = true;
 
                 if (mapMarkers[name]) {
                     mapMarkers[name].setPosition(pos);
-                    mapMarkers[name].setLabel({ text: markerLabelText, className: "pulsing-dot driver-map-label" });
+                    mapMarkers[name].setLabel({ text: markerLabelText, className: "driver-map-label" });
                 } else {
                     mapMarkers[name] = new google.maps.Marker({
                         position: pos, map: mainMap,
-                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00ff41', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
-                        label: { text: markerLabelText, className: "pulsing-dot driver-map-label" },
+                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#10b981', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
+                        label: { text: markerLabelText, className: "driver-map-label" },
                         title: name
                     });
                 }
@@ -595,7 +699,6 @@
         if(listeningRef) { listeningRef.off(); listeningRef = null; }
         db.ref('driver_locations').off();
         
-        // Clear previous markers
         for(let k in mapMarkers) {
              if(mapMarkers[k]) mapMarkers[k].setMap(null);
         }
@@ -609,7 +712,6 @@
             const pos = { lat: data.lat, lng: data.lng };
             const timeStr = formatTime12(data.gps_timestamp || Date.now());
 
-            // Driver Marker
             if(mapMarkers[name]) {
                  mapMarkers[name].setPosition(pos);
             } else {
@@ -617,14 +719,14 @@
                     position: pos, map: mainMap,
                     icon: { 
                         path: google.maps.SymbolPath.CIRCLE, 
-                        fillColor: '#00ff41', 
+                        fillColor: '#10b981', 
                         fillOpacity: 1, 
                         strokeWeight: 2, 
                         strokeColor: '#ffffff', 
                         scale: 7,
                         labelOrigin: new google.maps.Point(0, -15)
                     },
-                    label: { text: `${name} ${timeStr}`, className: "pulsing-dot driver-route-label" }
+                    label: { text: `${name} ${timeStr}`, className: "driver-route-label" }
                  });
                  mapMarkers[name] = marker;
             }
@@ -633,22 +735,17 @@
                  const path = google.maps.geometry.encoding.decodePath(data.active_route);
                  activePolyline = new google.maps.Polyline({
                      path: path, geodesic: true,
-                     strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5,
+                     strokeColor: "#3b82f6", strokeOpacity: 1.0, strokeWeight: 5,
                      map: mainMap
                  });
                  
                  const bounds = new google.maps.LatLngBounds();
                  path.forEach(p => bounds.extend(p));
                  
-                 // Add job markers to the map if they are part of the active route
-                 // This assumes jobs are geocoded, or we can use the path points if they match known jobs
-                 // Simplified: Show all pending jobs for this driver on the route map
-                 
                  const driverJobs = [];
                  Object.values(rawPickups).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'pickup'}); });
                  Object.values(rawDropoffs).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'drop'}); });
                  
-                 // Geocode addresses to place markers on route (simple approximation)
                  const geocoder = new google.maps.Geocoder();
                  
                  driverJobs.forEach((job, index) => {
@@ -663,7 +760,7 @@
                                 position: results[0].geometry.location,
                                 label: { 
                                     text: label, 
-                                    color: "#00ff41", 
+                                    color: "#10b981", 
                                     fontWeight: "bold",
                                     fontSize: "12px",
                                     className: "driver-map-label"
@@ -671,13 +768,12 @@
                                 icon: {
                                     path: google.maps.SymbolPath.CIRCLE,
                                     scale: 5,
-                                    fillColor: job.type === 'pickup' ? '#ff9800' : '#00ff41',
+                                    fillColor: job.type === 'pickup' ? '#f59e0b' : '#10b981',
                                     fillOpacity: 1,
                                     strokeWeight: 1,
                                     strokeColor: 'white'
                                 }
                             });
-                            // Keep track to remove later if needed
                             const key = `job_${index}`;
                             mapMarkers[key] = marker;
                         }
@@ -698,7 +794,6 @@
         if(listeningRef) { listeningRef.off(); listeningRef = null; }
         if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
         
-        // Clear all markers including job markers
         for(let k in mapMarkers) {
              if(mapMarkers[k]) mapMarkers[k].setMap(null);
         }
@@ -736,7 +831,6 @@
         }
     }
 
-    // Initialize Mode
     setMode('pickup');
 
     firebase.auth().signInAnonymously().then(() => {
@@ -782,14 +876,12 @@
             let cmdStr = e.results[0][0].transcript.toLowerCase();
             if (cmdStr.trim() === "dispatch") { createJob(); return; }
             
-            // Basic number conversion
             const numWords = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
             Object.keys(numWords).forEach(word => {
                 const reg = new RegExp(`\\b${word}\\b`, 'g');
                 cmdStr = cmdStr.replace(reg, numWords[word]);
             });
 
-            // Logic to populate fields (simplified for merged app)
             let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess|alicia|kayla)\b/);
             if (drvMatch) {
                 let dName = drvMatch[1].charAt(0).toUpperCase() + drvMatch[1].slice(1);
@@ -841,7 +933,9 @@
         const dropAddr = document.getElementById('f-drop-address').value;
         const dropCity = document.getElementById('f-drop-city').value;
         const drop = dropAddr + (dropCity ? ", " + dropCity : "");
-        const city = document.getElementById('f-city').value;
+        // Fix for delivery city issue: use the drop city if in delivery mode or if pickup city is empty but drop city exists
+        const cityFieldVal = document.getElementById('f-city').value;
+        const city = cityFieldVal || dropCity;
         const name = document.getElementById('f-name').value;
         const dropName = document.getElementById('f-drop-name').value;
         const assigned = document.getElementById('f-driver').value;
@@ -865,7 +959,6 @@
         const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(targetNode).push(jobData);
         
-        // Save addresses for autosuggest
         if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city });
         if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value });
 
@@ -883,33 +976,40 @@
         const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 
         const html = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <div style="font-weight:900; font-size:18px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
-                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #444; color:red; padding:8px 12px; font-weight:bold; cursor:pointer; font-size:12px;">DELETE</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #334155; padding-bottom:10px;">
+                <div style="font-weight:700; font-size:14px; color:var(--text); text-transform:uppercase;">Edit ${isPickup?'Pickup':'Delivery'}</div>
+                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:6px 10px; font-weight:600; cursor:pointer; font-size:11px; border-radius:4px;">DELETE</button>
             </div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:16px;">
-                <select id="e-driver" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-weight:bold; font-size:16px;">${driverOpts}</select>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages / Items / Dimensions">
                 
-                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <div class="flex-row">
+                    <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Reference" style="flex:1;">
+                    <input id="e-add-note" placeholder="Add Driver Note" style="flex:1.5;">
+                </div>
                 
-                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                <input id="e-name" value="${val(data.name)}" placeholder="Contact Name" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                
-                <input id="e-city" value="${val(data.city)}" placeholder="City" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
-                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Deliv. Contact" style="padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <textarea id="e-note" placeholder="Existing Driver Notes" style="height:50px; font-family:inherit;">${val(data.other_info)}</textarea>
 
-                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="grid-column:span 2; padding:12px; background:#222; border:1px solid #444; color:#fff; font-size:16px;">
+                <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
+
+                <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business / Name">
+                <div class="flex-row">
+                    <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2;">
+                    <input id="e-city" value="${val(data.city)}" placeholder="City" style="flex:1;">
+                </div>
+
+                <div style="margin: 8px 0; border-top: 1px solid #334155;"></div>
+
+                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact / Name">
+                <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address (Full)">
                 
-                <textarea id="e-note" placeholder="Driver Notes" style="grid-column:span 2; height:60px; padding:12px; background:#222; border:1px solid #444; color:#fff; font-family:inherit; font-size:16px;">${val(data.other_info)}</textarea>
-                <input id="e-add-note" placeholder="Add Driver Note" style="grid-column:span 2; padding:12px; background:#1a1a1a; border:1px solid var(--accent); color:#fff; font-size:16px;">
+                <select id="e-driver" class="driver-select" style="margin-top:10px;">${driverOpts}</select>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px; margin-top:15px;">
-                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#333; color:#ccc; border:none; padding:15px; font-weight:bold; cursor:pointer; font-size:14px;">CANCEL</button>
-                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:15px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:14px;">SAVE</button>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="document.getElementById('detailsModal').style.display='none'" style="flex:1; background:var(--card); color:var(--text-muted); border:1px solid var(--border); padding:12px; font-weight:600; cursor:pointer; font-size:13px; border-radius:6px;">CANCEL</button>
+                <button onclick="saveEdit('${id}', '${type}')" style="flex:1; background:var(--pro-blue); color:white; border:none; padding:12px; font-weight:600; cursor:pointer; font-size:13px; border-radius:6px;">SAVE CHANGES</button>
             </div>
         `;
         
@@ -963,13 +1063,11 @@
         let pending = 0, assignedCount = 0, noteCount = 0;
         let driverStats = {};
 
-        // Define Colors Here
         const dColors = {
-            'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
-            'Jess': '#FF69B4', 'Alicia': '#9C27B0', 'Kayla': '#E91E63'
+            'Matt': '#f59e0b', 'Touch': '#0ea5e9', 'Julian': '#3b82f6',
+            'Jess': '#ec4899', 'Alicia': '#8b5cf6', 'Kayla': '#f43f5e'
         };
 
-        // INIT DRIVERS from Select
         const driverOptions = document.getElementById('f-driver').options;
         for(let i=0; i<driverOptions.length; i++){
             const dVal = driverOptions[i].value;
@@ -983,37 +1081,32 @@
             const entries = Object.entries(obj).reverse();
             
             entries.forEach(([id, p]) => {
-                // Filter logic
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
 
                 if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
 
-                // Status check
                 if(p.status === 'completed') {
-                    // Render to Archive
                     const card = document.createElement("div");
                     card.className = "history-item";
                     card.onclick = () => viewDetails(id, type);
                     card.style.cursor = "pointer";
-                    card.style.borderLeft = "4px solid #333";
-                    card.style.background = "#111";
-                    card.style.opacity = "0.7";
+                    card.style.opacity = "1";
+                    card.style.borderLeft = "3px solid #64748b";
                     
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
-                    // Format Date
                     const doneTime = p.completed_at ? formatTime12(p.completed_at) : formatTime12(p.timestamp);
 
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:900; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
-                            <span style="font-size:10px; color:#00ff41; font-weight:bold;">DONE ${doneTime}</span>
+                            <span style="font-weight:700; color:#94a3b8; font-size:11px;">${p.assigned_to || 'Unassigned'}</span>
+                            <span style="font-size:10px; color:#10b981; font-weight:600;">DONE ${doneTime}</span>
                         </div>
-                        <div style="color:#666; font-size:13px; font-weight:bold;">${contact || 'No Contact'}</div>
-                        <div style="color:#444; font-size:11px;">${p.city || ''}</div>
+                        <div style="color:#e2e8f0; font-size:13px; font-weight:600; margin-top:4px;">${contact || 'No Contact'}</div>
+                        <div style="color:#94a3b8; font-size:11px;">${p.city || ''}</div>
                     `;
                     document.getElementById("list-archive").appendChild(card);
-                    return; // Skip adding to main list
+                    return;
                 }
 
                 const assignedTo = p.assigned_to;
@@ -1032,27 +1125,24 @@
                 if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) card.classList.add('urgent-pickup');
                 card.onclick = () => viewDetails(id, type);
                 card.style.cursor = "pointer";
-                // Color coding borders based on type
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
-                // Color Map Logic
-                const bg = dColors[p.assigned_to] || '#00ff41'; 
-                // Light colors need black text, dark colors need white text
-                const darkText = ['#00ff41', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
+                const bg = dColors[p.assigned_to] || '#10b981'; 
+                const darkText = false;
                 
                 const driverHTML = p.assigned_to ? 
-                    `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
-                    `<span style="color:red; font-weight:900;">UNASSIGNED</span>`;
+                    `<span class="hist-driver" style="background:${bg}; color:#fff;">${p.assigned_to}</span>` : 
+                    `<span style="color:var(--danger); font-weight:700; font-size:10px;">UNASSIGNED</span>`;
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         ${driverHTML}
-                        <div style="font-size:10px; color:#666;">INFO</div>
+                        <div style="font-size:9px; font-weight:700; color:var(--text-muted);">INFO</div>
                     </div>
-                    <div class="hist-name" style="margin-top:4px; color:#fff;">${contact || 'No Contact'}</div>
-                    <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
+                    <div class="hist-name" style="margin-top:6px; color:var(--text);">${contact || 'No Contact'}</div>
+                    <div style="margin-top:2px; font-size:11px; color:var(--text-muted);">${p.city || 'No City'}</div>
                 `;
                 list.appendChild(card);
             });
@@ -1061,15 +1151,11 @@
         processJobs(rawPickups, 'pickup');
         processJobs(rawDropoffs, 'delivery');
 
-        // RENDER DRIVER STATS
         Object.keys(driverStats).forEach(driver => {
             const pCount = driverStats[driver].p;
             const dCount = driverStats[driver].d;
             if(pCount > 0 || dCount > 0) {
                 const total = pCount + dCount;
-                const pFlex = total > 0 ? (pCount / total) : 0;
-                const dFlex = total > 0 ? (dCount / total) : 0;
-                
                 const color = dColors[driver] || '#fff';
 
                 const row = document.createElement("div");
@@ -1080,7 +1166,7 @@
                     <div style="display:flex; align-items:center;">
                         <div class="ds-name" style="color:${color};">${driver}</div>
                     </div>
-                    <div class="stat-info">
+                    <div class="stat-info" style="display:flex; gap:8px;">
                         ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
                         ${dCount > 0 ? `<div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>` : ''}
                     </div>
