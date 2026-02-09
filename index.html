@@ -334,6 +334,17 @@
             animation: none !important; 
         }
         .unassigned-glow { border-color: var(--accent) !important; animation: none; }
+        
+        /* FIX: Animations for alerts and changes */
+        @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        .new-info-glow { animation: pulse-blue 2s infinite; border-color: var(--pro-blue) !important; position: relative; }
+        .new-info-badge { position: absolute; top: -8px; right: -8px; background: var(--pro-blue); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; z-index: 10; }
+        
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .alert-glow { animation: pulse-red 2s infinite; border-color: var(--danger) !important; position: relative; }
+        .alert-badge { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; z-index: 10; }
+        
+        .field-change { color: var(--pro-blue) !important; text-shadow: 0 0 1px var(--pro-blue); }
 
         /* DRIVER STATS ROW */
         #driver-stats-panel { 
@@ -588,6 +599,8 @@
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
     let currentDriverFilter = null;
+    let changedJobs = new Map();
+    let selfEditIds = new Set();
 
     function filterByDriver(name) {
         currentDriverFilter = name;
@@ -681,7 +694,7 @@
                 } else {
                     mapMarkers[name] = new google.maps.Marker({
                         position: pos, map: mainMap,
-                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#10b981', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -20) },
+                        icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#10b981', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -10) },
                         label: { text: markerLabelText, className: "driver-map-label", color: "#39ff14", fontWeight: "bold" },
                         title: name
                     });
@@ -782,7 +795,7 @@
                                     fillOpacity: 1,
                                     strokeWeight: 1,
                                     strokeColor: 'white',
-                                    labelOrigin: new google.maps.Point(0, -12)
+                                    labelOrigin: new google.maps.Point(0, -6)
                                 }
                             });
                             const key = `job_${index}`;
@@ -844,16 +857,35 @@
 
     setMode('pickup');
 
+    function compareData(oldD, newD) {
+        if(!oldD) return;
+        Object.keys(newD).forEach(key => {
+            if(selfEditIds.has(key)) { selfEditIds.delete(key); return; }
+            const o = oldD[key];
+            const n = newD[key];
+            if(!o) { changedJobs.set(key, ['new']); return; } 
+            const diffs = [];
+            ['name','delivery_name','city','assigned_to','other_info','pickup_location','destination'].forEach(f => {
+                if(o[f] !== n[f]) diffs.push(f);
+            });
+            if(diffs.length > 0) changedJobs.set(key, diffs);
+        });
+    }
+
     firebase.auth().signInAnonymously().then(() => {
         db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
         
         db.ref("pickups").on("value", snapshot => {
-            rawPickups = snapshot.val() || {};
+            const val = snapshot.val() || {};
+            compareData(rawPickups, val);
+            rawPickups = val;
             renderData();
         });
 
         db.ref("dropoffs").on("value", snapshot => {
-            rawDropoffs = snapshot.val() || {};
+            const val = snapshot.val() || {};
+            compareData(rawDropoffs, val);
+            rawDropoffs = val;
             renderData();
         });
     });
@@ -967,7 +999,8 @@
         };
 
         const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
-        db.ref(targetNode).push(jobData);
+        const ref = db.ref(targetNode).push(jobData);
+        selfEditIds.add(ref.key);
         
         if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city });
         if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value });
@@ -1005,6 +1038,9 @@
 
     // FIX: Match Edit form line for line with Dispatch
     function viewDetails(id, type) {
+        // Clear change notification on view
+        if(changedJobs.has(id)) { changedJobs.delete(id); renderData(); }
+
         const isPickup = type === 'pickup';
         const data = isPickup ? rawPickups[id] : rawDropoffs[id];
         if(!data) return;
@@ -1026,7 +1062,7 @@
                     <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Reference" style="flex:1;">
                     <div style="flex:1.5; display:flex; flex-direction:column; gap:4px;">
                         <input id="e-add-note" placeholder="Add Driver Note">
-                        <div style="font-size:10px; color:var(--text-muted); max-height:40px; overflow-y:auto; background:var(--bg); padding:4px;">${val(data.other_info)}</div>
+                        <div style="font-size:14px; color:var(--text-muted); max-height:40px; overflow-y:auto; background:var(--bg); padding:4px;">${val(data.other_info)}</div>
                         <input type="hidden" id="e-old-note" value="${val(data.other_info)}">
                     </div>
                 </div>
@@ -1050,7 +1086,7 @@
                 </div>
                 <div class="flex-row">
                     <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address (Full)" style="flex:2;">
-                     <input id="e-drop-city" placeholder="City (Opt)" style="flex:1;"> 
+                     <input id="e-drop-city" placeholder="City" style="flex:1;"> 
                 </div>
                 
                 <select id="e-driver" class="driver-select" style="margin-top:10px;">${driverOpts}</select>
@@ -1088,6 +1124,8 @@
             destination: dest,
             other_info: finalNote
         };
+        
+        selfEditIds.add(id);
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(node).child(id).update(updates).then(() => {
             document.getElementById('detailsModal').style.display = 'none';
@@ -1164,7 +1202,11 @@
                     return;
                 }
 
-                const assignedTo = p.assigned_to;
+                // New Logic for DNP/DND
+                const isReturned = p.status === 'dnp' || p.status === 'dnd';
+                const effectiveDriver = isReturned ? 'Unassigned' : p.assigned_to;
+                
+                const assignedTo = effectiveDriver;
                 if(!assignedTo || assignedTo === 'Unassigned') pending++;
                 else {
                     assignedCount++;
@@ -1178,25 +1220,38 @@
                 const card = document.createElement("div");
                 card.className = "history-item";
                 if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) card.classList.add('urgent-pickup');
+                
+                // Alert/New Info Animations
+                const changes = changedJobs.get(id) || [];
+                if(changes.length > 0) {
+                    card.classList.add('new-info-glow');
+                    card.innerHTML += `<div class="new-info-badge">NEW INFO</div>`;
+                }
+                if(isReturned) {
+                    card.classList.add('alert-glow');
+                    card.innerHTML += `<div class="alert-badge">${p.status.toUpperCase()}</div>`;
+                }
+
                 card.onclick = () => viewDetails(id, type);
                 card.style.cursor = "pointer";
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
                 const bg = dColors[p.assigned_to] || '#10b981'; 
                 
-                const driverHTML = p.assigned_to ? 
+                const driverHTML = (p.assigned_to && !isReturned) ? 
                     `<span class="hist-driver" style="background:${bg}; color:#fff;">${p.assigned_to}</span>` : 
                     `<span style="color:var(--danger); font-weight:700; font-size:10px;">UNASSIGNED</span>`;
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
+                const nameClass = changes.includes(type === 'pickup'?'name':'delivery_name') ? 'hist-name field-change' : 'hist-name';
                 
-                card.innerHTML = `
+                card.innerHTML += `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         ${driverHTML}
                         <div style="font-size:9px; font-weight:700; color:var(--text-muted);">INFO</div>
                     </div>
-                    <div class="hist-name" style="margin-top:6px; color:var(--text);">${contact || 'No Contact'}</div>
-                    <div style="margin-top:2px; font-size:11px; color:var(--text-muted);">${p.city || 'No City'}</div>
+                    <div class="${nameClass}" style="margin-top:6px; color:var(--text);">${contact || 'No Contact'}</div>
+                    <div class="${changes.includes('city') ? 'field-change' : ''}" style="margin-top:2px; font-size:11px; color:var(--text-muted);">${p.city || 'No City'}</div>
                 `;
                 list.appendChild(card);
             });
