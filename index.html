@@ -335,16 +335,27 @@
         }
         .unassigned-glow { border-color: var(--accent) !important; animation: none; }
         
-        /* FIX: Animations for alerts and changes */
-        @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
-        .new-info-glow { animation: pulse-blue 2s infinite; border-color: var(--pro-blue) !important; position: relative; }
-        .new-info-badge { position: absolute; top: -8px; right: -8px; background: var(--pro-blue); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; z-index: 10; }
+        /* UPDATED ANIMATIONS - STATE DRIVEN */
+        @keyframes pulse-blue { 
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); border-color: var(--pro-blue); } 
+            50% { box-shadow: 0 0 10px 0 rgba(59, 130, 246, 0.2) inset; border-color: var(--pro-blue); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); border-color: var(--pro-blue); } 
+        }
+        .card-update { animation: pulse-blue 3s infinite; position: relative; }
         
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         .alert-glow { animation: pulse-red 2s infinite; border-color: var(--danger) !important; position: relative; }
-        .alert-badge { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; z-index: 10; }
         
-        .field-change { color: var(--pro-blue) !important; text-shadow: 0 0 1px var(--pro-blue); }
+        .badge-base { position: absolute; top: -8px; right: -8px; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .badge-new { background: var(--pro-blue); }
+        .badge-alert { background: var(--danger); }
+        
+        @keyframes text-glow {
+            0% { color: inherit; text-shadow: none; }
+            50% { color: var(--pro-blue); text-shadow: 0 0 8px rgba(59, 130, 246, 0.6); }
+            100% { color: inherit; text-shadow: none; }
+        }
+        .field-change { animation: text-glow 2.5s infinite; }
 
         /* DRIVER STATS ROW */
         #driver-stats-panel { 
@@ -892,9 +903,12 @@
             if(current.status !== viewed.status) diffs.push('status');
 
             if(diffs.length > 0) {
-                changedJobs.set(key, diffs);
+                // Merge new diffs with existing diffs to prevent "last update wins" issue
+                const existingDiffs = changedJobs.get(key) || [];
+                const mergedDiffs = [...new Set([...existingDiffs, ...diffs])];
+                changedJobs.set(key, mergedDiffs);
             } else {
-                // If data matches viewed state (e.g. after reload), ensure no animation
+                // If data matches viewed state (e.g. after reload or revert), clear animation
                 changedJobs.delete(key);
             }
         });
@@ -1256,13 +1270,19 @@
                 
                 // Alert/New Info Animations
                 const changes = changedJobs.get(id) || [];
+                const isNew = changes.includes('new');
+                
                 if(changes.length > 0) {
-                    card.classList.add('new-info-glow');
-                    card.innerHTML += `<div class="new-info-badge">NEW INFO</div>`;
+                    card.classList.add('card-update');
+                    if(isNew) {
+                        card.innerHTML += `<div class="badge-base badge-new">NEW</div>`;
+                    } else {
+                        card.innerHTML += `<div class="badge-base badge-new">UPDATED</div>`;
+                    }
                 }
                 if(isReturned) {
                     card.classList.add('alert-glow');
-                    card.innerHTML += `<div class="alert-badge">${p.status.toUpperCase()}</div>`;
+                    card.innerHTML += `<div class="badge-base badge-alert">${p.status.toUpperCase()}</div>`;
                 }
 
                 card.onclick = () => viewDetails(id, type);
@@ -1276,7 +1296,8 @@
                     `<span style="color:var(--danger); font-weight:700; font-size:10px;">UNASSIGNED</span>`;
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
-                const nameClass = changes.includes(type === 'pickup'?'name':'delivery_name') ? 'hist-name field-change' : 'hist-name';
+                const nameKey = type === 'pickup' ? 'name' : 'delivery_name';
+                const nameClass = changes.includes(nameKey) ? 'hist-name field-change' : 'hist-name';
                 
                 card.innerHTML += `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
