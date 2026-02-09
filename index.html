@@ -99,7 +99,10 @@
 
         #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
         #map { width: 100%; height: 100%; }
-        .close-map { position: absolute; top: 20px; right: 20px; z-index: 3001; background: #b71c1c; color: white; border: none; padding: 12px 24px; font-weight: 800; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        /* UPDATED: Close button moved down to clear fullscreen button */
+        .close-map { position: absolute; top: 70px; right: 20px; z-index: 3001; background: #b71c1c; color: white; border: none; padding: 12px 24px; font-weight: 800; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        /* NEW: Bright green label for map */
+        .driver-map-label { color: #00ff00 !important; font-weight: 800; text-shadow: 0 0 2px #000; }
 
         #install-btn { 
             display: none; 
@@ -392,10 +395,6 @@
         <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Schedule Delivery</button>
     </div>
 
-    <div style="position:relative; margin-bottom: 15px;">
-        <div style="position:absolute; right:0; top:-25px; z-index:10; font-size:10px; font-weight:bold; cursor:pointer; color: #666; text-transform: uppercase;" onclick="resetFormFields()">RESET FIELDS</div>
-    </div>
-
     <div id="top-input-section"></div>
     
     <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
@@ -430,6 +429,7 @@
         <div style="position:relative;">
             <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
             <div id="suggestions" class="suggestions-box"></div>
+            <div onclick="resetFormFields()" style="position:absolute; right:12px; top:14px; font-size:10px; font-weight:800; cursor:pointer; color:#666; text-transform:uppercase; z-index:10;">RESET</div>
         </div>
         <div class="flex-row">
             <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
@@ -483,7 +483,7 @@
     <div id="map"></div>
 </div>
 
-<div id="detailsModal" class="modal" onclick="this.style.display='none'">
+<div id="detailsModal" class="modal" onclick="this.style.display='none';document.body.style.overflow=''">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h2 id="m-title" style="color:var(--accent); margin-top:0; font-size: 18px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Job Details</h2>
         <div id="m-body"></div>
@@ -671,7 +671,7 @@
                         scale: 7,
                         labelOrigin: new google.maps.Point(0, -15)
                     },
-                    label: { text: `${name} ${timeStr}`, className: "pulsing-dot driver-route-label" }
+                    label: { text: `${name} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" }
                  });
                  mapMarkers[name] = marker;
             }
@@ -938,10 +938,9 @@
 
                 <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions" style="margin-bottom:12px;">
                 
-                <div class="flex-row">
-                    <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="flex:1;">
-                    <textarea id="e-note" placeholder="Driver Notes" style="flex:1.5; height:auto; padding:12px;">${val(data.other_info)}</textarea>
-                </div>
+                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="margin-bottom:12px;">
+                <textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:12px; padding:12px; resize:none; overflow:hidden; min-height:60px;">${val(data.other_info)}</textarea>
+
                 <input id="e-add-note" placeholder="Add New Note (Appends to above)" style="margin-bottom:12px;">
 
                 <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name" style="margin-bottom:12px;">
@@ -954,14 +953,19 @@
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px; margin-top:15px;">
-                <button onclick="document.getElementById('detailsModal').style.display='none'" style="background:#222; color:#ccc; border:1px solid #333; padding:16px; font-weight:700; cursor:pointer; font-size:14px; border-radius:6px;">CANCEL</button>
+                <button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" style="background:#222; color:#ccc; border:1px solid #333; padding:16px; font-weight:700; cursor:pointer; font-size:14px; border-radius:6px;">CANCEL</button>
                 <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:16px; font-weight:800; text-transform:uppercase; cursor:pointer; font-size:14px; border-radius:6px;">SAVE</button>
             </div>
         `;
         
         const modalContent = document.querySelector('#detailsModal .modal-content');
         modalContent.innerHTML = html;
+        
+        const ta = document.getElementById('e-note');
+        if(ta) ta.style.height = ta.scrollHeight + 'px';
+
         document.getElementById('detailsModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
     }
 
     function saveEdit(id, type) {
@@ -983,6 +987,7 @@
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(node).child(id).update(updates).then(() => {
             document.getElementById('detailsModal').style.display = 'none';
+            document.body.style.overflow = '';
         });
     }
 
@@ -991,6 +996,7 @@
             const node = type === 'pickup' ? 'pickups' : 'dropoffs';
             db.ref(node).child(id).remove();
             document.getElementById('detailsModal').style.display = 'none';
+            document.body.style.overflow = '';
         }
     }
 
