@@ -413,7 +413,7 @@
         <option value="Touch">Touch</option>
         <option value="Julian">Julian</option>
         <option value="Jess">Jess</option>
-        <option value="Alicia">Alicia</option>
+        <option value="Alysha">Alysha</option>
         <option value="Kayla">Kayla</option>
     </select>
     <div style="display: flex; gap: 12px;">
@@ -528,7 +528,7 @@
             label.style.display = "block";
             const dColors = {
                 'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
-                'Jess': '#FF69B4', 'Alicia': '#9C27B0', 'Kayla': '#E91E63'
+                'Jess': '#FF69B4', 'Alysha': '#9C27B0', 'Kayla': '#E91E63'
             };
             const c = dColors[name] || '#ffffff';
             label.style.borderColor = c;
@@ -830,7 +830,7 @@
             });
 
             // Logic to populate fields (simplified for merged app)
-            let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess|alicia|kayla)\b/);
+            let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess|alysha|kayla)\b/);
             if (drvMatch) {
                 let dName = drvMatch[1].charAt(0).toUpperCase() + drvMatch[1].slice(1);
                 document.getElementById('f-driver').value = dName;
@@ -919,7 +919,7 @@
         if(!data) return;
 
         const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
-        const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alicia', 'Kayla'];
+        const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
         const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 
         // UPDATED: EDIT FORM STRUCTURE TO MATCH MAIN DISPATCH FORM EXACTLY
@@ -1018,7 +1018,7 @@
         // Define Colors Here
         const dColors = {
             'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
-            'Jess': '#FF69B4', 'Alicia': '#9C27B0', 'Kayla': '#E91E63'
+            'Jess': '#FF69B4', 'Alysha': '#9C27B0', 'Kayla': '#E91E63'
         };
 
         // INIT DRIVERS from Select
