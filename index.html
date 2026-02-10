@@ -880,7 +880,7 @@
         const pickup = document.getElementById('f-pickup').value;
         const dropAddr = document.getElementById('f-drop-address').value;
         const dropCity = document.getElementById('f-drop-city').value;
-        const drop = dropAddr + (dropCity ? ", " + dropCity : "");
+        const drop = dropAddr;
         const city = document.getElementById('f-city').value;
         const name = document.getElementById('f-name').value;
         const dropName = document.getElementById('f-drop-name').value;
@@ -891,7 +891,7 @@
         if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert("Please complete either the full Pickup section or full Delivery section.");
 
         const jobData = {
-            city: city, pickup_location: pickup, destination: drop,
+            city: city || dropCity, pickup_location: pickup, destination: drop,
             delivery_name: dropName,
             package_details: document.getElementById('f-pkg-details').value,
             po_number: document.getElementById('f-po').value,
@@ -933,7 +933,7 @@
                 <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name" style="margin-bottom:12px;">
                 <div class="flex-row">
                     <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2;">
-                    <input id="e-city" value="${val(data.city)}" placeholder="City" style="flex:1;">
+                    <input id="e-city-p" value="${val(data.city)}" placeholder="City" style="flex:1;">
                 </div>
 
                 <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions" style="margin-bottom:12px;">
@@ -946,7 +946,7 @@
                 <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name" style="margin-bottom:12px;">
                 <div class="flex-row">
                     <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="flex:2;">
-                    <div style="flex:1; background:#222; border:1px solid #333; display:flex; align-items:center; justify-content:center; border-radius:6px; color:#555; font-size:11px; margin-bottom:12px;">(City in Addr)</div>
+                    <input id="e-city-d" value="${val(data.city)}" placeholder="City" style="flex:1;">
                 </div>
 
                 <select id="e-driver" class="driver-select" style="margin-bottom:12px;">${driverOpts}</select>
@@ -979,7 +979,7 @@
             po_number: document.getElementById('e-po').value,
             name: document.getElementById('e-name').value,
             pickup_location: document.getElementById('e-pickup').value,
-            city: document.getElementById('e-city').value,
+            city: type === 'pickup' ? document.getElementById('e-city-p').value : document.getElementById('e-city-d').value,
             delivery_name: document.getElementById('e-drop-name').value,
             destination: document.getElementById('e-drop').value,
             other_info: noteVal
