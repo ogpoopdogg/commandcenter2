@@ -1044,6 +1044,14 @@
                 // Status check
                 if(p.status === 'completed') {
                     // Render to Archive
+                    const d = new Date(p.completed_at || p.timestamp);
+                    const now = new Date();
+                    const isToday = d.toDateString() === now.toDateString();
+                    const isRecent = (now - d) < (30 * 24 * 60 * 60 * 1000); // 30 days in ms
+
+                    if (!searchTerm && !isToday) return; 
+                    if (searchTerm && !isRecent) return;
+
                     const card = document.createElement("div");
                     card.className = "history-item"; // Added class for CSS
                     card.onclick = () => viewDetails(id, type);
@@ -1054,7 +1062,9 @@
                     
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
                     // Format Date
-                    const doneTime = p.completed_at ? formatTime12(p.completed_at) : formatTime12(p.timestamp);
+                    const dateStr = (d.getMonth() + 1) + "/" + d.getDate();
+                    const timeStr = formatTime12(p.completed_at || p.timestamp);
+                    const doneTime = `${dateStr} ${timeStr}`;
 
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
