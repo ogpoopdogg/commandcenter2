@@ -12,7 +12,7 @@
         /* UPDATED COLORS: Dimmed down for professional look, less neon */
         :root { 
             --accent: #cca300;       /* Was #ffcc00 */
-            --bg: #0a0a0a; 
+            --bg: #222222; 
             --card: #141414; 
             --text: #e0e0e0; 
             --wpg: #1976d2; 
@@ -130,7 +130,7 @@
         .glow-field:focus { border-color: var(--accent); outline: none; }
 
         .stats-bar { display: flex; background: #0f0f0f; padding: 10px; border-bottom: 1px solid #222; justify-content: space-around; align-items: center; gap: 10px; }
-        #entry-panel { background: #0a0a0a; border-bottom: 1px solid #222; padding: 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        #entry-panel { background: #0a0a0a; border-bottom: 1px solid #222; padding: 20px 20px; box-shadow: 0 0 8px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 20px; }
         #board-panel { padding: 20px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         
         .stat-box { 
@@ -220,8 +220,8 @@
 
         .history-box { 
             margin-top: 20px; 
-            border-top: 1px solid #222; 
-            padding-top: 20px; 
+            border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2);
+            padding: 20px; 
             display: flex; 
             gap: 20px; 
             flex-wrap: wrap; 
@@ -330,7 +330,7 @@
         .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
 
         /* GRAPH INDICATOR STYLES */
-        #driver-stats-panel { background: #0f0f0f; padding: 15px; border-bottom: 1px solid #222; display: flex; flex-direction: column; gap: 8px; }
+        #driver-stats-panel { background: #0f0f0f; padding: 15px; border-bottom: 1px solid #222; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2); margin-bottom: 20px; }
         .driver-stat-row { 
             display: flex; 
             align-items: center; 
@@ -467,7 +467,7 @@
             <div id="list-deliveries"></div>
         </div>
     </div>
-    <div style="margin-top: 30px; padding: 15px; border-top: 2px dashed #222;">
+    <div style="margin-top: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2);">
         <div class="archive-title" style="color: #666; border-bottom:none;">ARCHIVE (COMPLETED)</div>
         <div id="list-archive" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
