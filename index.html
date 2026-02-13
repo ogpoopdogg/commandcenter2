@@ -502,6 +502,7 @@
 
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
+    <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
     <div id="map"></div>
 </div>
 
@@ -668,6 +669,17 @@
         listeningRef.on('value', snap => {
             const data = snap.val();
             if(!data) return;
+
+            const label = document.getElementById("selected-driver-label");
+            if (label) {
+                const timeInfo = data.total_duration ? `<br><span style="font-size:14px; color:#fff;">ETA: ${data.total_duration}</span>` : "";
+                label.innerHTML = name + timeInfo;
+            }
+            const badge = document.getElementById("route-time-badge");
+            if (badge && data.total_duration) {
+                badge.innerText = "ROUTE TIME: " + data.total_duration;
+                badge.style.display = "block";
+            }
 
             const pos = { lat: data.lat, lng: data.lng };
             const timeStr = formatTime12(data.gps_timestamp || Date.now());
