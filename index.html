@@ -1078,7 +1078,7 @@
             
             entries.forEach(([id, p]) => {
                 // Filter logic
-                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"")).toLowerCase();
+                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.customer_email||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
 
                 if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
@@ -1135,12 +1135,23 @@
                 card.className = "history-item"; // Added class for CSS
                 
                 // Highlight DND/DNP Logic
-                const isFailed = (p.other_info || "").toLowerCase().includes("dnd") || (p.other_info || "").toLowerCase().includes("dnp");
+                const infoLower = (p.other_info || "").toLowerCase();
+                const isFailed = infoLower.includes("dnd") || infoLower.includes("dnp");
                 const isUnassignedFailed = isFailed && (!assignedTo || assignedTo === 'Unassigned');
 
                 if(isUnassignedFailed) {
                     card.style.background = "#2b0000";
                     card.style.border = "2px solid #ff4444";
+                    
+                    // TRIGGER ALERT PING (Only if unassigned with tag and not yet sent)
+                    if (p.customer_email && !p.alert_sent) {
+                        db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).update({ alert_sent: true });
+                        fetch("https://script.google.com/macros/s/AKfycbxUDHdIBbU1qWsT1T9-TPCXp1mhr1ygvcKq3_xr3cjkO26d08ud3ens5wzh_YeveQGgGw/exec", {
+                            method: "POST",
+                            mode: "no-cors",
+                            body: JSON.stringify({ email: p.customer_email, notes: p.other_info, type: type })
+                        });
+                    }
                 } else if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) {
                     card.classList.add('urgent-pickup');
                 }
