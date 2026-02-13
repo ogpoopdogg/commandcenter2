@@ -529,6 +529,7 @@
     const db = firebase.database();
     let rawPickups = {};
     let rawDropoffs = {};
+    let driverLocationsData = {};
     let addressData = {};
     let deliveryData = {};
     let currentUser = localStorage.getItem('ec_command_user');
@@ -831,6 +832,11 @@
 
             db.ref("dropoffs").orderByChild("timestamp").startAt(sevenDaysAgo).on("value", snapshot => {
                 rawDropoffs = snapshot.val() || {};
+                renderData();
+            });
+
+            db.ref("driver_locations").on("value", snapshot => {
+                driverLocationsData = snapshot.val() || {};
                 renderData();
             });
         } else {
@@ -1210,6 +1216,7 @@
                 const dFlex = total > 0 ? (dCount / total) : 0;
                 
                 const color = dColors[driver] || '#fff';
+                const duration = (driverLocationsData[driver] && driverLocationsData[driver].total_duration) ? driverLocationsData[driver].total_duration : "";
 
                 const row = document.createElement("div");
                 row.className = "driver-stat-row";
@@ -1218,6 +1225,7 @@
                 row.innerHTML = `
                     <div style="display:flex; align-items:center;">
                         <div class="ds-name" style="color:${color};">${driver}</div>
+                        ${duration ? `<span style="font-size:12px; color:#aaa; margin-left:8px; font-weight:600;">${duration}</span>` : ''}
                     </div>
                     <div class="stat-info">
                         ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
