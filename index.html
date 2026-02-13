@@ -455,6 +455,7 @@
             <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
             <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
         </div>
+        <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Customer Email Address (for DNP alerts)">
     </div>
 
     <div id="group-drop">
@@ -466,6 +467,7 @@
             <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
             <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
         </div>
+        <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Customer Email Address (for DND alerts)">
     </div>
 </div>
 
@@ -832,7 +834,7 @@
     }
 
     function resetFormFields() {
-        ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details'].forEach(id => {
+        ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.value = "";
         });
@@ -886,6 +888,7 @@
         document.getElementById('f-name').value = name;
         document.getElementById('f-pickup').value = data.address || "";
         document.getElementById('f-city').value = data.city || "";
+        if(data.customer_email) document.getElementById('f-customer-email-p').value = data.customer_email;
         document.getElementById('suggestions').style.display = 'none';
     }
 
@@ -904,6 +907,7 @@
         document.getElementById('f-drop-name').value = name;
         document.getElementById('f-drop-address').value = data.address || "";
         document.getElementById('f-drop-city').value = data.city || "";
+        if(data.customer_email) document.getElementById('f-customer-email-d').value = data.customer_email;
         document.getElementById('drop-suggestions').style.display = 'none';
     }
 
@@ -918,6 +922,7 @@
         const assigned = document.getElementById('f-driver').value;
         const infoRaw = document.getElementById('f-info').value;
         const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
+        const email = currentMode === 'pickup' ? document.getElementById('f-customer-email-p').value : document.getElementById('f-customer-email-d').value;
 
         if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert("Please complete either the full Pickup section or full Delivery section.");
 
@@ -928,6 +933,7 @@
             po_number: document.getElementById('f-po').value,
             name: name,
             other_info: info,
+            customer_email: email || "",
             status: 'pending', 
             assigned_to: assigned, 
             timestamp: Date.now(),
@@ -938,8 +944,8 @@
         db.ref(targetNode).push(jobData);
         
         // Save addresses for autosuggest
-        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, last_edit_by: currentUser });
-        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, last_edit_by: currentUser });
+        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, customer_email: email || "", last_edit_by: currentUser });
+        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", last_edit_by: currentUser });
 
         resetFormFields();
         document.getElementById('f-driver').value = "Unassigned";
@@ -981,6 +987,8 @@
                     <input id="e-city-d" value="${val(data.city)}" placeholder="City" style="flex:1;">
                 </div>
 
+                <input id="e-email" type="email" value="${val(data.customer_email)}" placeholder="Customer Email Address" style="margin-bottom:12px; border-color:var(--active-green);">
+
                 <select id="e-driver" class="driver-select" style="margin-bottom:12px;">${driverOpts}</select>
             </div>
 
@@ -1015,6 +1023,7 @@
             delivery_name: document.getElementById('e-drop-name').value,
             destination: document.getElementById('e-drop').value,
             other_info: noteVal,
+            customer_email: document.getElementById('e-email').value || "",
             last_edit_by: currentUser
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
@@ -1069,7 +1078,7 @@
             
             entries.forEach(([id, p]) => {
                 // Filter logic
-                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"")).toLowerCase();
+                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
 
                 if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
@@ -1124,7 +1133,18 @@
 
                 const card = document.createElement("div");
                 card.className = "history-item"; // Added class for CSS
-                if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) card.classList.add('urgent-pickup');
+                
+                // Highlight DND/DNP Logic
+                const isFailed = (p.other_info || "").toLowerCase().includes("dnd") || (p.other_info || "").toLowerCase().includes("dnp");
+                const isUnassignedFailed = isFailed && (!assignedTo || assignedTo === 'Unassigned');
+
+                if(isUnassignedFailed) {
+                    card.style.background = "#2b0000";
+                    card.style.border = "2px solid #ff4444";
+                } else if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) {
+                    card.classList.add('urgent-pickup');
+                }
+
                 card.onclick = () => viewDetails(id, type);
                 card.style.cursor = "pointer";
                 // Color coding borders based on type
@@ -1137,7 +1157,7 @@
                 
                 const driverHTML = p.assigned_to ? 
                     `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
-                    `<span style="color:#cc5200; font-weight:800; font-size:11px;">UNASSIGNED</span>`;
+                    `<span style="color:${isFailed ? '#ff4444' : '#cc5200'}; font-weight:800; font-size:11px;">${isFailed ? 'FAILED ATTEMPT' : 'UNASSIGNED'}</span>`;
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
@@ -1148,6 +1168,7 @@
                     </div>
                     <div class="hist-name">${contact || 'No Contact'}</div>
                     <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
+                    ${p.customer_email ? `<div style="font-size:10px; color:var(--active-green); font-weight:bold; margin-top:5px;">EMAIL: ${p.customer_email}</div>` : ''}
                 `;
                 list.appendChild(card);
             });
