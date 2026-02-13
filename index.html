@@ -795,6 +795,13 @@
 
     firebase.auth().onAuthStateChanged((user) => {
         if(user) {
+            const allowedAdmins = ["desirae@ec.com", "celeste@ec.com"];
+            if (!allowedAdmins.includes(user.email)) {
+                alert("ACCESS DENIED: You are not authorized to access the Command Console.");
+                firebase.auth().signOut();
+                document.getElementById('login-overlay').style.display = 'flex';
+                return;
+            }
             currentUser = user.email.split('@')[0];
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
