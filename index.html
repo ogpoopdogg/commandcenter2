@@ -21,6 +21,26 @@
             --archive-orange: #cc5200; /* Was #ff6600 */
             --note-blue: #0099cc;    /* Was #00d4ff */
             --pro-blue: #0056b3; 
+            
+            /* DYNAMIC VARIABLES FOR THEME SWITCHING */
+            --header-bg: #000000;
+            --input-bg: #141414;
+            --border: #333333;
+            --stat-bg: #161616;
+            --modal-bg: #181818;
+            --btn-bg: #1c1c1c;
+        }
+
+        body.light-mode {
+            --bg: #f0f2f5;             /* Light gray, not totally white */
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --header-bg: #ffffff;
+            --input-bg: #ffffff;
+            --border: #cccccc;         /* Visible borders for light mode */
+            --stat-bg: #e4e6eb;
+            --modal-bg: #ffffff;
+            --btn-bg: #f0f0f0;
         }
 
         body { 
@@ -37,7 +57,7 @@
         
         header { 
             padding: 15px 20px; 
-            background: #000; 
+            background: var(--header-bg); 
             border-bottom: 2px solid var(--accent); /* Thinner border */
             display: flex; 
             justify-content: space-between; 
@@ -126,11 +146,11 @@
             50% { box-shadow: 0 0 8px rgba(204, 163, 0, 0.2); border-color: var(--accent); }
             100% { box-shadow: 0 0 2px rgba(204, 163, 0, 0.1); border-color: #333; }
         }
-        .glow-field { border: 1px solid #333; transition: border-color 0.3s; }
+        .glow-field { border: 1px solid var(--border); transition: border-color 0.3s; }
         .glow-field:focus { border-color: var(--accent); outline: none; }
 
-        .stats-bar { display: flex; background: #0f0f0f; padding: 10px; border-bottom: 1px solid #222; justify-content: space-around; align-items: center; gap: 10px; }
-        #entry-panel { background: #0a0a0a; border-bottom: 1px solid #222; padding: 20px 20px; box-shadow: 0 0 8px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 20px; }
+        .stats-bar { display: flex; background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 10px; }
+        #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 20px 20px; box-shadow: 0 0 8px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 20px; }
         #board-panel { padding: 20px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         
         .stat-box { 
@@ -140,8 +160,8 @@
             border-radius: 8px; 
             margin: 0; 
             padding: 8px;
-            background: #161616;
-            border: 1px solid #222;
+            background: var(--stat-bg);
+            border: 1px solid var(--border);
         }
         .stat-label { display: block; font-size: 10px; color: #777; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
         .stat-number { font-family: 'Segoe UI', sans-serif; font-weight: 800; line-height: 1; }
@@ -166,9 +186,9 @@
         input, select, textarea { 
             width: 100%; 
             padding: 12px 14px; 
-            background: #141414; 
-            border: 1px solid #333; 
-            color: #e0e0e0; 
+            background: var(--input-bg); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
             border-radius: 6px; 
             font-size: 15px; 
             margin-bottom: 12px; 
@@ -178,15 +198,15 @@
         input:focus, select:focus, textarea:focus {
             border-color: var(--accent);
             outline: none;
-            background: #1a1a1a;
+            background: var(--input-bg);
         }
         
         .flex-row { display: flex; gap: 12px; }
         .driver-select { 
             width: 100%; 
-            background: #111; 
+            background: var(--input-bg); 
             color: var(--accent); 
-            border: 1px solid #444; 
+            border: 1px solid var(--border); 
             font-weight: 600; 
             padding: 14px; 
             border-radius: 6px; 
@@ -196,10 +216,10 @@
         button.primary {
             width: 100%;
             padding: 16px;
-            background: #1c1c1c;
-            color: #ddd;
+            background: var(--btn-bg);
+            color: var(--text);
             font-weight: 800;
-            border: 1px solid #333;
+            border: 1px solid var(--border);
             border-bottom: 3px solid var(--accent);
             cursor: pointer;
             border-radius: 6px;
@@ -226,7 +246,7 @@
             gap: 20px; 
             flex-wrap: wrap; 
         }
-        .archive-column { flex: 1; min-width: 300px; border-right: 1px solid #222; padding-right: 20px; }
+        .archive-column { flex: 1; min-width: 300px; border-right: 1px solid var(--border); padding-right: 20px; }
         .archive-column:last-child { border-right: none; padding-right: 0; }
         .archive-title { 
             font-size: 13px; 
@@ -234,15 +254,15 @@
             color: #666; 
             text-transform: uppercase; 
             margin-bottom: 15px; 
-            border-bottom: 1px solid #333; 
+            border-bottom: 1px solid var(--border); 
             padding-bottom: 8px; 
             letter-spacing: 1px;
         }
 
         /* CARD UPDATES FOR SLEEK LOOK */
         .history-item {
-            background: #141414;
-            border: 1px solid #222;
+            background: var(--card);
+            border: 1px solid var(--border);
             padding: 15px;
             margin-bottom: 10px;
             border-radius: 6px;
@@ -250,14 +270,14 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .history-item:hover {
-            background: #1a1a1a;
+            background: var(--input-bg);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
         .hist-driver { font-weight: 800; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         .hist-time { font-size: 11px; color: #777; margin-top: 8px; font-family: monospace; font-weight: bold; }
-        .hist-name { font-size: 14px; color: #ccc; text-transform: uppercase; font-weight: 700; margin-top: 5px; }
+        .hist-name { font-size: 14px; color: var(--text); text-transform: uppercase; font-weight: 700; margin-top: 5px; }
         
         .urgent-pickup { border: 1px solid #b71c1c !important; box-shadow: inset 0 0 10px rgba(183, 28, 28, 0.2); }
 
@@ -266,8 +286,8 @@
             bottom: 0; 
             left: 0; 
             width: 100%; 
-            background: #000; 
-            border-top: 1px solid #333; 
+            background: var(--header-bg); 
+            border-top: 1px solid var(--border); 
             padding: 15px; 
             box-sizing: border-box; 
             z-index: 1001; 
@@ -277,9 +297,9 @@
         #archive-search { 
             width: 100%; 
             padding: 14px; 
-            background: #111; 
-            border: 1px solid #333; 
-            color: #ddd; 
+            background: var(--input-bg); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
             font-weight: 600; 
             border-radius: 6px; 
             font-size: 15px; 
@@ -288,13 +308,13 @@
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(2px); }
         .modal-content { 
-            background: #181818; 
+            background: var(--modal-bg); 
             margin: 5% auto; 
             padding: 30px; 
             width: 90%; 
             max-width: 550px; 
             border: 1px solid var(--accent); 
-            color: #eee; 
+            color: var(--text); 
             border-radius: 8px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
@@ -306,13 +326,13 @@
         .login-submit { width: 100%; padding: 14px; margin-top: 20px; background: var(--accent); border: none; color: #000; font-weight: 800; font-size: 16px; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         #user-display { color: var(--active-green); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
 
-        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: #1c1c1c; border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .suggestion-item { padding: 14px; border-bottom: 1px solid #333; cursor: pointer; color: #ddd; font-weight: 500; font-size: 14px; }
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text); font-weight: 500; font-size: 14px; }
         .suggestion-item:hover { background: var(--accent); color: #000; }
 
         .voice-active { fill: var(--active-green) !important; filter: drop-shadow(0 0 5px var(--active-green)); }
         
-        .mode-switch-container { display: flex; margin-bottom: 15px; background: #111; border-radius: 6px; padding: 4px; border: 1px solid #222; }
+        .mode-switch-container { display: flex; margin-bottom: 15px; background: var(--input-bg); border-radius: 6px; padding: 4px; border: 1px solid var(--border); }
         .mode-btn { 
             flex: 1; 
             padding: 12px; 
@@ -330,21 +350,21 @@
         .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
 
         /* GRAPH INDICATOR STYLES */
-        #driver-stats-panel { background: #0f0f0f; padding: 15px; border-bottom: 1px solid #222; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2); margin-bottom: 20px; }
+        #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2); margin-bottom: 20px; }
         .driver-stat-row { 
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
             padding: 10px 15px; 
-            background: #161616; 
+            background: var(--stat-bg); 
             border-radius: 6px; 
-            border: 1px solid #2a2a2a; 
+            border: 1px solid var(--border); 
             transition: transform 0.2s;
         }
         .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
-        .ds-name { color: #ddd; font-weight: 700; font-size: 14px; width: 80px; text-transform: uppercase; }
+        .ds-name { color: var(--text); font-weight: 700; font-size: 14px; width: 80px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-        .stat-item { font-size: 10px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: #0a0a0a; padding: 5px 10px; border-radius: 4px; border: 1px solid #222; }
+        .stat-item { font-size: 10px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
         .stat-val-p { color: var(--accent); font-size: 13px; font-weight: 800; }
         .stat-val-d { color: var(--active-green); font-size: 13px; font-weight: 800; }
         
@@ -364,7 +384,7 @@
 <header>
     <div style="display: flex; flex-direction: column; width: 100%;">
         <div id="user-display"></div>
-        <div style="display: flex; align-items: center; overflow: hidden;">
+        <div style="display: flex; align-items: center; overflow: hidden; cursor: pointer;" onclick="toggleTheme()">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
             <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
         </div>
@@ -511,6 +531,10 @@
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
     let currentDriverFilter = null;
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+    }
 
     function filterByDriver(name) {
         currentDriverFilter = name;
@@ -1057,7 +1081,7 @@
                     card.onclick = () => viewDetails(id, type);
                     card.style.cursor = "pointer";
                     card.style.borderLeft = "4px solid #333";
-                    card.style.background = "#141414";
+                    card.style.background = "var(--card)";
                     card.style.opacity = "0.7";
                     
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
