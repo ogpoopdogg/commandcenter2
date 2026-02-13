@@ -1146,7 +1146,7 @@
                     // TRIGGER ALERT PING (Only if unassigned with tag and not yet sent)
                     if (p.customer_email && !p.alert_sent) {
                         db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).update({ alert_sent: true });
-                        fetch("https://script.google.com/macros/s/AKfycbxUDHdIBbU1qWsT1T9-TPCXp1mhr1ygvcKq3_xr3cjkO26d08ud3ens5wzh_YeveQGgGw/exec", {
+                        fetch("https://script.google.com/macros/s/AKfycbyQDC4eq3YiiDLuY42Y7rBpWa1FBkPTaCUMQJTSw8qAEzW5sfBA4hR4WNNwzdxMFLij/exec", {
                             method: "POST",
                             mode: "no-cors",
                             body: JSON.stringify({ email: p.customer_email, notes: p.other_info, type: type })
