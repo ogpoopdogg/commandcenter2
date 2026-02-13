@@ -808,12 +808,14 @@
             
             db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
             
-            db.ref("pickups").on("value", snapshot => {
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+
+            db.ref("pickups").orderByChild("timestamp").startAt(sevenDaysAgo).on("value", snapshot => {
                 rawPickups = snapshot.val() || {};
                 renderData();
             });
 
-            db.ref("dropoffs").on("value", snapshot => {
+            db.ref("dropoffs").orderByChild("timestamp").startAt(sevenDaysAgo).on("value", snapshot => {
                 rawDropoffs = snapshot.val() || {};
                 renderData();
             });
@@ -928,15 +930,16 @@
             other_info: info,
             status: 'pending', 
             assigned_to: assigned, 
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            last_edit_by: currentUser
         };
 
         const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(targetNode).push(jobData);
         
         // Save addresses for autosuggest
-        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city });
-        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value });
+        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, last_edit_by: currentUser });
+        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, last_edit_by: currentUser });
 
         resetFormFields();
         document.getElementById('f-driver').value = "Unassigned";
@@ -1011,7 +1014,8 @@
             city: type === 'pickup' ? document.getElementById('e-city-p').value : document.getElementById('e-city-d').value,
             delivery_name: document.getElementById('e-drop-name').value,
             destination: document.getElementById('e-drop').value,
-            other_info: noteVal
+            other_info: noteVal,
+            last_edit_by: currentUser
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
         db.ref(node).child(id).update(updates).then(() => {
