@@ -603,7 +603,7 @@
         if (!mainMap) {
             mainMap = new google.maps.Map(document.getElementById("map"), {
                 gestureHandling: "greedy",
-                styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
+                styles: [ { \"featureType\": \"all\", \"elementType\": \"all\", \"stylers\": [{ \"invert_lightness\": true }, { \"saturation\": 10 }, { \"lightness\": 30 }, { \"gamma\": 0.5 }, { \"hue\": \"#435158\" }] } ]
             });
         }
         
@@ -631,7 +631,7 @@
                     mapMarkers[name] = new google.maps.Marker({
                         position: pos, map: mainMap,
                         icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
-                        label: { text: markerLabelText, className: "pulsing-dot driver-map-label" },
+                        label: { text: markerLabelText, className: \"pulsing-dot driver-map-label\" },
                         title: name
                     });
                 }
@@ -650,7 +650,7 @@
         if (!mainMap) {
             mainMap = new google.maps.Map(document.getElementById("map"), {
                 gestureHandling: "greedy",
-                styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
+                styles: [ { \"featureType\": \"all\", \"elementType\": \"all\", \"stylers\": [{ \"invert_lightness\": true }, { \"saturation\": 10 }, { \"lightness\": 30 }, { \"gamma\": 0.5 }, { \"hue\": \"#435158\" }] } ]
             });
         }
         
@@ -764,7 +764,7 @@
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
     function requestNotifyPermission() {
-        if ("Notification" in window) Notification.requestPermission();
+        if (\"Notification\" in window) Notification.requestPermission();
     }
 
     function updateClock() { document.getElementById('clock').innerText = formatTime12(new Date()); }
@@ -797,9 +797,9 @@
 
     firebase.auth().onAuthStateChanged((user) => {
         if(user) {
-            const allowedAdmins = ["desirae@ec.com", "celeste@ec.com"];
+            const allowedAdmins = [\"desirae@ec.com\", \"celeste@ec.com\"];
             if (!allowedAdmins.includes(user.email)) {
-                alert("ACCESS DENIED: You are not authorized to access the Command Console.");
+                alert(\"ACCESS DENIED: You are not authorized to access the Command Console.\");
                 firebase.auth().signOut();
                 document.getElementById('login-overlay').style.display = 'flex';
                 return;
@@ -808,16 +808,16 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
             
-            db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
+            db.ref(\"address_lookup\").on(\"value\", snap => { addressData = snap.val() || {}; });
             
             const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
-            db.ref("pickups").orderByChild("timestamp").startAt(sevenDaysAgo).on("value", snapshot => {
+            db.ref(\"pickups\").orderByChild(\"timestamp\").startAt(sevenDaysAgo).on(\"value\", snapshot => {
                 rawPickups = snapshot.val() || {};
                 renderData();
             });
 
-            db.ref("dropoffs").orderByChild("timestamp").startAt(sevenDaysAgo).on("value", snapshot => {
+            db.ref(\"dropoffs\").orderByChild(\"timestamp\").startAt(sevenDaysAgo).on(\"value\", snapshot => {
                 rawDropoffs = snapshot.val() || {};
                 renderData();
             });
@@ -827,7 +827,7 @@
     });
 
     function handleSearchKey(e) {
-        if (e.key === "Enter") {
+        if (e.key === \"Enter\") {
             e.target.blur();
             document.getElementById('board-panel').scrollIntoView({ behavior: 'smooth' });
         }
@@ -836,13 +836,13 @@
     function resetFormFields() {
         ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d'].forEach(id => {
             const el = document.getElementById(id);
-            if(el) el.value = "";
+            if(el) el.value = \"\";
         });
     }
 
     function startVoiceEntry() {
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!Speech) return alert("Voice API not supported");
+        if (!Speech) return alert(\"Voice API not supported\");
         
         const rec = new Speech();
         rec.lang = 'en-US';
@@ -853,7 +853,7 @@
         
         rec.onresult = (e) => {
             let cmdStr = e.results[0][0].transcript.toLowerCase();
-            if (cmdStr.trim() === "dispatch") { createJob(); return; }
+            if (cmdStr.trim() === \"dispatch\") { createJob(); return; }
             
             // Basic number conversion
             const numWords = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
@@ -878,7 +878,7 @@
         if(val.length < 1) { box.style.display = 'none'; return; }
         const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
         if(matches.length === 0) { box.style.display = 'none'; return; }
-        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectClient('${k}')">${k}</div>`).join('');
+        box.innerHTML = matches.map(k => `<div class=\"suggestion-item\" onclick=\"selectClient('${k}')\">${k}</div>`).join('');
         box.style.display = 'block';
     }
 
@@ -886,8 +886,8 @@
         const data = addressData[name];
         if(!data) return;
         document.getElementById('f-name').value = name;
-        document.getElementById('f-pickup').value = data.address || "";
-        document.getElementById('f-city').value = data.city || "";
+        document.getElementById('f-pickup').value = data.address || \"\";
+        document.getElementById('f-city').value = data.city || \"\";
         if(data.customer_email) document.getElementById('f-customer-email-p').value = data.customer_email;
         document.getElementById('suggestions').style.display = 'none';
     }
@@ -897,7 +897,7 @@
         if(val.length < 1) { box.style.display = 'none'; return; }
         const matches = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
         if(matches.length === 0) { box.style.display = 'none'; return; }
-        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="selectDropClient('${k}')">${k}</div>`).join('');
+        box.innerHTML = matches.map(k => `<div class=\"suggestion-item\" onclick=\"selectDropClient('${k}')\">${k}</div>`).join('');
         box.style.display = 'block';
     }
 
@@ -905,8 +905,8 @@
         const data = addressData[name];
         if(!data) return;
         document.getElementById('f-drop-name').value = name;
-        document.getElementById('f-drop-address').value = data.address || "";
-        document.getElementById('f-drop-city').value = data.city || "";
+        document.getElementById('f-drop-address').value = data.address || \"\";
+        document.getElementById('f-drop-city').value = data.city || \"\";
         if(data.customer_email) document.getElementById('f-customer-email-d').value = data.customer_email;
         document.getElementById('drop-suggestions').style.display = 'none';
     }
@@ -921,10 +921,10 @@
         const dropName = document.getElementById('f-drop-name').value;
         const assigned = document.getElementById('f-driver').value;
         const infoRaw = document.getElementById('f-info').value;
-        const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
+        const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : \"\";
         const email = currentMode === 'pickup' ? document.getElementById('f-customer-email-p').value : document.getElementById('f-customer-email-d').value;
 
-        if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert("Please complete either the full Pickup section or full Delivery section.");
+        if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert(\"Please complete either the full Pickup section or full Delivery section.\");
 
         const jobData = {
             city: city || dropCity, pickup_location: pickup, destination: drop,
@@ -933,7 +933,7 @@
             po_number: document.getElementById('f-po').value,
             name: name,
             other_info: info,
-            customer_email: email || "",
+            customer_email: email || \"\",
             status: 'pending', 
             assigned_to: assigned, 
             timestamp: Date.now(),
@@ -944,11 +944,11 @@
         db.ref(targetNode).push(jobData);
         
         // Save addresses for autosuggest
-        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, customer_email: email || "", last_edit_by: currentUser });
-        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", last_edit_by: currentUser });
+        if(name) db.ref(\"address_lookup\").child(name.replace(/[.#$\[\]\/]/g, \"\").trim()).set({ address: pickup, city: city, customer_email: email || \"\", last_edit_by: currentUser });
+        if(dropName) db.ref(\"address_lookup\").child(dropName.replace(/[.#$\[\]\/]/g, \"\").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || \"\", last_edit_by: currentUser });
 
         resetFormFields();
-        document.getElementById('f-driver').value = "Unassigned";
+        document.getElementById('f-driver').value = \"Unassigned\";
     }
 
     function viewDetails(id, type) {
@@ -956,45 +956,45 @@
         const data = isPickup ? rawPickups[id] : rawDropoffs[id];
         if(!data) return;
 
-        const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
+        const val = (v) => v ? v.replace(/"/g, '&quot;') : \"\";
         const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
-        const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
+        const driverOpts = drivers.map(d => `<option value=\"${d}\" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 
         // UPDATED: EDIT FORM STRUCTURE TO MATCH MAIN DISPATCH FORM EXACTLY
         const html = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
-                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #b71c1c; color:#ff5555; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px;">DELETE</button>
+            <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;\">
+                <div style=\"font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;\">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
+                <button onclick=\"deleteJob('${id}', '${type}')\" style=\"background:transparent; border:1px solid #b71c1c; color:#ff5555; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px;\">DELETE</button>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:0;">
-                <input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name" style="margin-bottom:12px;">
-                <div class="flex-row">
-                    <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2;">
-                    <input id="e-city-p" value="${val(data.city)}" placeholder="City" style="flex:1;">
+            <div style=\"display:flex; flex-direction:column; gap:0;\">
+                <input id=\"e-name\" value=\"${val(data.name)}\" placeholder=\"Pickup Business/Contact Name\" style=\"margin-bottom:12px;\">
+                <div class=\"flex-row\">
+                    <input id=\"e-pickup\" value=\"${val(data.pickup_location)}\" placeholder=\"Pickup Address\" style=\"flex:2;\">
+                    <input id=\"e-city-p\" value=\"${val(data.city)}\" placeholder=\"City\" style=\"flex:1;\">
                 </div>
 
-                <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions" style="margin-bottom:12px;">
+                <input id=\"e-pkg\" value=\"${val(data.package_details)}\" placeholder=\"Packages/Items/Dimensions\" style=\"margin-bottom:12px;\">
                 
-                <input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref" style="margin-bottom:12px;">
-                <textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:12px; padding:12px; resize:none; overflow:hidden; min-height:60px;">${val(data.other_info)}</textarea>
+                <input id=\"e-po\" value=\"${val(data.po_number)}\" placeholder=\"PO / Ref\" style=\"margin-bottom:12px;\">
+                <textarea id=\"e-note\" placeholder=\"Driver Notes\" oninput=\"this.style.height='';this.style.height=this.scrollHeight+'px'\" style=\"width:100%; margin-bottom:12px; padding:12px; resize:none; overflow:hidden; min-height:60px;\">${val(data.other_info)}</textarea>
 
-                <input id="e-add-note" placeholder="Add New Note (Appends to above)" style="margin-bottom:12px;">
+                <input id=\"e-add-note\" placeholder=\"Add New Note (Appends to above)\" style=\"margin-bottom:12px;\">
 
-                <input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name" style="margin-bottom:12px;">
-                <div class="flex-row">
-                    <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="flex:2;">
-                    <input id="e-city-d" value="${val(data.city)}" placeholder="City" style="flex:1;">
+                <input id=\"e-drop-name\" value=\"${val(data.delivery_name)}\" placeholder=\"Delivery Contact/Business Name\" style=\"margin-bottom:12px;\">
+                <div class=\"flex-row\">
+                    <input id=\"e-drop\" value=\"${val(data.destination)}\" placeholder=\"Delivery Address\" style=\"flex:2;\">
+                    <input id=\"e-city-d\" value=\"${val(data.city)}\" placeholder=\"City\" style=\"flex:1;\">
                 </div>
 
-                <input id="e-email" type="email" value="${val(data.customer_email)}" placeholder="Customer Email Address" style="margin-bottom:12px; border-color:var(--active-green);">
+                <input id=\"e-email\" type=\"email\" value=\"${val(data.customer_email)}\" placeholder=\"Customer Email Address\" style=\"margin-bottom:12px; border-color:var(--active-green);\">
 
-                <select id="e-driver" class="driver-select" style="margin-bottom:12px;">${driverOpts}</select>
+                <select id=\"e-driver\" class=\"driver-select\" style=\"margin-bottom:12px;\">${driverOpts}</select>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px; margin-top:15px;">
-                <button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" style="background:#222; color:#ccc; border:1px solid #333; padding:16px; font-weight:700; cursor:pointer; font-size:14px; border-radius:6px;">CANCEL</button>
-                <button onclick="saveEdit('${id}', '${type}')" style="background:var(--active-green); color:#000; border:none; padding:16px; font-weight:800; text-transform:uppercase; cursor:pointer; font-size:14px; border-radius:6px;">SAVE</button>
+            <div style=\"display:grid; grid-template-columns: 1fr 2fr; gap:12px; margin-top:15px;\">
+                <button onclick=\"document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''\" style=\"background:#222; color:#ccc; border:1px solid #333; padding:16px; font-weight:700; cursor:pointer; font-size:14px; border-radius:6px;\">CANCEL</button>
+                <button onclick=\"saveEdit('${id}', '${type}')\" style=\"background:var(--active-green); color:#000; border:none; padding:16px; font-weight:800; text-transform:uppercase; cursor:pointer; font-size:14px; border-radius:6px;\">SAVE</button>
             </div>
         `;
         
@@ -1011,19 +1011,19 @@
     function saveEdit(id, type) {
         let noteVal = document.getElementById('e-note').value;
         const addVal = document.getElementById('e-add-note').value;
-        if(addVal.trim()) noteVal = (noteVal ? noteVal + " " : "") + `[${currentUser}]: ${addVal.trim()}`;
+        if(addVal.trim()) noteVal = (noteVal ? noteVal + \" \" : \"\") + `[${currentUser}]: ${addVal.trim()}`;
 
         const updates = {
             assigned_to: document.getElementById('e-driver').value,
             package_details: document.getElementById('e-pkg').value,
-            po_number: document.getElementById('e-po').value,
+            po_number: document.getElementById('f-po').value,
             name: document.getElementById('e-name').value,
             pickup_location: document.getElementById('e-pickup').value,
             city: type === 'pickup' ? document.getElementById('e-city-p').value : document.getElementById('e-city-d').value,
             delivery_name: document.getElementById('e-drop-name').value,
             destination: document.getElementById('e-drop').value,
             other_info: noteVal,
-            customer_email: document.getElementById('e-email').value || "",
+            customer_email: document.getElementById('e-email').value || \"\",
             last_edit_by: currentUser
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
@@ -1034,7 +1034,7 @@
     }
 
     function deleteJob(id, type) {
-        if(confirm("Delete this dispatch completely?")) {
+        if(confirm(\"Delete this dispatch completely?\")) {
             const node = type === 'pickup' ? 'pickups' : 'dropoffs';
             db.ref(node).child(id).remove();
             document.getElementById('detailsModal').style.display = 'none';
@@ -1043,13 +1043,13 @@
     }
 
     function renderData() {
-        const pList = document.getElementById("list-pickups"); 
-        const dList = document.getElementById("list-deliveries");
-        const statsPanel = document.getElementById("driver-stats-panel");
-        const searchTerm = document.getElementById("archive-search").value.toLowerCase();
+        const pList = document.getElementById(\"list-pickups\"); 
+        const dList = document.getElementById(\"list-deliveries\");
+        const statsPanel = document.getElementById(\"driver-stats-panel\");
+        const searchTerm = document.getElementById(\"archive-search\").value.toLowerCase();
         
-        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
-        document.getElementById("list-archive").innerHTML = "";
+        pList.innerHTML = \"\"; dList.innerHTML = \"\"; statsPanel.innerHTML = \"\";
+        document.getElementById(\"list-archive\").innerHTML = \"\";
 
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
@@ -1078,7 +1078,7 @@
             
             entries.forEach(([id, p]) => {
                 // Filter logic
-                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.customer_email||"")).toLowerCase();
+                const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||\"\") + (p.other_info||\"\") + (p.customer_email||\"\")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm)) return;
 
                 if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
@@ -1094,29 +1094,29 @@
                     if (!searchTerm && !isToday) return; 
                     if (searchTerm && !isRecent) return;
 
-                    const card = document.createElement("div");
-                    card.className = "history-item"; // Added class for CSS
+                    const card = document.createElement(\"div\");
+                    card.className = \"history-item\"; // Added class for CSS
                     card.onclick = () => viewDetails(id, type);
-                    card.style.cursor = "pointer";
-                    card.style.borderLeft = "4px solid #333";
-                    card.style.background = "var(--card)";
-                    card.style.opacity = "0.7";
+                    card.style.cursor = \"pointer\";
+                    card.style.borderLeft = \"4px solid #333\";
+                    card.style.background = \"var(--card)\";
+                    card.style.opacity = \"0.7\";
                     
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
                     // Format Date
-                    const dateStr = (d.getMonth() + 1) + "/" + d.getDate();
+                    const dateStr = (d.getMonth() + 1) + \"/\" + d.getDate();
                     const timeStr = formatTime12(p.completed_at || p.timestamp);
                     const doneTime = `${dateStr} ${timeStr}`;
 
                     card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:800; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
-                            <span style="font-size:10px; color:#00b32d; font-weight:bold;">DONE ${doneTime}</span>
+                        <div style=\"display:flex; justify-content:space-between; align-items:center;\">
+                            <span style=\"font-weight:800; color:#555; text-decoration:line-through;\">${p.assigned_to || 'Unassigned'}</span>
+                            <span style=\"font-size:10px; color:#00b32d; font-weight:bold;\">DONE ${doneTime}</span>
                         </div>
-                        <div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${contact || 'No Contact'}</div>
-                        <div style="color:#555; font-size:11px;">${p.city || ''}</div>
+                        <div style=\"color:#777; font-size:13px; font-weight:700; margin-top:4px;\">${contact || 'No Contact'}</div>
+                        <div style=\"color:#555; font-size:11px;\">${p.city || ''}</div>
                     `;
-                    document.getElementById("list-archive").appendChild(card);
+                    document.getElementById(\"list-archive\").appendChild(card);
                     return; // Skip adding to main list
                 }
 
@@ -1131,24 +1131,24 @@
                 }
                 if(p.driver_edited_note) noteCount++;
 
-                const card = document.createElement("div");
-                card.className = "history-item"; // Added class for CSS
+                const card = document.createElement(\"div\");
+                card.className = \"history-item\"; // Added class for CSS
                 
                 // Highlight DND/DNP Logic
-                const infoLower = (p.other_info || "").toLowerCase();
-                const isFailed = infoLower.includes("dnd") || infoLower.includes("dnp");
+                const infoLower = (p.other_info || \"\").toLowerCase();
+                const isFailed = infoLower.includes(\"dnd\") || infoLower.includes(\"dnp\");
                 const isUnassignedFailed = isFailed && (!assignedTo || assignedTo === 'Unassigned');
 
                 if(isUnassignedFailed) {
-                    card.style.background = "#2b0000";
-                    card.style.border = "2px solid #ff4444";
+                    card.style.background = \"#2b0000\";
+                    card.style.border = \"2px solid #ff4444\";
                     
                     // TRIGGER ALERT PING (Only if unassigned with tag and not yet sent)
                     if (p.customer_email && !p.alert_sent) {
                         db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).update({ alert_sent: true });
-                        fetch("https://script.google.com/macros/s/AKfycbyQDC4eq3YiiDLuY42Y7rBpWa1FBkPTaCUMQJTSw8qAEzW5sfBA4hR4WNNwzdxMFLij/exec", {
-                            method: "POST",
-                            mode: "no-cors",
+                        fetch(\"https://script.google.com/macros/s/AKfycbyQDC4eq3YiiDLuY42Y7rBpWa1FBkPTaCUMQJTSw8qAEzW5sfBA4hR4WNNwzdxMFLij/exec\", {
+                            method: \"POST\",
+                            mode: \"no-cors\",
                             body: JSON.stringify({ email: p.customer_email, notes: p.other_info, type: type })
                         });
                     }
@@ -1157,7 +1157,7 @@
                 }
 
                 card.onclick = () => viewDetails(id, type);
-                card.style.cursor = "pointer";
+                card.style.cursor = \"pointer\";
                 // Color coding borders based on type
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
                 
@@ -1167,19 +1167,19 @@
                 const darkText = ['#00b32d', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
                 
                 const driverHTML = p.assigned_to ? 
-                    `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
-                    `<span style="color:${isFailed ? '#ff4444' : '#cc5200'}; font-weight:800; font-size:11px;">${isFailed ? 'FAILED ATTEMPT' : 'UNASSIGNED'}</span>`;
+                    `<span class=\"hist-driver\" style=\"background:${bg}; color:${darkText?'#000':'#fff'}\">${p.assigned_to}</span>` : 
+                    `<span style=\"color:${isFailed ? '#ff4444' : '#cc5200'}; font-weight:800; font-size:11px;\">${isFailed ? 'FAILED ATTEMPT' : 'UNASSIGNED'}</span>`;
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style=\"display:flex; justify-content:space-between; align-items:center;\">
                         ${driverHTML}
-                        <div style="font-size:10px; color:#666; font-weight:700;">DETAILS</div>
+                        <div style=\"font-size:10px; color:#666; font-weight:700;\">DETAILS</div>
                     </div>
-                    <div class="hist-name">${contact || 'No Contact'}</div>
-                    <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
-                    ${p.customer_email ? `<div style="font-size:10px; color:var(--active-green); font-weight:bold; margin-top:5px;">EMAIL: ${p.customer_email}</div>` : ''}
+                    <div class=\"hist-name\">${contact || 'No Contact'}</div>
+                    <div style=\"margin-top:2px; font-size:12px; color:#888;\">${p.city || 'No City'}</div>
+                    ${p.customer_email ? `<div style=\"font-size:10px; color:var(--active-green); font-weight:bold; margin-top:5px;\">EMAIL: ${p.customer_email}</div>` : ''}
                 `;
                 list.appendChild(card);
             });
@@ -1199,28 +1199,28 @@
                 
                 const color = dColors[driver] || '#fff';
 
-                const row = document.createElement("div");
-                row.className = "driver-stat-row";
-                row.style.cursor = "pointer";
+                const row = document.createElement(\"div\");
+                row.className = \"driver-stat-row\";
+                row.style.cursor = \"pointer\";
                 row.onclick = () => filterByDriver(driver);
                 row.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <div class="ds-name" style="color:${color};">${driver}</div>
+                    <div style=\"display:flex; align-items:center;\">
+                        <div class=\"ds-name\" style=\"color:${color};\">${driver}</div>
                     </div>
-                    <div class="stat-info">
-                        ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
-                        ${dCount > 0 ? `<div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>` : ''}
+                    <div class=\"stat-info\">
+                        ${pCount > 0 ? `<div class=\"stat-item\">Pickups <span class=\"stat-val-p\">${pCount}</span></div>` : ''}
+                        ${dCount > 0 ? `<div class=\"stat-item\">Deliveries <span class=\"stat-val-d\">${dCount}</span></div>` : ''}
                     </div>
                 `;
                 statsPanel.appendChild(row);
             }
         });
 
-        document.getElementById("stat-pending").innerText = pending;
-        document.getElementById("stat-assigned").innerText = assignedCount;
-        document.getElementById("stat-note").innerText = noteCount;
-        document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
-        document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
+        document.getElementById(\"stat-pending\").innerText = pending;
+        document.getElementById(\"stat-assigned\").innerText = assignedCount;
+        document.getElementById(\"stat-note\").innerText = noteCount;
+        document.getElementById(\"note-box\").style.display = noteCount > 0 ? \"block\" : \"none\";
+        document.getElementById(\"pending-box\").className = \"stat-box\" + (pending > 0 ? \" unassigned-glow\" : \"\");
     }
 </script>
 </body>
