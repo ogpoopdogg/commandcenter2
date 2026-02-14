@@ -1,0 +1,21 @@
+{
+  "name": "E&C Command Center",
+  "short_name": "E&C Admin",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#222222",
+  "theme_color": "#cca300",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
+}
