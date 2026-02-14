@@ -536,8 +536,13 @@
     let currentMode = 'pickup';
     let currentDriverFilter = null;
 
+    if (localStorage.getItem('ec_theme') === 'light') {
+        document.body.classList.add('light-mode');
+    }
+
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
+        localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
     }
 
     function filterByDriver(name) {
