@@ -423,23 +423,6 @@
     <div id="clock" style="font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums;"></div>
 </header>
 
-<div class="stats-bar">
-    <div id="pending-box" class="stat-box" onclick="requestNotifyPermission()" style="cursor:pointer;">
-        <span class="stat-label">Pending</span>
-        <div id="stat-pending" class="stat-number">0</div>
-    </div>
-
-    <div class="stat-box">
-        <button id="locate-btn" onclick="openMap()">Driver Map</button>
-    </div>
-
-    <div id="assigned-box" class="stat-box">
-        <span class="stat-label">Assigned</span>
-        <div id="stat-assigned" class="stat-number">0</div>
-    </div>
-    <div id="note-box" class="stat-box" style="display:none;"><span class="stat-label">Note</span><div id="stat-note" class="stat-number">0</div></div>
-</div>
-
 <div id="entry-panel">
     <div class="mode-switch-container">
         <button class="mode-btn active-mode" id="btn-mode-pickup" onclick="setMode('pickup')">Schedule Pickup</button>
@@ -477,6 +460,23 @@
     <div style="display: flex; gap: 12px;">
         <button class="primary super-dispatch" onclick="createJob()" style="flex: 1;">Dispatch</button>
         <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #111; border: 1px solid #444; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+    </div>
+    
+    <div style="display: flex; justify-content: space-around; align-items: center; gap: 10px; margin-top: 15px;">
+        <div id="pending-box" class="stat-box" onclick="requestNotifyPermission()" style="cursor:pointer;">
+            <span class="stat-label">Pending</span>
+            <div id="stat-pending" class="stat-number">0</div>
+        </div>
+
+        <div class="stat-box">
+            <button id="locate-btn" onclick="openMap()">Driver Map</button>
+        </div>
+
+        <div id="assigned-box" class="stat-box">
+            <span class="stat-label">Assigned</span>
+            <div id="stat-assigned" class="stat-number">0</div>
+        </div>
+        <div id="note-box" class="stat-box" style="display:none;"><span class="stat-label">Note</span><div id="stat-note" class="stat-number">0</div></div>
     </div>
 </div>
 
@@ -581,11 +581,6 @@
     </div>
 </div>
 
-<div id="search-footer">
-    <input type="text" id="archive-search" placeholder="SEARCH ARCHIVE" onkeyup="renderData()" onkeydown="handleSearchKey(event)">
-    <button id="install-btn">Install App</button>
-</div>
-
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
     <button class="close-map" onclick="zoomToDensest()" style="top:130px; background:#004488;">ZOOM QUICK</button>
@@ -602,6 +597,8 @@
         <div id="m-body"></div>
         </div>
 </div>
+
+<button id="install-btn">Install App</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -1249,7 +1246,7 @@
         const pList = document.getElementById("list-pickups"); 
         const dList = document.getElementById("list-deliveries");
         const statsPanel = document.getElementById("driver-stats-panel");
-        const searchTerm = document.getElementById("archive-search").value.toLowerCase();
+        const searchTerm = document.getElementById("archive-search") ? document.getElementById("archive-search").value.toLowerCase() : "";
         
         pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
         document.getElementById("list-archive").innerHTML = "";
@@ -1513,9 +1510,10 @@
                     const doneTime = `${dateStr} ${timeStr}`;
 
                     card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:800; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
-                            <span style="font-size:18px; color:#00b32d; font-weight:900; white-space:nowrap; line-height:1;">DONE ${doneTime}</span>
+                        <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;">
+                             <span style="font-weight:800; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span>
+                             <span style="font-size:16px; color:#00b32d; font-weight:900; text-align:center;">DONE</span>
+                             <span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${doneTime}</span>
                         </div>
                         <div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${contact || 'No Contact'}</div>
                         <div style="color:#555; font-size:11px;">${p.city || ''}</div>
