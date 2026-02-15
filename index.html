@@ -593,9 +593,16 @@
     let mapMarkers = {};
     let activePolyline = null;
     let listeningRef = null;
+    let mapAllListener = null;
 
     function openMap() {
         document.getElementById('map-modal').style.display = 'block';
+        currentDriverFilter = null;
+        
+        setTimeout(() => {
+             if(mainMap) google.maps.event.trigger(mainMap, "resize");
+        }, 100);
+
         if (!mainMap) {
             mainMap = new google.maps.Map(document.getElementById("map"), {
                 gestureHandling: "greedy",
@@ -603,7 +610,12 @@
             });
         }
         
-        db.ref('driver_locations').on('value', (snapshot) => {
+        for(let k in mapMarkers) { if(mapMarkers[k]) mapMarkers[k].setMap(null); }
+        mapMarkers = {};
+        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
+        if(mapAllListener) db.ref('driver_locations').off('value', mapAllListener);
+        
+        mapAllListener = db.ref('driver_locations').on('value', (snapshot) => {
             const drivers = snapshot.val();
             const bounds = new google.maps.LatLngBounds();
             let hasDrivers = false;
@@ -641,6 +653,13 @@
 
     function viewDriverRoute(name, e) {
         if(e) e.stopPropagation();
+        
+        if(mapAllListener) {
+            db.ref('driver_locations').off('value', mapAllListener);
+            mapAllListener = null;
+        }
+
+        currentDriverFilter = name;
         document.getElementById('map-modal').style.display = 'block';
         
         if (!mainMap) {
@@ -650,90 +669,19 @@
             });
         }
         
-        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
-        if(listeningRef) { listeningRef.off(); listeningRef = null; }
-        db.ref('driver_locations').off();
-        
-        for(let k in mapMarkers) {
-             if(mapMarkers[k]) mapMarkers[k].setMap(null);
-        }
-        mapMarkers = {};
-        
-        listeningRef = db.ref('driver_locations/' + name);
-        listeningRef.on('value', snap => {
-            const data = snap.val();
-            if(!data) return;
-            driverLocationsData[name] = data;
-
-            const pos = { lat: data.lat, lng: data.lng };
-            const timeStr = formatTime12(data.gps_timestamp || Date.now());
-            
-            if(mapMarkers[name]) {
-                mapMarkers[name].setPosition(pos);
-                mapMarkers[name].setLabel({ text: `${name} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" });
-            } else {
-                mapMarkers[name] = new google.maps.Marker({
-                    position: pos, map: mainMap,
-                    icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -15) },
-                    label: { text: `${name} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" }
-                });
-            }
-            
-            if(!activePolyline) mainMap.setCenter(pos);
-
-            if(data.active_route) {
-                 if(activePolyline) activePolyline.setMap(null);
-                 const path = google.maps.geometry.encoding.decodePath(data.active_route);
-                 activePolyline = new google.maps.Polyline({
-                     path: path, geodesic: true,
-                     strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5,
-                     map: mainMap
-                 });
-            }
-
-            const rList = document.getElementById('route-list');
-            const badge = document.getElementById("route-time-badge");
-            
-            if(badge) {
-                badge.style.display = data.total_duration ? 'block' : 'none';
-                if(data.total_duration) badge.innerText = "ROUTE TIME: " + data.total_duration;
-            }
-
-            if(rList && data.route_string) {
-                rList.style.display = 'block';
-                rList.innerHTML = '';
-                const stops = data.route_string.split(' | ');
-                
-                const pKeys = new Set();
-                Object.values(rawPickups).forEach(p => { 
-                    if(p.assigned_to === name && p.status === 'pending') 
-                        pKeys.add(`${p.name} ${p.pickup_location}`); 
-                });
-                
-                stops.forEach(s => {
-                    const idx = s.indexOf('. ');
-                    if(idx > -1) {
-                        const num = s.substring(0, idx);
-                        const txt = s.substring(idx+2);
-                        const isP = pKeys.has(txt);
-                        const col = isP ? '#ffcc00' : '#00b32d';
-                        
-                        rList.innerHTML += `<div style="display:flex; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px;">
-                            <div style="background:${col}; color:#000; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:14px; flex-shrink:0;">${num}</div>
-                            <div style="font-size:12px; color:#eee; font-weight:600; line-height:1.3;">${txt}</div>
-                        </div>`;
-                    }
-                });
-            } else if (rList) rList.style.display = 'none';
-        });
+        renderData();
+        setTimeout(() => google.maps.event.trigger(mainMap, "resize"), 100);
     }
 
     function closeMap() {
         document.getElementById('map-modal').style.display = 'none';
-        db.ref('driver_locations').off();
-        if(listeningRef) { listeningRef.off(); listeningRef = null; }
-        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
         
+        if(mapAllListener) {
+            db.ref('driver_locations').off('value', mapAllListener);
+            mapAllListener = null;
+        }
+        
+        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
         for(let k in mapMarkers) {
              if(mapMarkers[k]) mapMarkers[k].setMap(null);
         }
@@ -1124,7 +1072,7 @@
                      });
 
                      Object.keys(mapMarkers).forEach(k => {
-                         if(k !== currentDriverFilter) {
+                         if(k !== currentDriverFilter && !k.startsWith('job_')) {
                              mapMarkers[k].setMap(null);
                              delete mapMarkers[k];
                          }
@@ -1144,6 +1092,10 @@
                          const labelText = job.type === 'pickup' ? job.name : job.delivery_name;
                          const fullAddr = `${addr}, ${job.city || ''}`;
                          
+                         // Clean up old job markers if re-rendering
+                         const key = `job_${index}`;
+                         if(mapMarkers[key]) mapMarkers[key].setMap(null);
+
                          const placeMarker = (loc) => {
                             const marker = new google.maps.Marker({
                                 map: mainMap,
@@ -1164,7 +1116,6 @@
                                     strokeColor: 'white'
                                 }
                             });
-                            const key = `job_${index}`;
                             mapMarkers[key] = marker;
                          };
 
