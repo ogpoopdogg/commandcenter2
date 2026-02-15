@@ -419,6 +419,19 @@
         }
         .crt-animate { animation: crt-turn-on 3s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
 
+        @keyframes pulse-red-btn {
+            0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; }
+            50% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); border-color: #ff4444; background: rgba(255,0,0,0.1); }
+            100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; }
+        }
+        @keyframes pulse-orange-btn {
+            0% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; }
+            50% { box-shadow: 0 0 15px rgba(255, 140, 0, 0.7); border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); }
+            100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; }
+        }
+        .btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
+        .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
+
         .btn-pressed {
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8) !important;
             background: #111 !important;
@@ -432,19 +445,6 @@
             box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important;
             border-bottom: 1px solid #bbb !important;
         }
-
-        @keyframes pulse-red-btn {
-            0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; }
-            50% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); border-color: #ff4444; background: rgba(255,0,0,0.1); }
-            100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; }
-        }
-        @keyframes pulse-orange-btn {
-            0% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; }
-            50% { box-shadow: 0 0 15px rgba(255, 140, 0, 0.7); border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); }
-            100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; }
-        }
-        .btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
-        .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
     </style>
 </head>
 <body>
@@ -1626,7 +1626,7 @@
                 const isUnassignedFailed = isFailed && isUnassigned;
                 
                 // Active DND Logic: Must be Failed AND Assigned
-                if (isFailed && !isUnassigned) {
+                if (isFailed) {
                     dndCount++;
                     const dndCard = document.createElement("div");
                     dndCard.className = "history-item dnd-card";
@@ -1638,7 +1638,9 @@
                     // Card Content Generation (Shared logic simplified)
                     const bg = dColors[assignedTo] || '#00b32d'; 
                     const darkText = ['#00b32d', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
-                    const driverHTML = `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${assignedTo}</span>`;
+                    const driverHTML = (assignedTo && assignedTo !== 'Unassigned') ? 
+                        `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${assignedTo}</span>` : 
+                        `<span style="color:#ff4444; font-weight:800; font-size:11px;">UNASSIGNED / FAILED</span>`;
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
                     const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
                     const sNum = stopLookup[matchKey];
