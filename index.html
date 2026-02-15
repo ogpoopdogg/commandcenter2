@@ -152,7 +152,7 @@
         .glow-field:focus { border-color: var(--accent); outline: none; }
 
         .stats-bar { display: flex; background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 10px; }
-        #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 20px 20px; box-shadow: 0 0 8px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 20px; }
+        #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 15px; box-shadow: 0 0 8px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 20px; }
         #board-panel { padding: 20px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         
         .stat-box { 
@@ -187,14 +187,14 @@
         /* INCREASED SPACING FOR INPUTS */
         input, select, textarea { 
             width: 100%; 
-            padding: 12px 14px; 
+            padding: 10px 12px; 
             padding-right: 35px; /* Space for copy button */
             background: var(--input-bg); 
             border: 1px solid var(--border); 
             color: var(--text); 
             border-radius: 6px; 
             font-size: 15px; 
-            margin-bottom: 12px; 
+            margin-bottom: 6px; 
             box-sizing: border-box; 
             transition: border 0.2s;
         }
@@ -204,7 +204,7 @@
             background: var(--input-bg);
         }
         
-        .flex-row { display: flex; gap: 12px; }
+        .flex-row { display: flex; gap: 6px; }
         .driver-select { 
             width: 100%; 
             background: var(--input-bg); 
@@ -237,6 +237,7 @@
             letter-spacing: 1.5px;
             transition: all 0.2s ease;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            overflow: hidden;
         }
         button.primary:hover {
             background: #252525;
@@ -379,16 +380,16 @@
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
-            padding: 20px 25px; 
+            padding: 10px 15px; 
             background: var(--stat-bg); 
             border-radius: 6px; 
             border: 1px solid var(--border); 
             transition: transform 0.2s;
-            min-height: 80px; 
+            min-height: 50px; 
             animation: pulse-glow 4s infinite ease-in-out; 
         }
         .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
-        .ds-name { color: var(--text); font-weight: 700; font-size: 34px; width: 140px; text-transform: uppercase; }
+        .ds-name { color: var(--text); font-weight: 700; font-size: 20px; width: auto; padding-right: 10px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
         .stat-item { font-size: 14px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
         .stat-val-p { color: var(--accent); font-size: 22px; font-weight: 800; }
@@ -447,20 +448,18 @@
 
     <div id="top-input-section"></div>
     
-    <div class="input-wrap" style="margin-bottom:12px;">
+    <div class="input-wrap" style="margin-bottom:6px;">
         <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions" style="margin-bottom:0;">
         <button class="copy-btn" onclick="copyField('f-pkg-details')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
     </div>
 
-    <div class="flex-row">
-        <div class="input-wrap" style="flex: 1;">
-            <input type="text" id="f-po" placeholder="PO / Reference" style="margin-bottom:0; width:100%;">
-            <button class="copy-btn" onclick="copyField('f-po')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
-        </div>
-        <div class="input-wrap" style="flex: 1.5;">
-            <input type="text" id="f-info" placeholder="Driver Notes..." style="margin-bottom:0; width:100%;">
-            <button class="copy-btn" onclick="copyField('f-info')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
-        </div>
+    <div class="input-wrap" style="margin-bottom:6px;">
+        <input type="text" id="f-po" placeholder="PO / Reference" style="margin-bottom:0; width:100%;">
+        <button class="copy-btn" onclick="copyField('f-po')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+    </div>
+    <div class="input-wrap" style="margin-bottom:6px;">
+        <input type="text" id="f-info" placeholder="Driver Notes..." style="margin-bottom:0; width:100%;">
+        <button class="copy-btn" onclick="copyField('f-info')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
     </div>
 
     <div id="bottom-input-section" style="margin-top: 5px;"></div>
@@ -487,9 +486,9 @@
     <div id="group-pickup">
         <div style="position:relative;">
             <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
-            <button class="copy-btn" onclick="copyField('f-name')" style="right:35px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            <button class="copy-btn" onclick="copyField('f-name')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             <div id="suggestions" class="suggestions-box"></div>
-            <div onclick="resetFormFields()" style="position:absolute; right:12px; top:14px; font-size:10px; font-weight:800; cursor:pointer; color:#666; text-transform:uppercase; z-index:10;">RESET</div>
+            <div onclick="resetFormFields()" style="position:absolute; right:40px; top:50%; transform:translateY(-50%); font-size:10px; font-weight:800; cursor:pointer; color:#666; text-transform:uppercase; z-index:10;">RESET</div>
         </div>
         <div class="flex-row">
             <div class="input-wrap" style="flex: 2;">
@@ -503,11 +502,11 @@
         </div>
         <div class="flex-row">
             <div class="input-wrap" style="flex:1;">
-                <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Customer Email Address (for DNP alerts)" style="margin-bottom:0; width:100%;">
+                <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Email" style="margin-bottom:0; width:100%;">
                 <button class="copy-btn" onclick="copyField('f-customer-email-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
             <div class="input-wrap" style="flex:1;">
-                <input type="tel" id="f-customer-phone-p" class="glow-field" placeholder="Customer Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
+                <input type="tel" id="f-customer-phone-p" class="glow-field" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
                 <button class="copy-btn" onclick="copyField('f-customer-phone-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
         </div>
@@ -518,6 +517,7 @@
             <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
             <button class="copy-btn" onclick="copyField('f-drop-name')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             <div id="drop-suggestions" class="suggestions-box"></div>
+            <div onclick="resetFormFields()" style="position:absolute; right:40px; top:50%; transform:translateY(-50%); font-size:10px; font-weight:800; cursor:pointer; color:#666; text-transform:uppercase; z-index:10;">RESET</div>
         </div>
         <div class="flex-row">
             <div class="input-wrap" style="flex: 2;">
@@ -531,11 +531,11 @@
         </div>
         <div class="flex-row">
             <div class="input-wrap" style="flex:1;">
-                <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Customer Email Address (for DND alerts)" style="margin-bottom:0; width:100%;">
+                <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Email" style="margin-bottom:0; width:100%;">
                 <button class="copy-btn" onclick="copyField('f-customer-email-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
             <div class="input-wrap" style="flex:1;">
-                <input type="tel" id="f-customer-phone-d" class="glow-field" placeholder="Customer Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
+                <input type="tel" id="f-customer-phone-d" class="glow-field" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
                 <button class="copy-btn" onclick="copyField('f-customer-phone-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
         </div>
@@ -1121,11 +1121,11 @@
                 </div>
                 <div class="flex-row">
                     <div class="input-wrap" style="flex:1;">
-                        <input id="e-email-p" type="email" value="${isPickup ? val(data.customer_email) : ''}" placeholder="Pickup Email" style="margin-bottom:0; width:100%;">
+                        <input id="e-email-p" type="email" value="${isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%;">
                         <button class="copy-btn" onclick="copyField('e-email-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                     <div class="input-wrap" style="flex:1;">
-                        <input id="e-phone-p" type="tel" value="${isPickup ? val(data.customer_phone) : ''}" placeholder="Pickup Phone" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
+                        <input id="e-phone-p" type="tel" value="${isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
                         <button class="copy-btn" onclick="copyField('e-phone-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                 </div>
@@ -1167,11 +1167,11 @@
                 </div>
                 <div class="flex-row">
                     <div class="input-wrap" style="flex:1;">
-                        <input id="e-email-d" type="email" value="${!isPickup ? val(data.customer_email) : ''}" placeholder="Delivery Email" style="margin-bottom:0; width:100%;">
+                        <input id="e-email-d" type="email" value="${!isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%;">
                         <button class="copy-btn" onclick="copyField('e-email-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                     <div class="input-wrap" style="flex:1;">
-                        <input id="e-phone-d" type="tel" value="${!isPickup ? val(data.customer_phone) : ''}" placeholder="Delivery Phone" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
+                        <input id="e-phone-d" type="tel" value="${!isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
                         <button class="copy-btn" onclick="copyField('e-phone-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                 </div>
@@ -1515,7 +1515,7 @@
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-weight:800; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
-                            <span style="font-size:30px; color:#00b32d; font-weight:900; white-space:nowrap; line-height:1;">DONE ${doneTime}</span>
+                            <span style="font-size:18px; color:#00b32d; font-weight:900; white-space:nowrap; line-height:1;">DONE ${doneTime}</span>
                         </div>
                         <div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${contact || 'No Contact'}</div>
                         <div style="color:#555; font-size:11px;">${p.city || ''}</div>
