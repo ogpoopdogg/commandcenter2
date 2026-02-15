@@ -47,6 +47,9 @@
         /* Light mode specific updates */
         body.light-mode .route-time-display { color: #000 !important; border-color: #000 !important; box-shadow: none !important; }
         body.light-mode .back-to-all-btn { background: #fff !important; color: #000 !important; border-color: #000 !important; }
+        body.light-mode button.primary.super-dispatch { background: #e0e0e0 !important; color: #000 !important; border: 1px solid #ccc !important; box-shadow: none !important; text-shadow: none !important; }
+        body.light-mode #voice-btn { background: #ffffff !important; border-color: #cccccc !important; }
+        body.light-mode #mic-icon { fill: #000000 !important; }
 
         body { 
             font-family: 'Segoe UI', system-ui, sans-serif; /* More professional font stack */
@@ -413,7 +416,7 @@
             50% { transform: scaleY(0.005) scaleX(1); opacity: 1; }
             100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); }
         }
-        .crt-animate { animation: crt-turn-on 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        .crt-animate { animation: crt-turn-on 1.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
     </style>
 </head>
 <body>
@@ -518,7 +521,7 @@
             </div>
         </div>
         <div class="flex-row">
-            <div class="input-wrap" style="flex:1;">
+            <div class="input-wrap" style="flex:1.5;">
                 <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Email" style="margin-bottom:0; width:100%;">
                 <button class="copy-btn" onclick="copyField('f-customer-email-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
@@ -547,7 +550,7 @@
             </div>
         </div>
         <div class="flex-row">
-            <div class="input-wrap" style="flex:1;">
+            <div class="input-wrap" style="flex:1.5;">
                 <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Email" style="margin-bottom:0; width:100%;">
                 <button class="copy-btn" onclick="copyField('f-customer-email-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
@@ -756,6 +759,7 @@
     let mapAllListener = null;
 
     function openMap() {
+        document.getElementById('map-driver-head').style.display = 'none';
         mapBoundsInitialized = false;
         document.getElementById('map-modal').style.display = 'block';
         document.getElementById('route-time-badge').style.display = 'none';
@@ -1128,7 +1132,7 @@
                     </div>
                 </div>
                 <div class="flex-row">
-                    <div class="input-wrap" style="flex:1;">
+                    <div class="input-wrap" style="flex:1.5;">
                         <input id="e-email-p" type="email" value="${isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%;">
                         <button class="copy-btn" onclick="copyField('e-email-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
@@ -1174,7 +1178,7 @@
                     </div>
                 </div>
                 <div class="flex-row">
-                    <div class="input-wrap" style="flex:1;">
+                    <div class="input-wrap" style="flex:1.5;">
                         <input id="e-email-d" type="email" value="${!isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%;">
                         <button class="copy-btn" onclick="copyField('e-email-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
