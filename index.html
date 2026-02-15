@@ -124,6 +124,8 @@
         /* NEW: Bright green label for map */
         .driver-map-label { color: #00ff00 !important; font-weight: 800; text-shadow: 0 0 2px #000; }
 
+        #route-list { position: absolute; top: 130px; left: 20px; width: 280px; max-height: calc(100% - 150px); overflow-y: auto; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 6px; padding: 15px; z-index: 3001; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+
         #install-btn { 
             display: none; 
             background: var(--pro-blue); 
@@ -503,6 +505,7 @@
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
     <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
+    <div id="route-list"></div>
     <div id="map"></div>
 </div>
 
@@ -996,6 +999,32 @@
                  } else if (badge) {
                     badge.style.display = "none";
                  }
+
+                 const rList = document.getElementById('route-list');
+                 if(rList && drvData.route_string) {
+                    rList.style.display = 'block';
+                    rList.innerHTML = '';
+                    const stops = drvData.route_string.split(' | ');
+                    const pKeys = new Set();
+                    Object.values(rawPickups).forEach(p => { 
+                        if(p.assigned_to === currentDriverFilter && p.status === 'pending') 
+                            pKeys.add(`${p.name} ${p.pickup_location}`); 
+                    });
+                    
+                    stops.forEach(s => {
+                        const idx = s.indexOf('. ');
+                        if(idx > -1) {
+                            const num = s.substring(0, idx);
+                            const txt = s.substring(idx+2);
+                            const isP = pKeys.has(txt);
+                            const col = isP ? '#ffcc00' : '#00ff41'; 
+                            rList.innerHTML += `<div style="display:flex; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px;">
+                                <div style="background:${col}; color:#000; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:14px; flex-shrink:0;">${num}</div>
+                                <div style="font-size:12px; color:#eee; font-weight:600; line-height:1.3;">${txt}</div>
+                            </div>`;
+                        }
+                    });
+                 } else if (rList) rList.style.display = 'none';
 
                  const pos = { lat: drvData.lat, lng: drvData.lng };
                  const timeStr = formatTime12(drvData.gps_timestamp || Date.now());
