@@ -397,6 +397,7 @@
         <div style="display: flex; align-items: center; overflow: hidden; cursor: pointer;" onclick="toggleTheme()">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
             <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
+            <div id="header-alert" style="display:none; color:red; font-weight:900; animation:dot-pulse 1s infinite; margin-left:15px; font-size:14px;"></div>
         </div>
     </div>
     <div id="clock" style="font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums;"></div>
@@ -465,7 +466,10 @@
             <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="flex: 2;">
             <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
         </div>
-        <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Customer Email Address (for DNP alerts)">
+        <div class="flex-row">
+            <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Customer Email Address (for DNP alerts)" style="flex:1;">
+            <input type="tel" id="f-customer-phone-p" class="glow-field" placeholder="Customer Phone Number" style="flex:1;">
+        </div>
     </div>
 
     <div id="group-drop">
@@ -477,7 +481,10 @@
             <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="flex: 2;">
             <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="flex: 1;">
         </div>
-        <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Customer Email Address (for DND alerts)">
+        <div class="flex-row">
+            <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Customer Email Address (for DND alerts)" style="flex:1;">
+            <input type="tel" id="f-customer-phone-d" class="glow-field" placeholder="Customer Phone Number" style="flex:1;">
+        </div>
     </div>
 </div>
 
@@ -525,6 +532,7 @@
 
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
+    <button class="close-map" onclick="zoomToDensest()" style="top:130px; background:#004488;">ZOOM QUICK</button>
     <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
     <div id="map-driver-head" style="position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:3001; background:#000; border:1px solid #fff; padding:10px 20px; font-weight:900; font-size:24px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
     <div id="route-list"></div>
@@ -715,6 +723,50 @@
         }
         mapMarkers = {};
     }
+    
+    function zoomToDensest() {
+        if(!currentDriverFilter) return;
+        const pts = [];
+        Object.keys(mapMarkers).forEach(k => {
+             if(k.startsWith('job_')) {
+                 const pos = mapMarkers[k].getPosition();
+                 if(pos) pts.push(pos);
+             }
+        });
+        if(pts.length === 0) return;
+        
+        if(pts.length <= 3) {
+             const bounds = new google.maps.LatLngBounds();
+             pts.forEach(p => bounds.extend(p));
+             mainMap.fitBounds(bounds);
+             return;
+        }
+        
+        let bestCenter = pts[0];
+        let maxNeighbors = -1;
+        const radius = 0.05; // Approx 5km
+        
+        pts.forEach(p1 => {
+             let count = 0;
+             pts.forEach(p2 => {
+                 const dLat = p1.lat() - p2.lat();
+                 const dLng = p1.lng() - p2.lng();
+                 if(Math.sqrt(dLat*dLat + dLng*dLng) < radius) count++;
+             });
+             if(count > maxNeighbors) {
+                 maxNeighbors = count;
+                 bestCenter = p1;
+             }
+        });
+        
+        const bounds = new google.maps.LatLngBounds();
+        pts.forEach(p => {
+             const dLat = bestCenter.lat() - p.lat();
+             const dLng = bestCenter.lng() - p.lng();
+             if(Math.sqrt(dLat*dLat + dLng*dLng) < radius) bounds.extend(p);
+        });
+        mainMap.fitBounds(bounds);
+    }
 
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
@@ -794,7 +846,7 @@
     }
 
     function resetFormFields() {
-        ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d'].forEach(id => {
+        ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.value = "";
         });
@@ -824,6 +876,7 @@
 
             // Logic to populate fields (simplified for merged app)
             let drvMatch = cmdStr.match(/\bfor\s+(matt|touch|julian|jess|alysha|kayla)\b/);
+            if (cmdStr.trim() === "dispatch") { createJob(); return; }
             if (drvMatch) {
                 let dName = drvMatch[1].charAt(0).toUpperCase() + drvMatch[1].slice(1);
                 document.getElementById('f-driver').value = dName;
@@ -849,6 +902,7 @@
         document.getElementById('f-pickup').value = data.address || "";
         document.getElementById('f-city').value = data.city || "";
         if(data.customer_email) document.getElementById('f-customer-email-p').value = data.customer_email;
+        if(data.customer_phone) document.getElementById('f-customer-phone-p').value = data.customer_phone;
         document.getElementById('suggestions').style.display = 'none';
     }
 
@@ -868,6 +922,7 @@
         document.getElementById('f-drop-address').value = data.address || "";
         document.getElementById('f-drop-city').value = data.city || "";
         if(data.customer_email) document.getElementById('f-customer-email-d').value = data.customer_email;
+        if(data.customer_phone) document.getElementById('f-customer-phone-d').value = data.customer_phone;
         document.getElementById('drop-suggestions').style.display = 'none';
     }
 
@@ -883,6 +938,7 @@
         const infoRaw = document.getElementById('f-info').value;
         const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
         const email = currentMode === 'pickup' ? document.getElementById('f-customer-email-p').value : document.getElementById('f-customer-email-d').value;
+        const phone = currentMode === 'pickup' ? document.getElementById('f-customer-phone-p').value : document.getElementById('f-customer-phone-d').value;
 
         if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert("Please complete either the full Pickup section or full Delivery section.");
 
@@ -894,6 +950,7 @@
             name: name,
             other_info: info,
             customer_email: email || "",
+            customer_phone: phone || "",
             status: 'pending', 
             assigned_to: assigned, 
             timestamp: Date.now(),
@@ -904,8 +961,8 @@
         db.ref(targetNode).push(jobData);
         
         // Save addresses for autosuggest
-        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, customer_email: email || "", last_edit_by: currentUser });
-        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", last_edit_by: currentUser });
+        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
+        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
 
         resetFormFields();
         document.getElementById('f-driver').value = "Unassigned";
@@ -924,7 +981,10 @@
         const html = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
-                <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #b71c1c; color:#ff5555; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px;">DELETE</button>
+                <div style="display:flex;">
+                    <button onclick="archiveAsFailed('${id}', '${type}')" style="background:var(--accent); color:#000; border:none; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px; margin-right:10px;">ARCHIVE DND/DNP</button>
+                    <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #b71c1c; color:#ff5555; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px;">DELETE</button>
+                </div>
             </div>
             
             <div style="display:flex; flex-direction:column; gap:0;">
@@ -946,8 +1006,11 @@
                     <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="flex:2;">
                     <input id="e-city-d" value="${val(data.city)}" placeholder="City" style="flex:1;">
                 </div>
-
-                <input id="e-email" type="email" value="${val(data.customer_email)}" placeholder="Customer Email Address" style="margin-bottom:12px; border-color:var(--active-green);">
+                
+                <div class="flex-row">
+                    <input id="e-email" type="email" value="${val(data.customer_email)}" placeholder="Customer Email" style="margin-bottom:12px; border-color:var(--active-green); flex:1;">
+                    <input id="e-phone" type="tel" value="${val(data.customer_phone)}" placeholder="Customer Phone" style="margin-bottom:12px; flex:1;">
+                </div>
 
                 <select id="e-driver" class="driver-select" style="margin-bottom:12px;">${driverOpts}</select>
             </div>
@@ -967,6 +1030,21 @@
         document.getElementById('detailsModal').style.display = 'block';
         document.body.style.overflow = 'hidden';
     }
+    
+    function archiveAsFailed(id, type) {
+        if(confirm("Archive this job as Failed (Unassigned)?")) {
+             const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+             const existingNote = (type === 'pickup' ? rawPickups[id] : rawDropoffs[id])?.other_info || "";
+             db.ref(node).child(id).update({
+                 status: 'completed',
+                 assigned_to: 'Unassigned',
+                 completed_at: firebase.database.ServerValue.TIMESTAMP,
+                 other_info: "[ARCHIVED DND/DNP] " + existingNote
+             });
+             document.getElementById('detailsModal').style.display = 'none';
+             document.body.style.overflow = '';
+        }
+    }
 
     function saveEdit(id, type) {
         let noteVal = document.getElementById('e-note').value;
@@ -984,6 +1062,7 @@
             destination: document.getElementById('e-drop').value,
             other_info: noteVal,
             customer_email: document.getElementById('e-email').value || "",
+            customer_phone: document.getElementById('e-phone').value || "",
             last_edit_by: currentUser
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
@@ -1144,6 +1223,7 @@
                          if(mapMarkers[key]) mapMarkers[key].setMap(null);
 
                          const placeMarker = (loc) => {
+                            const isEven = index % 2 === 0;
                             const marker = new google.maps.Marker({
                                 map: mainMap,
                                 position: loc,
@@ -1151,16 +1231,17 @@
                                     text: finalLabel, 
                                     color: "#00b32d", 
                                     fontWeight: "bold",
-                                    fontSize: "12px",
+                                    fontSize: "24px",
                                     className: "driver-map-label"
                                 },
                                 icon: {
                                     path: google.maps.SymbolPath.CIRCLE,
                                     scale: 5,
-                                    fillColor: job.type === 'pickup' ? '#cc5200' : '#00b32d',
+                                    fillColor: '#ff0000',
                                     fillOpacity: 1,
                                     strokeWeight: 1,
-                                    strokeColor: 'white'
+                                    strokeColor: 'white',
+                                    labelOrigin: new google.maps.Point(0, isEven ? -15 : 15)
                                 }
                             });
                             mapMarkers[key] = marker;
@@ -1190,6 +1271,7 @@
         
         let pending = 0, assignedCount = 0, noteCount = 0;
         let driverStats = {};
+        let dndCount = 0;
 
         // Define Colors Here
         const dColors = {
@@ -1276,6 +1358,8 @@
                     return; // Skip adding to main list
                 }
 
+                if((p.other_info || "").toUpperCase().match(/DND|DNP/)) dndCount++;
+
                 const assignedTo = p.assigned_to;
                 if(!assignedTo || assignedTo === 'Unassigned') pending++;
                 else {
@@ -1353,6 +1437,14 @@
 
         processJobs(rawPickups, 'pickup');
         processJobs(rawDropoffs, 'delivery');
+        
+        const alertDiv = document.getElementById('header-alert');
+        if(dndCount > 0) {
+            alertDiv.style.display = 'block';
+            alertDiv.innerText = dndCount + " DND/DNP";
+        } else {
+            alertDiv.style.display = 'none';
+        }
 
         // RENDER DRIVER STATS
         Object.keys(driverStats).forEach(driver => {
