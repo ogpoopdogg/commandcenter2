@@ -34,7 +34,7 @@
         body.light-mode {
             --bg: #f0f2f5;             /* Light gray, not totally white */
             --card: #ffffff;
-            --text: #1a1a1a;
+            --text: #000000;
             --header-bg: #ffffff;
             --input-bg: #ffffff;
             --border: #cccccc;         /* Visible borders for light mode */
@@ -42,6 +42,7 @@
             --modal-bg: #ffffff;
             --btn-bg: #f0f0f0;
         }
+        body.light-mode .hist-time, body.light-mode .stat-label, body.light-mode .archive-title { color: #000000 !important; }
 
         body { 
             font-family: 'Segoe UI', system-ui, sans-serif; /* More professional font stack */
@@ -52,7 +53,7 @@
             display: flex; 
             flex-direction: column; 
             min-height: 100vh; 
-            padding-bottom: 100px; /* Increased bottom padding */
+            padding-bottom: 20px; /* Reduced bottom padding */
         }
         
         header { 
@@ -120,7 +121,7 @@
         #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
         #map { width: 100%; height: 100%; }
         /* UPDATED: Close button moved down to clear fullscreen button */
-        .close-map { position: absolute; top: 70px; right: 20px; z-index: 3001; background: #b71c1c; color: white; border: none; padding: 12px 24px; font-weight: 800; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .close-map { position: absolute; top: 70px; right: 20px; z-index: 3001; background: #b71c1c; color: white; border: none; width: 140px; height: 40px; font-weight: 800; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
         /* NEW: Bright green label for map */
         .driver-map-label { color: #00ff00 !important; font-weight: 800; text-shadow: 0 0 2px #000; }
 
@@ -265,7 +266,7 @@
             gap: 20px; 
             flex-wrap: wrap; 
         }
-        .archive-column { flex: 1; min-width: 300px; border-right: 1px solid var(--border); padding-right: 20px; }
+        .archive-column { flex: 1 1 0; min-width: 0; border-right: 1px solid var(--border); padding-right: 20px; }
         .archive-column:last-child { border-right: none; padding-right: 0; }
         .archive-title { 
             font-size: 13px; 
@@ -576,7 +577,7 @@
             <input id="af-name" placeholder="Name" class="glow-field" style="margin-bottom:0; flex:1;" onkeyup="renderData()">
             <input id="af-city" placeholder="City" class="glow-field" style="margin-bottom:0; flex:1;" onkeyup="renderData()">
         </div>
-        <input id="af-manual-search" placeholder="Manual Search (Today's Archive)..." class="glow-field" style="margin-bottom:15px;" onkeyup="renderData()">
+        <input id="af-manual-search" placeholder="Manual Search (Today's Archive)..." class="glow-field" style="margin-bottom:15px;" onkeyup="renderData()" onfocus="document.getElementById('board-panel').scrollIntoView({behavior:'smooth'})">
         <div id="list-archive" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
 </div>
@@ -823,63 +824,42 @@
     }
     
     function zoomToDensest() {
-        if(!currentDriverFilter) return;
-        const pts = [];
-        Object.keys(mapMarkers).forEach(k => {
-             if(k.startsWith('job_')) {
-                 const pos = mapMarkers[k].getPosition();
-                 if(pos) pts.push(pos);
-             }
-        });
-        if(pts.length === 0) return;
-        
-        if(pts.length <= 3) {
-             const bounds = new google.maps.LatLngBounds();
-             pts.forEach(p => bounds.extend(p));
-             mainMap.fitBounds(bounds);
-             return;
-        }
-        
-        let bestCenter = pts[0];
-        let maxNeighbors = -1;
-        const radius = 0.05; // Approx 5km
-        
-        pts.forEach(p1 => {
-             let count = 0;
-             pts.forEach(p2 => {
-                 const dLat = p1.lat() - p2.lat();
-                 const dLng = p1.lng() - p2.lng();
-                 if(Math.sqrt(dLat*dLat + dLng*dLng) < radius) count++;
-             });
-             if(count > maxNeighbors) {
-                 maxNeighbors = count;
-                 bestCenter = p1;
-             }
-        });
-        
-        const bounds = new google.maps.LatLngBounds();
-        pts.forEach(p => {
-             const dLat = bestCenter.lat() - p.lat();
-             const dLng = bestCenter.lng() - p.lng();
-             if(Math.sqrt(dLat*dLat + dLng*dLng) < radius) bounds.extend(p);
-        });
-        mainMap.fitBounds(bounds);
-    }
-
-    function zoomToAll() {
+        // Zoom Quick - Fit all visible drivers/points
         const bounds = new google.maps.LatLngBounds();
         let found = false;
-        for(let k in mapMarkers) {
-            if(mapMarkers[k].getPosition()) {
-                bounds.extend(mapMarkers[k].getPosition());
-                found = true;
-            }
-        }
+        Object.keys(mapMarkers).forEach(k => {
+             if(mapMarkers[k].getPosition()) {
+                 bounds.extend(mapMarkers[k].getPosition());
+                 found = true;
+             }
+        });
         if(activePolyline) {
             activePolyline.getPath().forEach(p => bounds.extend(p));
             found = true;
         }
         if(found) mainMap.fitBounds(bounds);
+    }
+
+    function zoomToAll() {
+        // Zoom Out - All points + buffer
+        const bounds = new google.maps.LatLngBounds();
+        let found = false;
+        Object.keys(mapMarkers).forEach(k => {
+            if(mapMarkers[k].getPosition()) {
+                bounds.extend(mapMarkers[k].getPosition());
+                found = true;
+            }
+        });
+        if(activePolyline) {
+            activePolyline.getPath().forEach(p => bounds.extend(p));
+            found = true;
+        }
+        if(found) {
+             mainMap.fitBounds(bounds);
+             const listener = google.maps.event.addListenerOnce(mainMap, 'idle', () => {
+                 mainMap.setZoom(mainMap.getZoom() - 1); // Zoom out one level
+             });
+        }
     }
 
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -1393,7 +1373,7 @@
                                     text: finalLabel, 
                                     color: "#00b32d", 
                                     fontWeight: "bold",
-                                    fontSize: "24px",
+                                    fontSize: "12px",
                                     className: "driver-map-label"
                                 },
                                 icon: {
