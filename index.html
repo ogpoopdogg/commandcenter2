@@ -732,31 +732,39 @@
                      const label = job.type === 'pickup' ? job.name : job.delivery_name;
                      const fullAddr = `${addr}, ${job.city || ''}`;
                      
-                     geocoder.geocode({ 'address': fullAddr }, (results, status) => {
-                        if (status === 'OK') {
-                            const marker = new google.maps.Marker({
-                                map: mainMap,
-                                position: results[0].geometry.location,
-                                label: { 
-                                    text: label, 
-                                    color: "#00b32d", 
-                                    fontWeight: "bold",
-                                    fontSize: "12px",
-                                    className: "driver-map-label"
-                                },
-                                icon: {
-                                    path: google.maps.SymbolPath.CIRCLE,
-                                    scale: 5,
-                                    fillColor: job.type === 'pickup' ? '#cc5200' : '#00b32d',
-                                    fillOpacity: 1,
-                                    strokeWeight: 1,
-                                    strokeColor: 'white'
-                                }
-                            });
-                            const key = `job_${index}`;
-                            mapMarkers[key] = marker;
-                        }
-                     });
+                     const placeMarker = (loc) => {
+                        const marker = new google.maps.Marker({
+                            map: mainMap,
+                            position: loc,
+                            label: { 
+                                text: label, 
+                                color: "#00b32d", 
+                                fontWeight: "bold",
+                                fontSize: "12px",
+                                className: "driver-map-label"
+                            },
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 5,
+                                fillColor: job.type === 'pickup' ? '#cc5200' : '#00b32d',
+                                fillOpacity: 1,
+                                strokeWeight: 1,
+                                strokeColor: 'white'
+                            }
+                        });
+                        const key = `job_${index}`;
+                        mapMarkers[key] = marker;
+                     };
+
+                     if(job.lat && job.lng) {
+                        placeMarker({lat: parseFloat(job.lat), lng: parseFloat(job.lng)});
+                     } else {
+                        geocoder.geocode({ 'address': fullAddr }, (results, status) => {
+                            if (status === 'OK') {
+                                placeMarker(results[0].geometry.location);
+                            }
+                        });
+                     }
                  });
                  
                  mainMap.fitBounds(bounds);
