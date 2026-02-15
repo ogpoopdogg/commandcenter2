@@ -554,20 +554,6 @@
             routeBtn.style.display = "inline-block";
             routeBtn.onclick = (e) => viewDriverRoute(name, e);
         }
-
-        const label = document.getElementById("selected-driver-label");
-        if(label) {
-            label.innerText = name;
-            label.style.display = "block";
-            const dColors = {
-                'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
-                'Jess': '#FF69B4', 'Alysha': '#9C27B0', 'Kayla': '#E91E63'
-            };
-            const c = dColors[name] || '#ffffff';
-            label.style.borderColor = c;
-            label.style.color = c;
-            label.style.boxShadow = `0 0 15px ${c}`;
-        }
     }
     
     function clearDriverFilter() {
@@ -670,109 +656,8 @@
              if(mapMarkers[k]) mapMarkers[k].setMap(null);
         }
         mapMarkers = {};
-
-        listeningRef = db.ref(`driver_locations/${name}`);
-        listeningRef.on('value', snap => {
-            const data = snap.val();
-            if(!data) return;
-
-            const label = document.getElementById("selected-driver-label");
-            if (label) {
-                const timeInfo = data.total_duration ? `<br><span style="font-size:14px; color:#fff;">ETA: ${data.total_duration}</span>` : "";
-                label.innerHTML = name + timeInfo;
-            }
-            const badge = document.getElementById("route-time-badge");
-            if (badge && data.total_duration) {
-                badge.innerText = "ROUTE TIME: " + data.total_duration;
-                badge.style.display = "block";
-            }
-
-            const pos = { lat: data.lat, lng: data.lng };
-            const timeStr = formatTime12(data.gps_timestamp || Date.now());
-
-            // Driver Marker
-            if(mapMarkers[name]) {
-                 mapMarkers[name].setPosition(pos);
-            } else {
-                 const marker = new google.maps.Marker({
-                    position: pos, map: mainMap,
-                    icon: { 
-                        path: google.maps.SymbolPath.CIRCLE, 
-                        fillColor: '#00b32d', 
-                        fillOpacity: 1, 
-                        strokeWeight: 2, 
-                        strokeColor: '#ffffff', 
-                        scale: 7,
-                        labelOrigin: new google.maps.Point(0, -15)
-                    },
-                    label: { text: `${name} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" }
-                 });
-                 mapMarkers[name] = marker;
-            }
-
-            if(data.active_route && !activePolyline) {
-                 const path = google.maps.geometry.encoding.decodePath(data.active_route);
-                 activePolyline = new google.maps.Polyline({
-                     path: path, geodesic: true,
-                     strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5,
-                     map: mainMap
-                 });
-                 
-                 const bounds = new google.maps.LatLngBounds();
-                 path.forEach(p => bounds.extend(p));
-                 
-                 const driverJobs = [];
-                 Object.values(rawPickups).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'pickup'}); });
-                 Object.values(rawDropoffs).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'drop'}); });
-                 
-                 const geocoder = new google.maps.Geocoder();
-                 
-                 driverJobs.forEach((job, index) => {
-                     const addr = job.type === 'pickup' ? job.pickup_location : job.destination;
-                     const label = job.type === 'pickup' ? job.name : job.delivery_name;
-                     const fullAddr = `${addr}, ${job.city || ''}`;
-                     
-                     const placeMarker = (loc) => {
-                        const marker = new google.maps.Marker({
-                            map: mainMap,
-                            position: loc,
-                            label: { 
-                                text: label, 
-                                color: "#00b32d", 
-                                fontWeight: "bold",
-                                fontSize: "12px",
-                                className: "driver-map-label"
-                            },
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: 5,
-                                fillColor: job.type === 'pickup' ? '#cc5200' : '#00b32d',
-                                fillOpacity: 1,
-                                strokeWeight: 1,
-                                strokeColor: 'white'
-                            }
-                        });
-                        const key = `job_${index}`;
-                        mapMarkers[key] = marker;
-                     };
-
-                     if(job.lat && job.lng) {
-                        placeMarker({lat: parseFloat(job.lat), lng: parseFloat(job.lng)});
-                     } else {
-                        geocoder.geocode({ 'address': fullAddr }, (results, status) => {
-                            if (status === 'OK') {
-                                placeMarker(results[0].geometry.location);
-                            }
-                        });
-                     }
-                 });
-                 
-                 mainMap.fitBounds(bounds);
-            } else if (!activePolyline) {
-                 mainMap.setCenter(pos);
-                 mainMap.setZoom(15);
-            }
-        });
+        
+        renderData();
     }
 
     function closeMap() {
@@ -1084,6 +969,129 @@
 
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
+
+        if(currentDriverFilter) {
+            const drvData = driverLocationsData[currentDriverFilter];
+            const label = document.getElementById("selected-driver-label");
+            if(label) {
+                label.style.display = "block";
+                const dColors = {
+                    'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
+                    'Jess': '#FF69B4', 'Alysha': '#9C27B0', 'Kayla': '#E91E63'
+                };
+                const c = dColors[currentDriverFilter] || '#ffffff';
+                label.style.borderColor = c;
+                label.style.color = c;
+                label.style.boxShadow = `0 0 15px ${c}`;
+                
+                const timeInfo = (drvData && drvData.total_duration) ? `<br><span style="font-size:14px; color:#fff;">ETA: ${drvData.total_duration}</span>` : "";
+                label.innerHTML = currentDriverFilter + timeInfo;
+            }
+
+            if(document.getElementById('map-modal').style.display === 'block' && mainMap && drvData) {
+                 const badge = document.getElementById("route-time-badge");
+                 if (badge && drvData.total_duration) {
+                    badge.innerText = "ROUTE TIME: " + drvData.total_duration;
+                    badge.style.display = "block";
+                 } else if (badge) {
+                    badge.style.display = "none";
+                 }
+
+                 const pos = { lat: drvData.lat, lng: drvData.lng };
+                 const timeStr = formatTime12(drvData.gps_timestamp || Date.now());
+
+                 if(mapMarkers[currentDriverFilter]) {
+                      mapMarkers[currentDriverFilter].setPosition(pos);
+                      mapMarkers[currentDriverFilter].setLabel({ text: `${currentDriverFilter} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" });
+                 } else {
+                      const marker = new google.maps.Marker({
+                         position: pos, map: mainMap,
+                         icon: { 
+                             path: google.maps.SymbolPath.CIRCLE, 
+                             fillColor: '#00b32d', 
+                             fillOpacity: 1, 
+                             strokeWeight: 2, 
+                             strokeColor: '#ffffff', 
+                             scale: 7,
+                             labelOrigin: new google.maps.Point(0, -15)
+                         },
+                         label: { text: `${currentDriverFilter} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" }
+                      });
+                      mapMarkers[currentDriverFilter] = marker;
+                 }
+
+                 if(drvData.active_route) {
+                     if(activePolyline) activePolyline.setMap(null);
+                     const path = google.maps.geometry.encoding.decodePath(drvData.active_route);
+                     activePolyline = new google.maps.Polyline({
+                         path: path, geodesic: true,
+                         strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5,
+                         map: mainMap
+                     });
+
+                     Object.keys(mapMarkers).forEach(k => {
+                         if(k !== currentDriverFilter) {
+                             mapMarkers[k].setMap(null);
+                             delete mapMarkers[k];
+                         }
+                     });
+
+                     const bounds = new google.maps.LatLngBounds();
+                     path.forEach(p => bounds.extend(p));
+                     
+                     const driverJobs = [];
+                     Object.values(rawPickups).forEach(j => { if(j.assigned_to === currentDriverFilter && j.status === 'pending') driverJobs.push({...j, type:'pickup'}); });
+                     Object.values(rawDropoffs).forEach(j => { if(j.assigned_to === currentDriverFilter && j.status === 'pending') driverJobs.push({...j, type:'drop'}); });
+                     
+                     const geocoder = new google.maps.Geocoder();
+                     
+                     driverJobs.forEach((job, index) => {
+                         const addr = job.type === 'pickup' ? job.pickup_location : job.destination;
+                         const labelText = job.type === 'pickup' ? job.name : job.delivery_name;
+                         const fullAddr = `${addr}, ${job.city || ''}`;
+                         
+                         const placeMarker = (loc) => {
+                            const marker = new google.maps.Marker({
+                                map: mainMap,
+                                position: loc,
+                                label: { 
+                                    text: labelText, 
+                                    color: "#00b32d", 
+                                    fontWeight: "bold",
+                                    fontSize: "12px",
+                                    className: "driver-map-label"
+                                },
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 5,
+                                    fillColor: job.type === 'pickup' ? '#cc5200' : '#00b32d',
+                                    fillOpacity: 1,
+                                    strokeWeight: 1,
+                                    strokeColor: 'white'
+                                }
+                            });
+                            const key = `job_${index}`;
+                            mapMarkers[key] = marker;
+                         };
+
+                         if(job.lat && job.lng) {
+                            placeMarker({lat: parseFloat(job.lat), lng: parseFloat(job.lng)});
+                         } else {
+                            geocoder.geocode({ 'address': fullAddr }, (results, status) => {
+                                if (status === 'OK') {
+                                    placeMarker(results[0].geometry.location);
+                                }
+                            });
+                         }
+                     });
+                     mainMap.fitBounds(bounds);
+                 } else {
+                     if(!activePolyline) {
+                        mainMap.setCenter(pos);
+                     }
+                 }
+            }
+        }
         
         let pending = 0, assignedCount = 0, noteCount = 0;
         let driverStats = {};
