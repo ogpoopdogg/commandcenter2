@@ -389,11 +389,11 @@
             animation: pulse-glow 4s infinite ease-in-out; 
         }
         .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
-        .ds-name { color: var(--text); font-weight: 700; font-size: 20px; width: auto; padding-right: 10px; text-transform: uppercase; }
+        .ds-name { color: var(--text); font-weight: 700; font-size: 12px; width: auto; padding-right: 10px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-        .stat-item { font-size: 14px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
-        .stat-val-p { color: var(--accent); font-size: 22px; font-weight: 800; }
-        .stat-val-d { color: var(--active-green); font-size: 22px; font-weight: 800; }
+        .stat-item { font-size: 9px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
+        .stat-val-p { color: var(--accent); font-size: 12px; font-weight: 800; }
+        .stat-val-d { color: var(--active-green); font-size: 12px; font-weight: 800; }
         
         .input-wrap { position: relative; width: 100%; display: flex; align-items: center; }
         .copy-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
@@ -1631,7 +1631,7 @@
                 row.innerHTML = `
                     <div style="display:flex; align-items:center;">
                         <div class="ds-name" style="color:${color};">${driver}</div>
-                        ${duration ? `<span style="font-size:22px; color:#fff; margin-left:15px; font-weight:800; border:2px solid var(--accent); padding:5px 12px; border-radius:6px; box-shadow:0 0 10px var(--accent); animation:pulse-glow 2s infinite;">${duration}</span>` : ''}
+                        ${duration ? `<span style="font-size:12px; color:#fff; margin-left:8px; font-weight:800; border:1px solid var(--accent); padding:2px 6px; border-radius:6px; box-shadow:0 0 5px var(--accent); animation:pulse-glow 2s infinite;">${duration}</span>` : ''}
                     </div>
                     <div class="stat-info">
                         ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
