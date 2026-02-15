@@ -654,13 +654,111 @@
         if(listeningRef) { listeningRef.off(); listeningRef = null; }
         db.ref('driver_locations').off();
         
-        // Clear previous markers
         for(let k in mapMarkers) {
              if(mapMarkers[k]) mapMarkers[k].setMap(null);
         }
         mapMarkers = {};
+
+        listeningRef = db.ref('driver_locations/' + name);
+        listeningRef.on('value', (snapshot) => {
+            const drv = snapshot.val();
+            if(!drv) return;
+
+            const pos = { lat: drv.lat, lng: drv.lng };
+            const timeStr = formatTime12(drv.gps_timestamp || Date.now());
+            
+            if(mapMarkers[name]) {
+                mapMarkers[name].setPosition(pos);
+                mapMarkers[name].setLabel({ text: `${name} ${timeStr}`, className: "pulsing-dot driver-map-label" });
+            } else {
+                mapMarkers[name] = new google.maps.Marker({
+                    position: pos, map: mainMap,
+                    icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) },
+                    label: { text: `${name} ${timeStr}`, className: "pulsing-dot driver-map-label" },
+                    title: name
+                });
+            }
+
+            if(drv.active_route) {
+                if(activePolyline) activePolyline.setMap(null);
+                const path = google.maps.geometry.encoding.decodePath(drv.active_route);
+                activePolyline = new google.maps.Polyline({
+                    path: path, geodesic: true,
+                    strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5,
+                    map: mainMap
+                });
+            }
+
+            const rList = document.getElementById('route-list');
+            const badge = document.getElementById("route-time-badge");
+            if(badge) {
+                badge.innerText = drv.total_duration ? "ROUTE TIME: " + drv.total_duration : "";
+                badge.style.display = drv.total_duration ? "block" : "none";
+            }
+
+            if(rList && drv.route_string) {
+                rList.style.display = 'block';
+                rList.innerHTML = '';
+                const stops = drv.route_string.split(' | ');
+                
+                stops.forEach(s => {
+                    const idx = s.indexOf('. ');
+                    if(idx > -1) {
+                        const num = s.substring(0, idx);
+                        const txt = s.substring(idx+2);
+                        
+                        let isP = false;
+                        let status = 'pending';
+                        
+                        Object.values(rawPickups).forEach(p => {
+                            if(p.assigned_to === name && `${p.name} ${p.pickup_location}` === txt) {
+                                isP = true;
+                                status = p.status;
+                            }
+                        });
+                        
+                        if(!isP) {
+                            Object.values(rawDropoffs).forEach(d => {
+                                if(d.assigned_to === name && `${d.delivery_name} ${d.destination}` === txt) {
+                                    status = d.status;
+                                }
+                            });
+                        }
+
+                        const isDone = status === 'completed';
+                        const col = isP ? '#ffcc00' : '#00ff41';
+                        const style = isDone ? 'text-decoration:line-through; opacity:0.5;' : '';
+                        
+                        rList.innerHTML += `<div style="display:flex; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px; ${style}">
+                            <div style="background:${col}; color:#000; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:14px; flex-shrink:0;">${num}</div>
+                            <div style="font-size:12px; color:#eee; font-weight:600; line-height:1.3;">${txt}</div>
+                        </div>`;
+                    }
+                });
+            } else if(rList) rList.style.display = 'none';
+        });
+
+        // One-time job marker render
+        const driverJobs = [];
+        Object.values(rawPickups).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'pickup'}); });
+        Object.values(rawDropoffs).forEach(j => { if(j.assigned_to === name && j.status === 'pending') driverJobs.push({...j, type:'drop'}); });
         
-        renderData();
+        const geocoder = new google.maps.Geocoder();
+        driverJobs.forEach((job, index) => {
+            const addr = job.type === 'pickup' ? job.pickup_location : job.destination;
+            const labelText = job.type === 'pickup' ? job.name : job.delivery_name;
+            const fullAddr = `${addr}, ${job.city || ''}`;
+            const placeMarker = (loc) => {
+               const marker = new google.maps.Marker({
+                   map: mainMap, position: loc,
+                   label: { text: labelText, color: "#00b32d", fontWeight: "bold", fontSize: "12px", className: "driver-map-label" },
+                   icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5, fillColor: job.type === 'pickup' ? '#cc5200' : '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: 'white' }
+               });
+               mapMarkers[`job_${index}`] = marker;
+            };
+            if(job.lat && job.lng) placeMarker({lat: parseFloat(job.lat), lng: parseFloat(job.lng)});
+            else geocoder.geocode({ 'address': fullAddr }, (results, status) => { if (status === 'OK') placeMarker(results[0].geometry.location); });
+        });
     }
 
     function closeMap() {
