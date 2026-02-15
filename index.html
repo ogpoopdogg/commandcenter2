@@ -50,6 +50,7 @@
         body.light-mode button.primary.super-dispatch { background: #e0e0e0 !important; color: #000 !important; border: 1px solid #ccc !important; box-shadow: none !important; text-shadow: none !important; }
         body.light-mode #voice-btn { background: #ffffff !important; border-color: #cccccc !important; }
         body.light-mode #mic-icon { fill: #000000 !important; }
+        body.light-mode .dnd-card .hist-name { color: #fff !important; }
 
         body { 
             font-family: 'Segoe UI', system-ui, sans-serif; /* More professional font stack */
@@ -188,7 +189,7 @@
             color: transparent;
             -webkit-background-clip: text;
             background-clip: text;
-            animation: text-shine 5s linear infinite;
+            animation: text-shine 3s linear infinite;
         }
         @keyframes text-shine { to { background-position: 200% center; } }
 
@@ -416,7 +417,21 @@
             50% { transform: scaleY(0.005) scaleX(1); opacity: 1; }
             100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); }
         }
-        .crt-animate { animation: crt-turn-on 1.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        .crt-animate { animation: crt-turn-on 3s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+        .btn-pressed {
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8) !important;
+            background: #111 !important;
+            color: #888 !important;
+            border-bottom: 1px solid var(--border) !important;
+            transform: translateY(2px) !important;
+        }
+        body.light-mode .btn-pressed {
+            background: #ddd !important;
+            color: #555 !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important;
+            border-bottom: 1px solid #bbb !important;
+        }
     </style>
 </head>
 <body>
@@ -501,6 +516,7 @@
 
 <div id="driver-stats-panel"></div>
 <button id="toggle-active-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleActiveList()">Active Pickups/Deliveries</button>
+<button id="toggle-dnd-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleDNDList()">Active DND/DNP</button>
 
 <div style="display:none;">
     <div id="group-pickup">
@@ -581,6 +597,13 @@
         </div>
         <button onclick="toggleActiveList()" style="width:100%; margin-top:15px; background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:12px; font-weight:800; cursor:pointer; border-radius:6px; text-transform:uppercase;">Minimize Pickups/Deliveries List</button>
     </div>
+
+    <div class="history-box" id="dnd-list-container" style="display:none; flex-direction:column;">
+        <div class="archive-title" style="color:#ff4444;">Active DND/DNP</div>
+        <div id="list-dnd"></div>
+        <button onclick="toggleDNDList()" style="width:100%; margin-top:15px; background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:12px; font-weight:800; cursor:pointer; border-radius:6px; text-transform:uppercase;">Minimize Active DND/DNP</button>
+    </div>
+
     <div style="margin-top: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2);">
         <div class="archive-title" style="color: #666; border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
         <div class="flex-row" style="margin-bottom: 15px;">
@@ -655,10 +678,27 @@
 
     function toggleActiveList() {
         const list = document.getElementById('active-list-container');
+        const btn = document.getElementById('toggle-active-btn');
         if (list.style.display === 'none') {
             list.style.display = 'flex';
+            btn.classList.add('btn-pressed');
         } else {
             list.style.display = 'none';
+            btn.classList.remove('btn-pressed');
+            btn.style.display = 'block';
+        }
+    }
+
+    function toggleDNDList() {
+        const list = document.getElementById('dnd-list-container');
+        const btn = document.getElementById('toggle-dnd-btn');
+        if (list.style.display === 'none') {
+            list.style.display = 'flex';
+            btn.classList.add('btn-pressed');
+        } else {
+            list.style.display = 'none';
+            btn.classList.remove('btn-pressed');
+            btn.style.display = 'block';
         }
     }
 
@@ -1215,7 +1255,8 @@
                  status: 'completed',
                  assigned_to: 'Unassigned',
                  completed_at: firebase.database.ServerValue.TIMESTAMP,
-                 other_info: "[ARCHIVED DND/DNP] " + existingNote
+                 other_info: "[ARCHIVED DND/DNP] " + existingNote,
+                 last_edit_by: currentUser
              });
              document.getElementById('detailsModal').style.display = 'none';
              document.body.style.overflow = '';
@@ -1265,6 +1306,10 @@
         
         pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
         document.getElementById("list-archive").innerHTML = "";
+
+        // DND LIST CLEAR
+        const dndList = document.getElementById("list-dnd");
+        dndList.innerHTML = "";
 
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
@@ -1488,6 +1533,11 @@
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.customer_email||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm) && p.status !== 'completed') return;
 
+                // DND/DNP LOGIC for DND LIST
+                const infoLower = (p.other_info || "").toLowerCase();
+                const isFailed = infoLower.includes("dnd") || infoLower.includes("dnp");
+                
+                // MAIN LIST FILTER
                 if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
 
                 // Status check
@@ -1537,7 +1587,7 @@
                     return; // Skip adding to main list
                 }
 
-                if((p.other_info || "").toUpperCase().match(/DND|DNP/)) dndCount++;
+                if(isFailed) dndCount++;
 
                 const assignedTo = p.assigned_to;
                 if(!assignedTo || assignedTo === 'Unassigned') pending++;
@@ -1554,8 +1604,6 @@
                 card.className = "history-item"; // Added class for CSS
                 
                 // Highlight DND/DNP Logic
-                const infoLower = (p.other_info || "").toLowerCase();
-                const isFailed = infoLower.includes("dnd") || infoLower.includes("dnp");
                 const isUnassignedFailed = isFailed && (!assignedTo || assignedTo === 'Unassigned');
 
                 if(isUnassignedFailed) {
@@ -1597,6 +1645,18 @@
                     </div>
                 `;
                 list.appendChild(card);
+
+                // Populate DND List
+                if(isFailed) {
+                    const dndCard = document.createElement("div");
+                    dndCard.className = "history-item dnd-card";
+                    dndCard.style.background = "#2b0000";
+                    dndCard.style.border = "2px solid #ff4444";
+                    dndCard.style.cursor = "pointer";
+                    dndCard.onclick = () => viewDetails(id, type);
+                    dndCard.innerHTML = card.innerHTML;
+                    dndList.appendChild(dndCard);
+                }
             });
         }
 
