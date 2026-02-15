@@ -986,11 +986,16 @@
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
 
-        let routeStops = {};
+        let stopLookup = {};
         if(currentDriverFilter && driverLocationsData[currentDriverFilter] && driverLocationsData[currentDriverFilter].route_string) {
-            driverLocationsData[currentDriverFilter].route_string.split(' | ').forEach(s => {
-                const idx = s.indexOf('. ');
-                if(idx > -1) routeStops[s.substring(idx+2).trim()] = s.substring(0, idx);
+            const parts = driverLocationsData[currentDriverFilter].route_string.split(' | ');
+            parts.forEach(p => {
+                const idx = p.indexOf('. ');
+                if(idx > -1) {
+                    const num = parseInt(p.substring(0, idx));
+                    const txt = p.substring(idx+2).trim();
+                    stopLookup[txt] = num;
+                }
             });
         }
 
@@ -1077,8 +1082,9 @@
                          const labelText = job.type === 'pickup' ? job.name : job.delivery_name;
                          const fullAddr = `${addr}, ${job.city || ''}`;
                          
-                         const matchKey = `${labelText} ${addr}`;
-                         const stopNum = routeStops[matchKey];
+                         const matchKey = job.type === 'pickup' ? `${job.name} ${job.pickup_location}` : `${job.delivery_name} ${job.destination}`;
+                         const sNum = stopLookup[matchKey];
+                         const finalLabel = sNum ? `${sNum}. ${labelText}` : labelText;
 
                          // Clean up old job markers if re-rendering
                          const key = `job_${index}`;
@@ -1089,10 +1095,10 @@
                                 map: mainMap,
                                 position: loc,
                                 label: { 
-                                    text: stopNum ? String(stopNum) : labelText, 
+                                    text: finalLabel, 
                                     color: "#00b32d", 
                                     fontWeight: "bold",
-                                    fontSize: stopNum ? "14px" : "12px",
+                                    fontSize: "12px",
                                     className: "driver-map-label"
                                 },
                                 icon: {
@@ -1146,15 +1152,17 @@
 
         function processJobs(obj, type) {
             const list = type === 'pickup' ? pList : dList;
+            
+            // Convert to array for sorting
             let entries = Object.entries(obj);
             
-            if(currentDriverFilter && Object.keys(routeStops).length > 0) {
-                 entries.sort((a, b) => {
-                    const kA = type === 'pickup' ? `${a[1].name} ${a[1].pickup_location}` : `${a[1].delivery_name} ${a[1].destination}`;
-                    const kB = type === 'pickup' ? `${b[1].name} ${b[1].pickup_location}` : `${b[1].delivery_name} ${b[1].destination}`;
-                    const nA = parseInt(routeStops[kA] || 9999);
-                    const nB = parseInt(routeStops[kB] || 9999);
-                    return nA - nB;
+            if(currentDriverFilter) {
+                entries.sort((a, b) => {
+                    const keyA = type === 'pickup' ? `${a[1].name} ${a[1].pickup_location}` : `${a[1].delivery_name} ${a[1].destination}`;
+                    const keyB = type === 'pickup' ? `${b[1].name} ${b[1].pickup_location}` : `${b[1].delivery_name} ${b[1].destination}`;
+                    const numA = stopLookup[keyA] || 999;
+                    const numB = stopLookup[keyB] || 999;
+                    return numA - numB;
                 });
             } else {
                 entries.reverse();
@@ -1256,29 +1264,25 @@
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
+                // Badge Logic
                 const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
-                const stopNum = routeStops[matchKey];
+                const sNum = stopLookup[matchKey];
+                const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
 
-                const innerContent = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        ${driverHTML}
-                        <div style="font-size:10px; color:#666; font-weight:700;">DETAILS</div>
-                    </div>
-                    <div class="hist-name">${contact || 'No Contact'}</div>
-                    <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
-                    ${p.customer_email ? `<div style="font-size:10px; color:var(--active-green); font-weight:bold; margin-top:5px;">EMAIL: ${p.customer_email}</div>` : ''}
-                `;
-
-                if(stopNum) {
-                    card.innerHTML = `
-                        <div style="display:flex; align-items:flex-start; gap:10px;">
-                            <div style="background:${type==='pickup'?'var(--accent)':'var(--active-green)'}; color:#000; font-weight:900; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; margin-top:5px;">${stopNum}</div>
-                            <div style="flex:1;">${innerContent}</div>
+                card.innerHTML = `
+                    <div style="display:flex; align-items:flex-start;">
+                        ${badgeHTML}
+                        <div style="flex-grow:1;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                ${driverHTML}
+                                <div style="font-size:10px; color:#666; font-weight:700;">DETAILS</div>
+                            </div>
+                            <div class="hist-name">${contact || 'No Contact'}</div>
+                            <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
+                            ${p.customer_email ? `<div style="font-size:10px; color:var(--active-green); font-weight:bold; margin-top:5px;">EMAIL: ${p.customer_email}</div>` : ''}
                         </div>
-                    `;
-                } else {
-                    card.innerHTML = innerContent;
-                }
+                    </div>
+                `;
                 list.appendChild(card);
             });
         }
