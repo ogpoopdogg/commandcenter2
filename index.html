@@ -352,23 +352,31 @@
         .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
 
         /* GRAPH INDICATOR STYLES */
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(204,163,0,0.1); border-color: #333; }
+            50% { box-shadow: 0 0 20px rgba(204,163,0,0.3); border-color: var(--accent); }
+            100% { box-shadow: 0 0 5px rgba(204,163,0,0.1); border-color: #333; }
+        }
+
         #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2); margin-bottom: 20px; }
         .driver-stat-row { 
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
-            padding: 10px 15px; 
+            padding: 20px 25px; 
             background: var(--stat-bg); 
             border-radius: 6px; 
             border: 1px solid var(--border); 
             transition: transform 0.2s;
+            min-height: 80px; 
+            animation: pulse-glow 4s infinite ease-in-out; 
         }
         .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
-        .ds-name { color: var(--text); font-weight: 700; font-size: 14px; width: 80px; text-transform: uppercase; }
+        .ds-name { color: var(--text); font-weight: 700; font-size: 24px; width: 140px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-        .stat-item { font-size: 10px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
-        .stat-val-p { color: var(--accent); font-size: 13px; font-weight: 800; }
-        .stat-val-d { color: var(--active-green); font-size: 13px; font-weight: 800; }
+        .stat-item { font-size: 14px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
+        .stat-val-p { color: var(--accent); font-size: 22px; font-weight: 800; }
+        .stat-val-d { color: var(--active-green); font-size: 22px; font-weight: 800; }
         
     </style>
 </head>
@@ -492,7 +500,20 @@
         </div>
     </div>
     <div style="margin-top: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2);">
-        <div class="archive-title" style="color: #666; border-bottom:none;">ARCHIVE (COMPLETED)</div>
+        <div class="archive-title" style="color: #666; border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
+        <div class="flex-row" style="margin-bottom: 15px;">
+             <select id="af-driver" class="driver-select" style="margin-bottom:0; flex:1;" onchange="renderData()">
+                <option value="">All Drivers</option>
+                <option value="Matt">Matt</option>
+                <option value="Touch">Touch</option>
+                <option value="Julian">Julian</option>
+                <option value="Jess">Jess</option>
+                <option value="Alysha">Alysha</option>
+                <option value="Kayla">Kayla</option>
+            </select>
+            <input id="af-name" placeholder="Name" class="glow-field" style="margin-bottom:0; flex:1;" onkeyup="renderData()">
+            <input id="af-city" placeholder="City" class="glow-field" style="margin-bottom:0; flex:1;" onkeyup="renderData()">
+        </div>
         <div id="list-archive" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
 </div>
@@ -986,6 +1007,11 @@
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
 
+        // NEW FILTER VALUES
+        const afDriver = document.getElementById('af-driver') ? document.getElementById('af-driver').value : "";
+        const afName = document.getElementById('af-name') ? document.getElementById('af-name').value.toLowerCase() : "";
+        const afCity = document.getElementById('af-city') ? document.getElementById('af-city').value.toLowerCase() : "";
+
         let stopLookup = {};
         if(currentDriverFilter && driverLocationsData[currentDriverFilter] && driverLocationsData[currentDriverFilter].route_string) {
             const parts = driverLocationsData[currentDriverFilter].route_string.split(' | ');
@@ -1171,7 +1197,7 @@
             entries.forEach(([id, p]) => {
                 // Filter logic
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.customer_email||"")).toLowerCase();
-                if(searchTerm && !textSearch.includes(searchTerm)) return;
+                if(searchTerm && !textSearch.includes(searchTerm) && p.status !== 'completed') return;
 
                 if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
 
@@ -1181,10 +1207,18 @@
                     const d = new Date(p.completed_at || p.timestamp);
                     const now = new Date();
                     const isToday = d.toDateString() === now.toDateString();
-                    const isRecent = (now - d) < (30 * 24 * 60 * 60 * 1000); // 30 days in ms
 
-                    if (!searchTerm && !isToday) return; 
-                    if (searchTerm && !isRecent) return;
+                    // strict "from that day only"
+                    if (!isToday) return;
+
+                    // Extended Search for Archive (all info)
+                    const fullContent = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.package_details||"") + (p.po_number||"")).toLowerCase();
+                    if (searchTerm && !fullContent.includes(searchTerm)) return;
+
+                    // New Filters
+                    if (afDriver && p.assigned_to !== afDriver) return;
+                    if (afName && !(p.name.toLowerCase().includes(afName) || p.delivery_name.toLowerCase().includes(afName))) return;
+                    if (afCity && !(p.city || "").toLowerCase().includes(afCity)) return;
 
                     const card = document.createElement("div");
                     card.className = "history-item"; // Added class for CSS
