@@ -468,7 +468,7 @@
         </div>
         <div class="flex-row">
             <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Customer Email Address (for DNP alerts)" style="flex:1;">
-            <input type="tel" id="f-customer-phone-p" class="glow-field" placeholder="Customer Phone Number" style="flex:1;">
+            <input type="tel" id="f-customer-phone-p" class="glow-field" placeholder="Customer Phone Number" style="flex:1;" oninput="formatPhone(this)">
         </div>
     </div>
 
@@ -483,7 +483,7 @@
         </div>
         <div class="flex-row">
             <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Customer Email Address (for DND alerts)" style="flex:1;">
-            <input type="tel" id="f-customer-phone-d" class="glow-field" placeholder="Customer Phone Number" style="flex:1;">
+            <input type="tel" id="f-customer-phone-d" class="glow-field" placeholder="Customer Phone Number" style="flex:1;" oninput="formatPhone(this)">
         </div>
     </div>
 </div>
@@ -511,6 +511,7 @@
         <div class="flex-row" style="margin-bottom: 15px;">
              <select id="af-driver" class="driver-select" style="margin-bottom:0; flex:1;" onchange="renderData()">
                 <option value="">All Drivers</option>
+                <option value="Unassigned">Unassigned</option>
                 <option value="Matt">Matt</option>
                 <option value="Touch">Touch</option>
                 <option value="Julian">Julian</option>
@@ -521,6 +522,7 @@
             <input id="af-name" placeholder="Name" class="glow-field" style="margin-bottom:0; flex:1;" onkeyup="renderData()">
             <input id="af-city" placeholder="City" class="glow-field" style="margin-bottom:0; flex:1;" onkeyup="renderData()">
         </div>
+        <input id="af-manual-search" placeholder="Manual Search (Today's Archive)..." class="glow-field" style="margin-bottom:15px;" onkeyup="renderData()">
         <div id="list-archive" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
 </div>
@@ -533,6 +535,7 @@
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
     <button class="close-map" onclick="zoomToDensest()" style="top:130px; background:#004488;">ZOOM QUICK</button>
+    <button class="close-map" onclick="zoomToAll()" style="top:190px; background:#448800;">ZOOM OUT</button>
     <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
     <div id="map-driver-head" style="position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:3001; background:#000; border:1px solid #fff; padding:10px 20px; font-weight:900; font-size:24px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
     <div id="route-list"></div>
@@ -617,6 +620,11 @@
         const d = new Date(ts);
         if (isNaN(d.getTime())) return '--:--';
         return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+    
+    function formatPhone(input) {
+        let x = input.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+        input.value = !x[2] ? x[1] : '(' + x[1] + ')-' + x[2] + (x[3] ? '-' + x[3] : '');
     }
 
     // MAP LOGIC
@@ -766,6 +774,22 @@
              if(Math.sqrt(dLat*dLat + dLng*dLng) < radius) bounds.extend(p);
         });
         mainMap.fitBounds(bounds);
+    }
+
+    function zoomToAll() {
+        const bounds = new google.maps.LatLngBounds();
+        let found = false;
+        for(let k in mapMarkers) {
+            if(mapMarkers[k].getPosition()) {
+                bounds.extend(mapMarkers[k].getPosition());
+                found = true;
+            }
+        }
+        if(activePolyline) {
+            activePolyline.getPath().forEach(p => bounds.extend(p));
+            found = true;
+        }
+        if(found) mainMap.fitBounds(bounds);
     }
 
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -993,6 +1017,10 @@
                     <input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address" style="flex:2;">
                     <input id="e-city-p" value="${val(data.city)}" placeholder="City" style="flex:1;">
                 </div>
+                <div class="flex-row">
+                    <input id="e-email-p" type="email" value="${isPickup ? val(data.customer_email) : ''}" placeholder="Pickup Email" style="flex:1;">
+                    <input id="e-phone-p" type="tel" value="${isPickup ? val(data.customer_phone) : ''}" placeholder="Pickup Phone" style="flex:1;" oninput="formatPhone(this)">
+                </div>
 
                 <input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions" style="margin-bottom:12px;">
                 
@@ -1006,10 +1034,9 @@
                     <input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address" style="flex:2;">
                     <input id="e-city-d" value="${val(data.city)}" placeholder="City" style="flex:1;">
                 </div>
-                
                 <div class="flex-row">
-                    <input id="e-email" type="email" value="${val(data.customer_email)}" placeholder="Customer Email" style="margin-bottom:12px; border-color:var(--active-green); flex:1;">
-                    <input id="e-phone" type="tel" value="${val(data.customer_phone)}" placeholder="Customer Phone" style="margin-bottom:12px; flex:1;">
+                    <input id="e-email-d" type="email" value="${!isPickup ? val(data.customer_email) : ''}" placeholder="Delivery Email" style="flex:1;">
+                    <input id="e-phone-d" type="tel" value="${!isPickup ? val(data.customer_phone) : ''}" placeholder="Delivery Phone" style="flex:1;" oninput="formatPhone(this)">
                 </div>
 
                 <select id="e-driver" class="driver-select" style="margin-bottom:12px;">${driverOpts}</select>
@@ -1061,8 +1088,8 @@
             delivery_name: document.getElementById('e-drop-name').value,
             destination: document.getElementById('e-drop').value,
             other_info: noteVal,
-            customer_email: document.getElementById('e-email').value || "",
-            customer_phone: document.getElementById('e-phone').value || "",
+            customer_email: type === 'pickup' ? document.getElementById('e-email-p').value : document.getElementById('e-email-d').value,
+            customer_phone: type === 'pickup' ? document.getElementById('e-phone-p').value : document.getElementById('e-phone-d').value,
             last_edit_by: currentUser
         };
         const node = type === 'pickup' ? 'pickups' : 'dropoffs';
@@ -1097,6 +1124,7 @@
         const afDriver = document.getElementById('af-driver') ? document.getElementById('af-driver').value : "";
         const afName = document.getElementById('af-name') ? document.getElementById('af-name').value.toLowerCase() : "";
         const afCity = document.getElementById('af-city') ? document.getElementById('af-city').value.toLowerCase() : "";
+        const afManual = document.getElementById('af-manual-search') ? document.getElementById('af-manual-search').value.toLowerCase() : "";
 
         let stopLookup = {};
         if(currentDriverFilter && driverLocationsData[currentDriverFilter] && driverLocationsData[currentDriverFilter].route_string) {
@@ -1331,6 +1359,7 @@
                     if (afDriver && p.assigned_to !== afDriver) return;
                     if (afName && !(p.name.toLowerCase().includes(afName) || p.delivery_name.toLowerCase().includes(afName))) return;
                     if (afCity && !(p.city || "").toLowerCase().includes(afCity)) return;
+                    if (afManual && !fullContent.includes(afManual)) return;
 
                     const card = document.createElement("div");
                     card.className = "history-item"; // Added class for CSS
