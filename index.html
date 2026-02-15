@@ -372,7 +372,7 @@
             animation: pulse-glow 4s infinite ease-in-out; 
         }
         .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
-        .ds-name { color: var(--text); font-weight: 700; font-size: 24px; width: 140px; text-transform: uppercase; }
+        .ds-name { color: var(--text); font-weight: 700; font-size: 34px; width: 140px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
         .stat-item { font-size: 14px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
         .stat-val-p { color: var(--accent); font-size: 22px; font-weight: 800; }
@@ -526,6 +526,7 @@
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
     <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
+    <div id="map-driver-head" style="position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:3001; background:#000; border:1px solid #fff; padding:10px 20px; font-weight:900; font-size:24px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
     <div id="route-list"></div>
     <div id="map"></div>
 </div>
@@ -696,6 +697,7 @@
 
     function closeMap() {
         document.getElementById('map-modal').style.display = 'none';
+        document.getElementById('map-driver-head').style.display = 'none';
         
         if(mapAllListener) {
             db.ref('driver_locations').off('value', mapAllListener);
@@ -1043,6 +1045,17 @@
                 label.innerHTML = currentDriverFilter + timeInfo;
             }
 
+            const mapHead = document.getElementById("map-driver-head");
+            if(mapHead) {
+                const dColors = {
+                    'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
+                    'Jess': '#FF69B4', 'Alysha': '#9C27B0', 'Kayla': '#E91E63'
+                };
+                mapHead.style.display = "block";
+                mapHead.innerText = currentDriverFilter;
+                mapHead.style.color = dColors[currentDriverFilter] || '#fff';
+            }
+
             if(document.getElementById('map-modal').style.display === 'block' && mainMap && drvData) {
                  const badge = document.getElementById("route-time-badge");
                  if (badge && drvData.total_duration) {
@@ -1060,20 +1073,29 @@
 
                  if(mapMarkers[currentDriverFilter]) {
                       mapMarkers[currentDriverFilter].setPosition(pos);
-                      mapMarkers[currentDriverFilter].setLabel({ text: `${currentDriverFilter} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" });
+                      mapMarkers[currentDriverFilter].setIcon({ 
+                             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, 
+                             fillColor: '#00b32d', 
+                             fillOpacity: 1, 
+                             strokeWeight: 1, 
+                             strokeColor: '#000000', 
+                             scale: 8,
+                             anchor: new google.maps.Point(0, 2.5)
+                      });
+                      mapMarkers[currentDriverFilter].setLabel(null);
                  } else {
                       const marker = new google.maps.Marker({
                          position: pos, map: mainMap,
                          icon: { 
-                             path: google.maps.SymbolPath.CIRCLE, 
+                             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, 
                              fillColor: '#00b32d', 
                              fillOpacity: 1, 
-                             strokeWeight: 2, 
-                             strokeColor: '#ffffff', 
-                             scale: 7,
-                             labelOrigin: new google.maps.Point(0, -15)
+                             strokeWeight: 1, 
+                             strokeColor: '#000000', 
+                             scale: 8,
+                             anchor: new google.maps.Point(0, 2.5)
                          },
-                         label: { text: `${currentDriverFilter} ${timeStr}`, color: "#00ff00", className: "pulsing-dot driver-route-label" }
+                         label: null
                       });
                       mapMarkers[currentDriverFilter] = marker;
                  }
@@ -1237,7 +1259,7 @@
                     card.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-weight:800; color:#555; text-decoration:line-through;">${p.assigned_to || 'Unassigned'}</span>
-                            <span style="font-size:10px; color:#00b32d; font-weight:bold;">DONE ${doneTime}</span>
+                            <span style="font-size:30px; color:#00b32d; font-weight:900; white-space:nowrap; line-height:1;">DONE ${doneTime}</span>
                         </div>
                         <div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${contact || 'No Contact'}</div>
                         <div style="color:#555; font-size:11px;">${p.city || ''}</div>
@@ -1343,7 +1365,7 @@
                 row.innerHTML = `
                     <div style="display:flex; align-items:center;">
                         <div class="ds-name" style="color:${color};">${driver}</div>
-                        ${duration ? `<span style="font-size:12px; color:#aaa; margin-left:8px; font-weight:600;">${duration}</span>` : ''}
+                        ${duration ? `<span style="font-size:22px; color:#fff; margin-left:15px; font-weight:800; border:2px solid var(--accent); padding:5px 12px; border-radius:6px; box-shadow:0 0 10px var(--accent); animation:pulse-glow 2s infinite;">${duration}</span>` : ''}
                     </div>
                     <div class="stat-info">
                         ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
