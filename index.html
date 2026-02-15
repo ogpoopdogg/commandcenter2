@@ -1561,18 +1561,7 @@
                 if(isUnassignedFailed) {
                     card.style.background = "#2b0000";
                     card.style.border = "2px solid #ff4444";
-                    
-                    // TRIGGER ALERT PING (Only if unassigned with tag and not yet sent)
-                    if (p.customer_email && !p.alert_sent) {
-                        db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).update({ alert_sent: true });
-                        fetch("https://script.google.com/macros/s/AKfycbzBVnLWBMu06fRcbuRyxnBupNGPcsNV_Qq5HmsM8_h4zjzTSbXlez6Vtx_J9cCnXSQwSQ/exec", {
-                            method: "POST",
-                            mode: "no-cors",
-                            body: JSON.stringify({ email: p.customer_email, notes: p.other_info, type: type })
-                        });
-                    }
-                } else if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) {
-                    card.classList.add('urgent-pickup');
+                    } else if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) {                    card.classList.add('urgent-pickup');
                 }
 
                 card.onclick = () => viewDetails(id, type);
