@@ -216,6 +216,12 @@
             margin-bottom: 12px;
         }
         
+        @keyframes dispatch-shine {
+            0% { background-position: 0% 50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
+            50% { background-position: 100% 50%; box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), 0 0 5px rgba(255, 255, 255, 0.5); }
+            100% { background-position: 0% 50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
+        }
+
         button.primary {
             width: 100%;
             padding: 16px;
@@ -239,6 +245,15 @@
         }
         button.primary:active {
             transform: translateY(1px);
+        }
+        
+        button.primary.super-dispatch {
+            background: linear-gradient(110deg, #5c4d00, #cca300, #ffe680, #cca300, #5c4d00) !important;
+            background-size: 300% 300% !important;
+            animation: dispatch-shine 3s ease infinite !important;
+            border: 1px solid #ffd700 !important;
+            color: #fff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
         .history-box { 
@@ -461,7 +476,7 @@
         <option value="Kayla">Kayla</option>
     </select>
     <div style="display: flex; gap: 12px;">
-        <button class="primary" onclick="createJob()" style="flex: 1; background-color: #3d3300; border-color: #665500;">Dispatch</button>
+        <button class="primary super-dispatch" onclick="createJob()" style="flex: 1;">Dispatch</button>
         <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #111; border: 1px solid #444; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
     </div>
 </div>
@@ -671,6 +686,37 @@
         if(el) {
             el.select();
             navigator.clipboard.writeText(el.value);
+            
+            const rect = window.event.target.getBoundingClientRect();
+            const prompt = document.createElement("div");
+            prompt.innerText = "COPIED TO CLIPBOARD";
+            prompt.style.position = "fixed";
+            prompt.style.left = (rect.right + 10) + "px";
+            prompt.style.top = rect.top + "px";
+            prompt.style.background = "var(--active-green)";
+            prompt.style.color = "#000";
+            prompt.style.padding = "4px 8px";
+            prompt.style.fontSize = "10px";
+            prompt.style.fontWeight = "900";
+            prompt.style.borderRadius = "4px";
+            prompt.style.zIndex = "10000";
+            prompt.style.pointerEvents = "none";
+            prompt.style.boxShadow = "0 2px 10px rgba(0,0,0,0.5)";
+            prompt.style.opacity = "0";
+            prompt.style.transition = "opacity 0.3s, transform 0.3s";
+            
+            document.body.appendChild(prompt);
+            
+            requestAnimationFrame(() => {
+                prompt.style.opacity = "1";
+                prompt.style.transform = "translateX(5px)";
+            });
+
+            setTimeout(() => {
+                prompt.style.opacity = "0";
+                prompt.style.transform = "translateX(10px)";
+                setTimeout(() => document.body.removeChild(prompt), 300);
+            }, 1500);
         }
     }
 
@@ -1547,7 +1593,7 @@
                             </div>
                             <div class="hist-name">${contact || 'No Contact'}</div>
                             <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
-                            ${p.package_details ? `<div style="font-size:10px; color:var(--text); margin-top:5px; font-style:italic;">📦 ${p.package_details}</div>` : ''}
+                            ${p.package_details ? `<div style="font-size:15px; color:#fff; margin-top:5px; font-weight:bold; font-style:normal;">📦 ${p.package_details}</div>` : ''}
                         </div>
                     </div>
                 `;
