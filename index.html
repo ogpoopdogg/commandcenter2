@@ -432,6 +432,19 @@
             box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important;
             border-bottom: 1px solid #bbb !important;
         }
+
+        @keyframes pulse-red-btn {
+            0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; }
+            50% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); border-color: #ff4444; background: rgba(255,0,0,0.1); }
+            100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; }
+        }
+        @keyframes pulse-orange-btn {
+            0% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; }
+            50% { box-shadow: 0 0 15px rgba(255, 140, 0, 0.7); border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); }
+            100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; }
+        }
+        .btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
+        .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
     </style>
 </head>
 <body>
@@ -448,10 +461,15 @@
 <header>
     <div style="display: flex; flex-direction: column; width: 100%;">
         <div id="user-display"></div>
-        <div class="crt-animate" style="display: flex; align-items: center; overflow: hidden; cursor: pointer;" onclick="toggleTheme()">
-            <img src="icon-512.png" class="header-logo" alt="E&C Logo">
-            <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
-            <div id="header-alert" style="display:none; color:red; font-weight:900; animation:dot-pulse 1s infinite; margin-left:15px; font-size:14px;"></div>
+        <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleTheme()">
+            <div class="crt-animate" style="display: flex; align-items: center;">
+                <img src="icon-512.png" class="header-logo" alt="E&C Logo">
+                <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
+            </div>
+            <div style="display:flex; flex-direction:column; margin-left:15px; justify-content:center;">
+                <div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:900; animation:dot-pulse 1s infinite; font-size:11px; margin-bottom:2px;"></div>
+                <div id="header-alert" style="display:none; color:red; font-weight:900; animation:dot-pulse 1s infinite; font-size:11px;"></div>
+            </div>
         </div>
     </div>
     <div id="clock" style="font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums;"></div>
@@ -679,9 +697,15 @@
     function toggleActiveList() {
         const list = document.getElementById('active-list-container');
         const btn = document.getElementById('toggle-active-btn');
+        const dndList = document.getElementById('dnd-list-container');
+        const dndBtn = document.getElementById('toggle-dnd-btn');
+
         if (list.style.display === 'none') {
             list.style.display = 'flex';
             btn.classList.add('btn-pressed');
+            // Close DND
+            dndList.style.display = 'none';
+            dndBtn.classList.remove('btn-pressed');
         } else {
             list.style.display = 'none';
             btn.classList.remove('btn-pressed');
@@ -692,9 +716,15 @@
     function toggleDNDList() {
         const list = document.getElementById('dnd-list-container');
         const btn = document.getElementById('toggle-dnd-btn');
+        const activeList = document.getElementById('active-list-container');
+        const activeBtn = document.getElementById('toggle-active-btn');
+
         if (list.style.display === 'none') {
             list.style.display = 'flex';
             btn.classList.add('btn-pressed');
+            // Close Active
+            activeList.style.display = 'none';
+            activeBtn.classList.remove('btn-pressed');
         } else {
             list.style.display = 'none';
             btn.classList.remove('btn-pressed');
@@ -708,6 +738,10 @@
         
         // Auto open the list when filtering a driver
         document.getElementById('active-list-container').style.display = 'flex';
+        document.getElementById('toggle-active-btn').classList.add('btn-pressed');
+        // Ensure DND is closed
+        document.getElementById('dnd-list-container').style.display = 'none';
+        document.getElementById('toggle-dnd-btn').classList.remove('btn-pressed');
         document.getElementById('toggle-active-btn').style.display = 'none';
 
         const routeBtn = document.getElementById("view-route-btn");
@@ -1587,10 +1621,51 @@
                     return; // Skip adding to main list
                 }
 
-                if(isFailed) dndCount++;
-
                 const assignedTo = p.assigned_to;
-                if(!assignedTo || assignedTo === 'Unassigned') pending++;
+                const isUnassigned = !assignedTo || assignedTo === 'Unassigned';
+                const isUnassignedFailed = isFailed && isUnassigned;
+                
+                // Active DND Logic: Must be Failed AND Assigned
+                if (isFailed && !isUnassigned) {
+                    dndCount++;
+                    const dndCard = document.createElement("div");
+                    dndCard.className = "history-item dnd-card";
+                    dndCard.style.background = "#2b0000";
+                    dndCard.style.border = "2px solid #ff4444";
+                    dndCard.style.cursor = "pointer";
+                    dndCard.onclick = () => viewDetails(id, type);
+                    
+                    // Card Content Generation (Shared logic simplified)
+                    const bg = dColors[assignedTo] || '#00b32d'; 
+                    const darkText = ['#00b32d', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
+                    const driverHTML = `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${assignedTo}</span>`;
+                    const contact = type === 'pickup' ? p.name : p.delivery_name;
+                    const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
+                    const sNum = stopLookup[matchKey];
+                    const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
+
+                    dndCard.innerHTML = `
+                        <div style="display:flex; flex-direction:column; width:100%;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                ${badgeHTML || '<div></div>'}
+                                ${driverHTML}
+                            </div>
+                            <div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${contact || 'No Contact'}</div>
+                            <div style="font-size:11px; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.city || 'No City'}</div>
+                            ${p.package_details ? `<div style="font-size:11px; color:#aaa; margin-top:2px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📦 ${p.package_details}</div>` : ''}
+                        </div>
+                    `;
+                    dndList.appendChild(dndCard);
+                    
+                    if(driverStats[assignedTo]) {
+                        if(type === 'pickup') driverStats[assignedTo].p++;
+                        else driverStats[assignedTo].d++;
+                    }
+                    if(p.driver_edited_note) noteCount++;
+                    return; // Don't add to main list
+                }
+
+                if(isUnassigned) pending++;
                 else {
                     assignedCount++;
                     if(driverStats[assignedTo]) {
@@ -1603,13 +1678,11 @@
                 const card = document.createElement("div");
                 card.className = "history-item"; // Added class for CSS
                 
-                // Highlight DND/DNP Logic
-                const isUnassignedFailed = isFailed && (!assignedTo || assignedTo === 'Unassigned');
-
                 if(isUnassignedFailed) {
                     card.style.background = "#2b0000";
                     card.style.border = "2px solid #ff4444";
-                    } else if(type === 'pickup' && (!assignedTo || assignedTo === 'Unassigned')) {                    card.classList.add('urgent-pickup');
+                } else if(type === 'pickup' && isUnassigned) {
+                    card.classList.add('urgent-pickup');
                 }
 
                 card.onclick = () => viewDetails(id, type);
@@ -1624,7 +1697,7 @@
                 
                 const driverHTML = p.assigned_to ? 
                     `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
-                    `<span style="color:${isFailed ? '#ff4444' : '#cc5200'}; font-weight:800; font-size:11px;">${isFailed ? 'FAILED ATTEMPT' : 'UNASSIGNED'}</span>`;
+                    `<span style="color:${isUnassignedFailed ? '#ff4444' : '#cc5200'}; font-weight:800; font-size:11px;">${isUnassignedFailed ? 'FAILED ATTEMPT' : 'UNASSIGNED'}</span>`;
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
@@ -1645,18 +1718,6 @@
                     </div>
                 `;
                 list.appendChild(card);
-
-                // Populate DND List
-                if(isFailed) {
-                    const dndCard = document.createElement("div");
-                    dndCard.className = "history-item dnd-card";
-                    dndCard.style.background = "#2b0000";
-                    dndCard.style.border = "2px solid #ff4444";
-                    dndCard.style.cursor = "pointer";
-                    dndCard.onclick = () => viewDetails(id, type);
-                    dndCard.innerHTML = card.innerHTML;
-                    dndList.appendChild(dndCard);
-                }
             });
         }
 
@@ -1664,11 +1725,34 @@
         processJobs(rawDropoffs, 'delivery');
         
         const alertDiv = document.getElementById('header-alert');
+        const unassignedDiv = document.getElementById('header-unassigned');
+        
         if(dndCount > 0) {
             alertDiv.style.display = 'block';
             alertDiv.innerText = dndCount + " DND/DNP";
         } else {
             alertDiv.style.display = 'none';
+        }
+
+        if(pending > 0) {
+            unassignedDiv.style.display = 'block';
+            unassignedDiv.innerText = pending + " UNASSIGNED";
+        } else {
+            unassignedDiv.style.display = 'none';
+        }
+
+        const dndBtn = document.getElementById('toggle-dnd-btn');
+        if (dndCount > 0) {
+            dndBtn.classList.add('btn-alert-red');
+        } else {
+            dndBtn.classList.remove('btn-alert-red');
+        }
+
+        const activeBtn = document.getElementById('toggle-active-btn');
+        if (pending > 0) {
+            activeBtn.classList.add('btn-alert-orange');
+        } else {
+            activeBtn.classList.remove('btn-alert-orange');
         }
 
         // RENDER DRIVER STATS
