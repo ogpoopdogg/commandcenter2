@@ -221,10 +221,10 @@
             margin-bottom: 12px;
         }
         
-        @keyframes dispatch-shine {
-            0% { background-position: 0% 50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
-            50% { background-position: 100% 50%; box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), 0 0 5px rgba(255, 255, 255, 0.5); }
-            100% { background-position: 0% 50%; box-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
+        @keyframes professional-pulse {
+            0% { box-shadow: inset 0 0 5px rgba(0, 179, 45, 0.1); border-color: var(--active-green); }
+            50% { box-shadow: inset 0 0 20px rgba(0, 179, 45, 0.3), 0 0 10px rgba(255, 255, 255, 0.1); border-color: #4dff88; }
+            100% { box-shadow: inset 0 0 5px rgba(0, 179, 45, 0.1); border-color: var(--active-green); }
         }
 
         button.primary {
@@ -254,12 +254,13 @@
         }
         
         button.primary.super-dispatch {
-            background: linear-gradient(110deg, #5c4d00, #cca300, #ffe680, #cca300, #5c4d00) !important;
-            background-size: 300% 300% !important;
-            animation: dispatch-shine 3s ease infinite !important;
-            border: 1px solid #ffd700 !important;
-            color: #fff !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            background: #000 !important;
+            color: var(--active-green) !important;
+            border: 1px solid var(--active-green) !important;
+            box-shadow: 0 0 10px rgba(0, 179, 45, 0.1) !important;
+            animation: professional-pulse 3s infinite ease-in-out !important;
+            text-shadow: 0 0 5px rgba(0, 179, 45, 0.5);
+            letter-spacing: 2px;
         }
 
         .history-box { 
@@ -406,6 +407,13 @@
 
         .route-time-display { font-size:12px; color:#fff; margin-left:8px; font-weight:800; border:1px solid var(--accent); padding:2px 6px; border-radius:6px; box-shadow:0 0 5px var(--accent); animation:pulse-glow 2s infinite; }
         .back-to-all-btn { background:#222; border:1px solid var(--accent); color:var(--accent); padding:10px 24px; font-weight:800; border-radius:6px; text-transform:uppercase; cursor:pointer; }
+        
+        @keyframes crt-turn-on {
+            0% { transform: scaleY(0.005) scaleX(0); opacity: 0; filter: brightness(0); }
+            50% { transform: scaleY(0.005) scaleX(1); opacity: 1; }
+            100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); }
+        }
+        .crt-animate { animation: crt-turn-on 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
     </style>
 </head>
 <body>
@@ -422,7 +430,7 @@
 <header>
     <div style="display: flex; flex-direction: column; width: 100%;">
         <div id="user-display"></div>
-        <div style="display: flex; align-items: center; overflow: hidden; cursor: pointer;" onclick="toggleTheme()">
+        <div class="crt-animate" style="display: flex; align-items: center; overflow: hidden; cursor: pointer;" onclick="toggleTheme()">
             <img src="icon-512.png" class="header-logo" alt="E&C Logo">
             <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
             <div id="header-alert" style="display:none; color:red; font-weight:900; animation:dot-pulse 1s infinite; margin-left:15px; font-size:14px;"></div>
@@ -595,7 +603,7 @@
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
     <button class="close-map" onclick="zoomToAll()" style="top:130px; background:#448800;">ZOOM OUT</button>
     <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
-    <div id="map-driver-head" style="position:absolute; top:20px; right:80px; z-index:3001; background:#000; border:1px solid #fff; padding:10px 20px; font-weight:900; font-size:24px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
+    <div id="map-driver-head" style="position:absolute; top:15px; right:80px; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:900; font-size:16px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
     <div id="route-list"></div>
     <div id="map"></div>
 </div>
@@ -657,6 +665,7 @@
         
         // Auto open the list when filtering a driver
         document.getElementById('active-list-container').style.display = 'flex';
+        document.getElementById('toggle-active-btn').style.display = 'none';
 
         const routeBtn = document.getElementById("view-route-btn");
         if(routeBtn) {
@@ -669,6 +678,7 @@
         currentDriverFilter = null;
         const routeBtn = document.getElementById("view-route-btn");
         if(routeBtn) routeBtn.style.display = "none";
+        document.getElementById('toggle-active-btn').style.display = 'block';
         
         const label = document.getElementById("selected-driver-label");
         if(label) label.style.display = "none";
@@ -748,6 +758,7 @@
     function openMap() {
         mapBoundsInitialized = false;
         document.getElementById('map-modal').style.display = 'block';
+        document.getElementById('route-time-badge').style.display = 'none';
         currentDriverFilter = null;
         
         setTimeout(() => {
