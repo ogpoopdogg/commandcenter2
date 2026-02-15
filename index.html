@@ -986,6 +986,14 @@
         const filterUI = document.getElementById('filter-reset-ui');
         if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
 
+        let routeStops = {};
+        if(currentDriverFilter && driverLocationsData[currentDriverFilter] && driverLocationsData[currentDriverFilter].route_string) {
+            driverLocationsData[currentDriverFilter].route_string.split(' | ').forEach(s => {
+                const idx = s.indexOf('. ');
+                if(idx > -1) routeStops[s.substring(idx+2).trim()] = s.substring(0, idx);
+            });
+        }
+
         if(currentDriverFilter) {
             const drvData = driverLocationsData[currentDriverFilter];
             const label = document.getElementById("selected-driver-label");
@@ -1014,30 +1022,7 @@
                  }
 
                  const rList = document.getElementById('route-list');
-                 if(rList && drvData.route_string) {
-                    rList.style.display = 'block';
-                    rList.innerHTML = '';
-                    const stops = drvData.route_string.split(' | ');
-                    const pKeys = new Set();
-                    Object.values(rawPickups).forEach(p => { 
-                        if(p.assigned_to === currentDriverFilter && p.status === 'pending') 
-                            pKeys.add(`${p.name} ${p.pickup_location}`); 
-                    });
-                    
-                    stops.forEach(s => {
-                        const idx = s.indexOf('. ');
-                        if(idx > -1) {
-                            const num = s.substring(0, idx);
-                            const txt = s.substring(idx+2);
-                            const isP = pKeys.has(txt);
-                            const col = isP ? '#ffcc00' : '#00ff41'; 
-                            rList.innerHTML += `<div style="display:flex; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px;">
-                                <div style="background:${col}; color:#000; font-weight:900; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:14px; flex-shrink:0;">${num}</div>
-                                <div style="font-size:12px; color:#eee; font-weight:600; line-height:1.3;">${txt}</div>
-                            </div>`;
-                        }
-                    });
-                 } else if (rList) rList.style.display = 'none';
+                 if(rList) rList.style.display = 'none';
 
                  const pos = { lat: drvData.lat, lng: drvData.lng };
                  const timeStr = formatTime12(drvData.gps_timestamp || Date.now());
@@ -1092,6 +1077,9 @@
                          const labelText = job.type === 'pickup' ? job.name : job.delivery_name;
                          const fullAddr = `${addr}, ${job.city || ''}`;
                          
+                         const matchKey = `${labelText} ${addr}`;
+                         const stopNum = routeStops[matchKey];
+
                          // Clean up old job markers if re-rendering
                          const key = `job_${index}`;
                          if(mapMarkers[key]) mapMarkers[key].setMap(null);
@@ -1101,10 +1089,10 @@
                                 map: mainMap,
                                 position: loc,
                                 label: { 
-                                    text: labelText, 
+                                    text: stopNum ? String(stopNum) : labelText, 
                                     color: "#00b32d", 
                                     fontWeight: "bold",
-                                    fontSize: "12px",
+                                    fontSize: stopNum ? "14px" : "12px",
                                     className: "driver-map-label"
                                 },
                                 icon: {
@@ -1158,7 +1146,19 @@
 
         function processJobs(obj, type) {
             const list = type === 'pickup' ? pList : dList;
-            const entries = Object.entries(obj).reverse();
+            let entries = Object.entries(obj);
+            
+            if(currentDriverFilter && Object.keys(routeStops).length > 0) {
+                 entries.sort((a, b) => {
+                    const kA = type === 'pickup' ? `${a[1].name} ${a[1].pickup_location}` : `${a[1].delivery_name} ${a[1].destination}`;
+                    const kB = type === 'pickup' ? `${b[1].name} ${b[1].pickup_location}` : `${b[1].delivery_name} ${b[1].destination}`;
+                    const nA = parseInt(routeStops[kA] || 9999);
+                    const nB = parseInt(routeStops[kB] || 9999);
+                    return nA - nB;
+                });
+            } else {
+                entries.reverse();
+            }
             
             entries.forEach(([id, p]) => {
                 // Filter logic
@@ -1256,7 +1256,10 @@
                 
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
                 
-                card.innerHTML = `
+                const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
+                const stopNum = routeStops[matchKey];
+
+                const innerContent = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         ${driverHTML}
                         <div style="font-size:10px; color:#666; font-weight:700;">DETAILS</div>
@@ -1265,6 +1268,17 @@
                     <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
                     ${p.customer_email ? `<div style="font-size:10px; color:var(--active-green); font-weight:bold; margin-top:5px;">EMAIL: ${p.customer_email}</div>` : ''}
                 `;
+
+                if(stopNum) {
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:flex-start; gap:10px;">
+                            <div style="background:${type==='pickup'?'var(--accent)':'var(--active-green)'}; color:#000; font-weight:900; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; margin-top:5px;">${stopNum}</div>
+                            <div style="flex:1;">${innerContent}</div>
+                        </div>
+                    `;
+                } else {
+                    card.innerHTML = innerContent;
+                }
                 list.appendChild(card);
             });
         }
