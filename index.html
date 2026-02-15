@@ -560,6 +560,7 @@
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
     let currentDriverFilter = null;
+    let mapBoundsInitialized = false;
 
     if (localStorage.getItem('ec_theme') === 'light') {
         document.body.classList.add('light-mode');
@@ -618,6 +619,7 @@
     let mapAllListener = null;
 
     function openMap() {
+        mapBoundsInitialized = false;
         document.getElementById('map-modal').style.display = 'block';
         currentDriverFilter = null;
         
@@ -666,8 +668,9 @@
                     });
                 }
             }
-            if (hasDrivers) {
+            if (hasDrivers && !mapBoundsInitialized) {
                 mainMap.fitBounds(bounds);
+                mapBoundsInitialized = true;
                 google.maps.event.addListenerOnce(mainMap, 'idle', () => { if (mainMap.getZoom() > 16) mainMap.setZoom(16); });
             }
         });
@@ -675,6 +678,7 @@
 
     function viewDriverRoute(name, e) {
         if(e) e.stopPropagation();
+        mapBoundsInitialized = false;
         
         if(mapAllListener) {
             db.ref('driver_locations').off('value', mapAllListener);
@@ -696,6 +700,7 @@
     }
 
     function closeMap() {
+        mapBoundsInitialized = false;
         document.getElementById('map-modal').style.display = 'none';
         document.getElementById('map-driver-head').style.display = 'none';
         
@@ -1171,7 +1176,10 @@
                             });
                          }
                      });
-                     mainMap.fitBounds(bounds);
+                     if (!mapBoundsInitialized) {
+                        mainMap.fitBounds(bounds);
+                        mapBoundsInitialized = true;
+                     }
                  } else {
                      if(!activePolyline) {
                         mainMap.setCenter(pos);
