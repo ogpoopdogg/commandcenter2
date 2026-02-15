@@ -43,6 +43,10 @@
             --btn-bg: #f0f0f0;
         }
         body.light-mode .hist-time, body.light-mode .stat-label, body.light-mode .archive-title { color: #000000 !important; }
+        
+        /* Light mode specific updates */
+        body.light-mode .route-time-display { color: #000 !important; border-color: #000 !important; box-shadow: none !important; }
+        body.light-mode .back-to-all-btn { background: #fff !important; color: #000 !important; border-color: #000 !important; }
 
         body { 
             font-family: 'Segoe UI', system-ui, sans-serif; /* More professional font stack */
@@ -259,10 +263,10 @@
         }
 
         .history-box { 
+            display: none; /* Default hidden */
             margin-top: 20px; 
             border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2);
             padding: 20px; 
-            display: flex; 
             gap: 20px; 
             flex-wrap: wrap; 
         }
@@ -399,6 +403,9 @@
         .input-wrap { position: relative; width: 100%; display: flex; align-items: center; }
         .copy-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
         .copy-btn:hover { color: var(--accent); }
+
+        .route-time-display { font-size:12px; color:#fff; margin-left:8px; font-weight:800; border:1px solid var(--accent); padding:2px 6px; border-radius:6px; box-shadow:0 0 5px var(--accent); animation:pulse-glow 2s infinite; }
+        .back-to-all-btn { background:#222; border:1px solid var(--accent); color:var(--accent); padding:10px 24px; font-weight:800; border-radius:6px; text-transform:uppercase; cursor:pointer; }
     </style>
 </head>
 <body>
@@ -482,6 +489,7 @@
 </div>
 
 <div id="driver-stats-panel"></div>
+<button id="toggle-active-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleActiveList()">Active Pickups/Deliveries</button>
 
 <div style="display:none;">
     <div id="group-pickup">
@@ -544,12 +552,12 @@
 </div>
 
 <div id="board-panel">
-    <div class="history-box">
+    <div class="history-box" id="active-list-container">
         <div id="filter-reset-ui" style="width:100%; text-align:center; display:none; margin-bottom:15px;">
-            <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:20px; font-weight:900; padding:8px 24px; border-radius:30px; text-transform:uppercase; background:#111; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
+            <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:20px; font-weight:900; padding:8px 24px; border-radius:4px; text-transform:uppercase; background:#111; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
             <div style="display:flex; justify-content:center; gap:15px;">
                 <button id="view-route-btn" class="route-btn" style="display:none;">View Current Route</button>
-                <button onclick="clearDriverFilter()" style="background:#222; border:1px solid var(--accent); color:var(--accent); padding:10px 24px; font-weight:800; border-radius:6px; text-transform:uppercase; cursor:pointer;">Back to All</button>
+                <button onclick="clearDriverFilter()" class="back-to-all-btn">Back to All</button>
             </div>
         </div>
         <div class="archive-column">
@@ -560,6 +568,7 @@
             <div class="archive-title" style="color:var(--active-green);">Deliveries</div>
             <div id="list-deliveries"></div>
         </div>
+        <button onclick="toggleActiveList()" style="width:100%; margin-top:15px; background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:12px; font-weight:800; cursor:pointer; border-radius:6px; text-transform:uppercase;">Minimize Pickups/Deliveries List</button>
     </div>
     <div style="margin-top: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2);">
         <div class="archive-title" style="color: #666; border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
@@ -584,10 +593,9 @@
 
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
-    <button class="close-map" onclick="zoomToDensest()" style="top:130px; background:#004488;">ZOOM QUICK</button>
-    <button class="close-map" onclick="zoomToAll()" style="top:190px; background:#448800;">ZOOM OUT</button>
+    <button class="close-map" onclick="zoomToAll()" style="top:130px; background:#448800;">ZOOM OUT</button>
     <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
-    <div id="map-driver-head" style="position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:3001; background:#000; border:1px solid #fff; padding:10px 20px; font-weight:900; font-size:24px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
+    <div id="map-driver-head" style="position:absolute; top:20px; right:80px; z-index:3001; background:#000; border:1px solid #fff; padding:10px 20px; font-weight:900; font-size:24px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
     <div id="route-list"></div>
     <div id="map"></div>
 </div>
@@ -634,10 +642,22 @@
         localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
     }
 
+    function toggleActiveList() {
+        const list = document.getElementById('active-list-container');
+        if (list.style.display === 'none') {
+            list.style.display = 'flex';
+        } else {
+            list.style.display = 'none';
+        }
+    }
+
     function filterByDriver(name) {
         currentDriverFilter = name;
         renderData();
         
+        // Auto open the list when filtering a driver
+        document.getElementById('active-list-container').style.display = 'flex';
+
         const routeBtn = document.getElementById("view-route-btn");
         if(routeBtn) {
             routeBtn.style.display = "inline-block";
@@ -1562,17 +1582,14 @@
                 const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
 
                 card.innerHTML = `
-                    <div style="display:flex; align-items:flex-start;">
-                        ${badgeHTML}
-                        <div style="flex-grow:1;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                ${driverHTML}
-                                <div style="font-size:10px; color:#666; font-weight:700;">DETAILS</div>
-                            </div>
-                            <div class="hist-name">${contact || 'No Contact'}</div>
-                            <div style="margin-top:2px; font-size:12px; color:#888;">${p.city || 'No City'}</div>
-                            ${p.package_details ? `<div style="font-size:15px; color:#fff; margin-top:5px; font-weight:bold; font-style:normal;">📦 ${p.package_details}</div>` : ''}
+                    <div style="display:flex; flex-direction:column; width:100%;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            ${badgeHTML || '<div></div>'}
+                            ${driverHTML}
                         </div>
+                        <div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${contact || 'No Contact'}</div>
+                        <div style="font-size:11px; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.city || 'No City'}</div>
+                        ${p.package_details ? `<div style="font-size:11px; color:#aaa; margin-top:2px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📦 ${p.package_details}</div>` : ''}
                     </div>
                 `;
                 list.appendChild(card);
@@ -1609,7 +1626,7 @@
                 row.innerHTML = `
                     <div style="display:flex; align-items:center;">
                         <div class="ds-name" style="color:${color};">${driver}</div>
-                        ${duration ? `<span style="font-size:12px; color:#fff; margin-left:8px; font-weight:800; border:1px solid var(--accent); padding:2px 6px; border-radius:6px; box-shadow:0 0 5px var(--accent); animation:pulse-glow 2s infinite;">${duration}</span>` : ''}
+                        ${duration ? `<span class="route-time-display">${duration}</span>` : ''}
                     </div>
                     <div class="stat-info">
                         ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
