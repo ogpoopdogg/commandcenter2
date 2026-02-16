@@ -550,8 +550,9 @@
                 <button class="copy-btn" onclick="copyField('f-pickup')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
             <div class="input-wrap" style="flex: 1;">
-                <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="margin-bottom:0; width:100%;">
+                <input type="text" id="f-city" class="glow-field" placeholder="City/Town" style="margin-bottom:0; width:100%;" oninput="handleCityInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('city-suggestions-p').style.display='none', 200)">
                 <button class="copy-btn" onclick="copyField('f-city')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+                <div id="city-suggestions-p" class="suggestions-box"></div>
             </div>
         </div>
         <div class="flex-row">
@@ -579,8 +580,9 @@
                 <button class="copy-btn" onclick="copyField('f-drop-address')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
             </div>
             <div class="input-wrap" style="flex: 1;">
-                <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="margin-bottom:0; width:100%;">
+                <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" style="margin-bottom:0; width:100%;" oninput="handleCityInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('city-suggestions-d').style.display='none', 200)">
                 <button class="copy-btn" onclick="copyField('f-drop-city')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+                <div id="city-suggestions-d" class="suggestions-box"></div>
             </div>
         </div>
         <div class="flex-row">
@@ -618,6 +620,7 @@
 
     <div class="history-box" id="dnd-list-container" style="display:none; flex-direction:column;">
         <div class="archive-title" style="color:#ff4444;">Active DND/DNP</div>
+        <button id="archive-all-dnd-btn" onclick="archiveAllDND()" style="background:#b71c1c; color:#fff; border:none; padding:10px; font-weight:800; cursor:pointer; border-radius:6px; text-transform:uppercase; margin-bottom:15px; display:none;">Archive All Failed</button>
         <div id="list-dnd"></div>
         <button onclick="toggleDNDList()" style="width:100%; margin-top:15px; background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:12px; font-weight:800; cursor:pointer; border-radius:6px; text-transform:uppercase;">Minimize Active DND/DNP</button>
     </div>
@@ -1107,6 +1110,7 @@
         if(data.customer_email) document.getElementById('f-customer-email-p').value = data.customer_email;
         if(data.customer_phone) document.getElementById('f-customer-phone-p').value = data.customer_phone;
         document.getElementById('suggestions').style.display = 'none';
+        document.getElementById('city-suggestions-p').style.display = 'none';
     }
 
     function handleDropNameInput(val) {
@@ -1127,6 +1131,54 @@
         if(data.customer_email) document.getElementById('f-customer-email-d').value = data.customer_email;
         if(data.customer_phone) document.getElementById('f-customer-phone-d').value = data.customer_phone;
         document.getElementById('drop-suggestions').style.display = 'none';
+        document.getElementById('city-suggestions-d').style.display = 'none';
+    }
+
+    function handleCityInput(val, type) {
+        const boxId = type === 'pickup' ? 'city-suggestions-p' : 'city-suggestions-d';
+        const box = document.getElementById(boxId);
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => {
+            const city = addressData[k].city || "";
+            return city.toLowerCase().startsWith(val.toLowerCase());
+        });
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        const fn = type === 'pickup' ? 'selectClient' : 'selectDropClient';
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="${fn}('${k}')">${k} (${addressData[k].city})</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function archiveAllDND() {
+        if(!confirm("Archive ALL active DND/DNP jobs?")) return;
+        const updates = {};
+        const ts = firebase.database.ServerValue.TIMESTAMP;
+        
+        const check = (list, node) => {
+            Object.keys(list).forEach(id => {
+                const job = list[id];
+                const infoLower = (job.other_info || "").toLowerCase();
+                if(job.status !== 'completed' && (infoLower.includes("dnd") || infoLower.includes("dnp"))) {
+                    updates[`/${node}/${id}/status`] = 'completed';
+                    updates[`/${node}/${id}/completed_at`] = ts;
+                    updates[`/${node}/${id}/last_edit_by`] = currentUser;
+                    updates[`/${node}/${id}/other_info`] = "[ARCHIVED ALL] " + job.other_info;
+                }
+            });
+        };
+        
+        check(rawPickups, 'pickups');
+        check(rawDropoffs, 'dropoffs');
+        
+        if(Object.keys(updates).length > 0) db.ref().update(updates);
+        
+        // Close list immediately
+        const list = document.getElementById('dnd-list-container');
+        const btn = document.getElementById('toggle-dnd-btn');
+        if(list.style.display !== 'none') {
+             list.style.display = 'none';
+             btn.classList.remove('btn-pressed');
+             btn.style.display = 'block';
+        }
     }
 
     function createJob() {
@@ -1157,6 +1209,7 @@
             status: 'pending', 
             assigned_to: assigned, 
             timestamp: Date.now(),
+            created_by: currentUser,
             last_edit_by: currentUser
         };
 
@@ -1168,7 +1221,7 @@
         if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
 
         resetFormFields();
-        document.getElementById('f-driver').value = "Unassigned";
+        // document.getElementById('f-driver').value = "Unassigned";
     }
 
     function viewDetails(id, type) {
@@ -1732,8 +1785,19 @@
         if(dndCount > 0) {
             alertDiv.style.display = 'block';
             alertDiv.innerText = dndCount + " DND/DNP";
+            document.getElementById('archive-all-dnd-btn').style.display = 'block';
         } else {
             alertDiv.style.display = 'none';
+            document.getElementById('archive-all-dnd-btn').style.display = 'none';
+            
+            // Auto minimize logic if open
+            const dListContainer = document.getElementById('dnd-list-container');
+            const dBtn = document.getElementById('toggle-dnd-btn');
+            if (dListContainer.style.display === 'flex') {
+                dListContainer.style.display = 'none';
+                dBtn.classList.remove('btn-pressed');
+                dBtn.style.display = 'block';
+            }
         }
 
         if(pending > 0) {
