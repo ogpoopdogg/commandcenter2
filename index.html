@@ -1054,7 +1054,10 @@
     function resetFormFields() {
         ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => {
             const el = document.getElementById(id);
-            if(el) el.value = "";
+            if(el) {
+                el.value = "";
+                // Reset styling if it was a link field (though this only applies to edit modal, form is fine)
+            }
         });
     }
 
@@ -1224,6 +1227,24 @@
         // document.getElementById('f-driver').value = "Unassigned";
     }
 
+    let pressTimer;
+    function startPress(el) {
+        pressTimer = setTimeout(() => {
+            el.readOnly = false;
+            el.style.color = 'var(--text)';
+            el.style.textDecoration = 'none';
+            el.style.cursor = 'text';
+            el.focus();
+            if(navigator.vibrate) navigator.vibrate(50);
+        }, 1500);
+    }
+    function cancelPress() { clearTimeout(pressTimer); }
+    function handleLinkClick(el, type) {
+        if(el.readOnly && el.value) {
+            window.location.href = (type === 'email' ? 'mailto:' : 'tel:') + el.value;
+        }
+    }
+
     function viewDetails(id, type) {
         const isPickup = type === 'pickup';
         const data = isPickup ? rawPickups[id] : rawDropoffs[id];
@@ -1238,7 +1259,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
                 <div style="display:flex;">
-                    <button onclick="archiveAsFailed('${id}', '${type}')" style="background:var(--accent); color:#000; border:none; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px; margin-right:10px;">ARCHIVE DND/DNP</button>
+                    <button onclick="archiveAsFailed('${id}', '${type}')" style="background:var(--accent); color:#000; border:none; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px; margin-right:10px;">ARCHIVE</button>
                     <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #b71c1c; color:#ff5555; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px;">DELETE</button>
                 </div>
             </div>
@@ -1260,11 +1281,11 @@
                 </div>
                 <div class="flex-row">
                     <div class="input-wrap" style="flex:1.5;">
-                        <input id="e-email-p" type="email" value="${isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%;">
+                        <input id="e-email-p" type="email" value="${isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%; color:#4da6ff; text-decoration:underline; cursor:pointer;" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')">
                         <button class="copy-btn" onclick="copyField('e-email-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                     <div class="input-wrap" style="flex:1;">
-                        <input id="e-phone-p" type="tel" value="${isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
+                        <input id="e-phone-p" type="tel" value="${isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%; color:#4da6ff; text-decoration:underline; cursor:pointer;" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')">
                         <button class="copy-btn" onclick="copyField('e-phone-p')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                 </div>
@@ -1306,11 +1327,11 @@
                 </div>
                 <div class="flex-row">
                     <div class="input-wrap" style="flex:1.5;">
-                        <input id="e-email-d" type="email" value="${!isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%;">
+                        <input id="e-email-d" type="email" value="${!isPickup ? val(data.customer_email) : ''}" placeholder="Email" style="margin-bottom:0; width:100%; color:#4da6ff; text-decoration:underline; cursor:pointer;" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')">
                         <button class="copy-btn" onclick="copyField('e-email-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                     <div class="input-wrap" style="flex:1;">
-                        <input id="e-phone-d" type="tel" value="${!isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%;">
+                        <input id="e-phone-d" type="tel" value="${!isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" style="margin-bottom:0; width:100%; color:#4da6ff; text-decoration:underline; cursor:pointer;" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')">
                         <button class="copy-btn" onclick="copyField('e-phone-d')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                     </div>
                 </div>
@@ -1354,6 +1375,15 @@
         let noteVal = document.getElementById('e-note').value;
         const addVal = document.getElementById('e-add-note').value;
         if(addVal.trim()) noteVal = (noteVal ? noteVal + " " : "") + `[${currentUser}]: ${addVal.trim()}`;
+
+        const newDriver = document.getElementById('e-driver').value;
+        const oldData = type === 'pickup' ? rawPickups[id] : rawDropoffs[id];
+        const oldInfo = (oldData.other_info || "").toLowerCase();
+        
+        if ((oldInfo.includes("dnd") || oldInfo.includes("dnp")) && newDriver !== 'Unassigned') {
+            noteVal = noteVal.replace(/dnd/gi, "").replace(/dnp/gi, ""); 
+            noteVal += ` [reassigned by ${currentUser}]`;
+        }
 
         const updates = {
             assigned_to: document.getElementById('e-driver').value,
