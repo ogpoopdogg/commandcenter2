@@ -667,6 +667,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry"></script>
 
 <script>
@@ -687,6 +688,40 @@
     let currentMode = 'pickup';
     let currentDriverFilter = null;
     let mapBoundsInitialized = false;
+
+    const messaging = firebase.messaging();
+
+    function initCommandNotifications(userEmail) {
+        if ("Notification" in window) {
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    messaging.getToken({ vapidKey: "BMw-sFqU0eX8rUe-..." }).then((currentToken) => {
+                        if (currentToken) {
+                            const sanitizedEmail = userEmail.replace(/[.#$\[\]]/g, "");
+                            db.ref('command_tokens/' + sanitizedEmail).set({
+                                token: currentToken,
+                                user: userEmail,
+                                updated: firebase.database.ServerValue.TIMESTAMP
+                            });
+                            console.log("Command Notification Token Updated");
+                        }
+                    }).catch((err) => console.log('Token Error', err));
+                }
+            });
+
+            messaging.onMessage((payload) => {
+                console.log('Foreground Message:', payload);
+                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+                audio.play();
+                const alertDiv = document.getElementById('header-alert');
+                alertDiv.style.display = 'block';
+                alertDiv.innerText = "⚠️ " + payload.notification.title;
+                setTimeout(() => { 
+                    if(!document.getElementById('list-dnd').innerHTML) alertDiv.style.display = 'none'; 
+                }, 5000);
+            });
+        }
+    }
 
     if (localStorage.getItem('ec_theme') === 'light') {
         document.body.classList.add('light-mode');
@@ -1018,6 +1053,7 @@
                 return;
             }
             currentUser = user.email.split('@')[0];
+            initCommandNotifications(user.email);
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
             
