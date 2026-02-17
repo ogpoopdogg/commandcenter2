@@ -1438,16 +1438,21 @@
         const afManual = document.getElementById('af-manual-search') ? document.getElementById('af-manual-search').value.toLowerCase() : "";
 
         let stopLookup = {};
-        if(currentDriverFilter && driverLocationsData[currentDriverFilter] && driverLocationsData[currentDriverFilter].route_string) {
-            const parts = driverLocationsData[currentDriverFilter].route_string.split(' | ');
-            parts.forEach(p => {
-                const idx = p.indexOf('. ');
-                if(idx > -1) {
-                    const num = parseInt(p.substring(0, idx));
-                    const txt = p.substring(idx+2).trim();
-                    stopLookup[txt] = num;
-                }
-            });
+        if(currentDriverFilter && driverLocationsData[currentDriverFilter]) {
+            const dData = driverLocationsData[currentDriverFilter];
+            if(dData.route_order && Array.isArray(dData.route_order)) {
+                dData.route_order.forEach((jid, idx) => { stopLookup[jid] = idx + 1; });
+            } else if (dData.route_string) {
+                const parts = dData.route_string.split(' | ');
+                parts.forEach(p => {
+                    const idx = p.indexOf('. ');
+                    if(idx > -1) {
+                        const num = parseInt(p.substring(0, idx));
+                        const txt = p.substring(idx+2).trim();
+                        stopLookup[txt] = num;
+                    }
+                });
+            }
         }
 
         if(currentDriverFilter) {
@@ -1543,8 +1548,8 @@
                      path.forEach(p => bounds.extend(p));
                      
                      const driverJobs = [];
-                     Object.values(rawPickups).forEach(j => { if(j.assigned_to === currentDriverFilter && j.status === 'pending') driverJobs.push({...j, type:'pickup'}); });
-                     Object.values(rawDropoffs).forEach(j => { if(j.assigned_to === currentDriverFilter && j.status === 'pending') driverJobs.push({...j, type:'drop'}); });
+                     Object.entries(rawPickups).forEach(([id, j]) => { if(j.assigned_to === currentDriverFilter && j.status === 'pending') driverJobs.push({...j, type:'pickup', id: id}); });
+                     Object.entries(rawDropoffs).forEach(([id, j]) => { if(j.assigned_to === currentDriverFilter && j.status === 'pending') driverJobs.push({...j, type:'drop', id: id}); });
                      
                      const geocoder = new google.maps.Geocoder();
                      
@@ -1554,7 +1559,7 @@
                          const fullAddr = `${addr}, ${job.city || ''}`;
                          
                          const matchKey = job.type === 'pickup' ? `${job.name} ${job.pickup_location}` : `${job.delivery_name} ${job.destination}`;
-                         const sNum = stopLookup[matchKey];
+                         const sNum = stopLookup[job.id] || stopLookup[matchKey];
                          const finalLabel = sNum ? `${sNum}. ${labelText}` : labelText;
 
                          // Clean up old job markers if re-rendering
@@ -1635,10 +1640,8 @@
             
             if(currentDriverFilter) {
                 entries.sort((a, b) => {
-                    const keyA = type === 'pickup' ? `${a[1].name} ${a[1].pickup_location}` : `${a[1].delivery_name} ${a[1].destination}`;
-                    const keyB = type === 'pickup' ? `${b[1].name} ${b[1].pickup_location}` : `${b[1].delivery_name} ${b[1].destination}`;
-                    const numA = stopLookup[keyA] || 999;
-                    const numB = stopLookup[keyB] || 999;
+                    const numA = stopLookup[a[0]] || stopLookup[type === 'pickup' ? `${a[1].name} ${a[1].pickup_location}` : `${a[1].delivery_name} ${a[1].destination}`] || 999;
+                    const numB = stopLookup[b[0]] || stopLookup[type === 'pickup' ? `${b[1].name} ${b[1].pickup_location}` : `${b[1].delivery_name} ${b[1].destination}`] || 999;
                     return numA - numB;
                 });
             } else {
@@ -1726,7 +1729,7 @@
                         `<span style="color:#ff4444; font-weight:800; font-size:11px;">UNASSIGNED / FAILED</span>`;
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
                     const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
-                    const sNum = stopLookup[matchKey];
+                    const sNum = stopLookup[id] || stopLookup[matchKey];
                     const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
 
                     dndCard.innerHTML = `
@@ -1788,7 +1791,7 @@
                 
                 // Badge Logic
                 const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
-                const sNum = stopLookup[matchKey];
+                const sNum = stopLookup[id] || stopLookup[matchKey];
                 const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
 
                 card.innerHTML = `
