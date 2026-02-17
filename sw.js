@@ -1,3 +1,30 @@
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
+  authDomain: "eandccourier-36fcc.firebaseapp.com",
+  databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
+  projectId: "eandccourier-36fcc",
+  messagingSenderId: "103953800507"
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  console.log('[sw.js] Background message: ', payload);
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: 'icon2.png',
+    data: payload.data,
+    requireInteraction: true,
+    tag: payload.data.jobId
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
 // Minimal Service Worker to enable PWA Installability
 self.addEventListener('install', (e) => {
   e.waitUntil(
