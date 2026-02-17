@@ -465,6 +465,7 @@
             <div class="crt-animate" style="display: flex; align-items: center;">
                 <img src="icon2.png" class="header-logo" alt="E&C Logo">
                 <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
+                <button class="route-btn" onclick="toggleTerritoryMode()" style="margin-left:15px; background:#444; color:#fff; border:1px solid #666;">Draw Boundaries</button>
             </div>
             <div style="display:flex; flex-direction:column; margin-left:15px; justify-content:center;">
                 <div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:900; animation:dot-pulse 1s infinite; font-size:11px; margin-bottom:2px;"></div>
@@ -533,6 +534,12 @@
 </div>
 
 <div id="driver-stats-panel"></div>
+
+<div id="warehouse-panel" style="margin: 0 15px 20px; border: 2px solid var(--note-blue); border-radius: 8px; padding: 15px; background: #001a33; display:none;">
+    <div class="archive-title" style="color:var(--note-blue); border-bottom:1px solid var(--note-blue); margin-bottom:10px;">Warehouse Queue (At Shop)</div>
+    <div id="list-warehouse" style="display:flex; flex-direction:column; gap:8px;"></div>
+</div>
+
 <button id="toggle-active-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleActiveList()">Active Pickups/Deliveries</button>
 <button id="toggle-dnd-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleDNDList()">Active DND/DNP</button>
 
@@ -668,7 +675,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing"></script>
 <script>
     firebase.initializeApp({
         apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
@@ -685,10 +692,14 @@
     let driverLocationsData = {};
     let addressData = {};
     let deliveryData = {};
+    let territoryPolygons = {};
+    let drawingManager;
+    let isTerritoryMode = false;
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
     let currentDriverFilter = null;
     let mapBoundsInitialized = false;
+    const SHOP_LOCATION = { lat: 49.8485, lng: -99.9501 };
 
     const messaging = firebase.messaging();
 
@@ -734,6 +745,30 @@
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
         localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    }
+
+    function toggleTerritoryMode() {
+        isTerritoryMode = !isTerritoryMode;
+        if(isTerritoryMode) {
+            openMap();
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                drawingControl: true,
+                polygonOptions: { fillColor: '#cca300', fillOpacity: 0.3, strokeWeight: 2, editable: true }
+            });
+            drawingManager.setMap(mainMap);
+            google.maps.event.addListener(drawingManager, 'polygoncomplete', function(poly) {
+                const dName = prompt("Assign this territory to which driver? (Matt, Touch, Julian, Jess, Alysha, Kayla)");
+                if(dName) {
+                    const path = poly.getPath().getArray().map(p => ({lat: p.lat(), lng: p.lng()}));
+                    db.ref('territories').child(dName).set(path);
+                }
+                poly.setMap(null);
+            });
+        } else {
+            if(drawingManager) drawingManager.setMap(null);
+            closeMap();
+        }
     }
 
     function toggleActiveList() {
@@ -1075,8 +1110,39 @@
                 renderData();
             });
 
+            db.ref("territories").on("value", snap => {
+                const data = snap.val() || {};
+                territoryPolygons = {};
+                for(let dName in data) {
+                    territoryPolygons[dName] = new google.maps.Polygon({ paths: data[dName] });
+                }
+            });
+
             db.ref("driver_locations").on("value", snapshot => {
                 driverLocationsData = snapshot.val() || {};
+                
+                // GEOFENCE LOGIC
+                Object.keys(driverLocationsData).forEach(dName => {
+                    const dLoc = driverLocationsData[dName];
+                    const dist = google.maps.geometry.spherical.computeDistanceBetween(
+                        new google.maps.LatLng(dLoc.lat, dLoc.lng),
+                        new google.maps.LatLng(SHOP_LOCATION.lat, SHOP_LOCATION.lng)
+                    );
+                    
+                    if(dist < 150) {
+                        const check = (list, node) => {
+                            Object.keys(list).forEach(jid => {
+                                const job = list[jid];
+                                if(job.assigned_to === dName && job.status === 'picked_up') {
+                                    db.ref(node).child(jid).update({ status: 'at_shop', last_edit_by: 'SYSTEM_GEOFENCE' });
+                                }
+                            });
+                        };
+                        check(rawPickups, 'pickups');
+                        check(rawDropoffs, 'dropoffs');
+                    }
+                });
+
                 renderData();
             });
         } else {
@@ -1397,7 +1463,7 @@
     
     function archiveAsFailed(id, type) {
         if(confirm("Archive this job as Failed (Unassigned)?")) {
-             const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+            const node = type === 'pickup' ? 'pickups' : 'dropoffs';
              const existingNote = (type === 'pickup' ? rawPickups[id] : rawDropoffs[id])?.other_info || "";
              db.ref(node).child(id).update({
                  status: 'completed',
@@ -1455,13 +1521,33 @@
         }
     }
 
+    function autoRouteJob(id, type, job) {
+        const destStr = `${job.destination}, ${job.city}, MB`;
+        new google.maps.Geocoder().geocode({address: destStr}, (results, status) => {
+            if(status === 'OK') {
+                const pt = results[0].geometry.location;
+                for(let dName in territoryPolygons) {
+                    if(google.maps.geometry.poly.containsLocation(pt, territoryPolygons[dName])) {
+                        db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).update({
+                            assigned_to: dName,
+                            status: 'pending',
+                            last_edit_by: 'AUTO_ROUTER'
+                        });
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
     function renderData() {
         const pList = document.getElementById("list-pickups"); 
         const dList = document.getElementById("list-deliveries");
+        const wList = document.getElementById("list-warehouse");
         const statsPanel = document.getElementById("driver-stats-panel");
         const searchTerm = document.getElementById("archive-search") ? document.getElementById("archive-search").value.toLowerCase() : "";
         
-        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = "";
+        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = ""; wList.innerHTML = "";
         document.getElementById("list-archive").innerHTML = "";
 
         // DND LIST CLEAR
@@ -1654,6 +1740,7 @@
         }
         
         let pending = 0, assignedCount = 0, noteCount = 0;
+        let warehouseCount = 0;
         let driverStats = {};
         let dndCount = 0;
 
@@ -1692,6 +1779,26 @@
                 // Filter logic
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.customer_email||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm) && p.status !== 'completed') return;
+
+                // WAREHOUSE / AT SHOP logic
+                if(p.status === 'at_shop') {
+                    warehouseCount++;
+                    const card = document.createElement("div");
+                    card.className = "history-item";
+                    card.style.background = "#002b52";
+                    card.style.borderLeft = "4px solid var(--note-blue)";
+                    card.onclick = () => viewDetails(id, type);
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="font-weight:800; color:var(--note-blue); font-size:11px;">READY FOR ROUTING</span>
+                            <span style="font-size:11px; color:#fff; font-weight:800; cursor:pointer;" onclick="autoRouteJob('${id}', '${type}', ${JSON.stringify(p).replace(/"/g, '&quot;')}); event.stopPropagation();">AUTO-ASSIGN</span>
+                        </div>
+                        <div style="color:#fff; font-size:13px; font-weight:700; margin-top:4px;">${type==='pickup'?p.name:p.delivery_name}</div>
+                        <div style="color:#888; font-size:11px;">${p.destination || p.pickup_location}</div>
+                    `;
+                    document.getElementById("list-warehouse").appendChild(card);
+                    return;
+                }
 
                 // DND/DNP LOGIC for DND LIST
                 const infoLower = (p.other_info || "").toLowerCase();
@@ -1852,6 +1959,8 @@
         processJobs(rawPickups, 'pickup');
         processJobs(rawDropoffs, 'delivery');
         
+        document.getElementById('warehouse-panel').style.display = warehouseCount > 0 ? 'block' : 'none';
+
         const alertDiv = document.getElementById('header-alert');
         const unassignedDiv = document.getElementById('header-unassigned');
         
