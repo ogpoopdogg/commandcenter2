@@ -679,6 +679,7 @@
         appId: "1:1067680083511:android:22d1eb3757302492bd19b2" 
     });
    const db = firebase.database();
+    let swReg = null;    
     let rawPickups = {};
     let rawDropoffs = {};
     let driverLocationsData = {};
@@ -695,8 +696,11 @@
         if ("Notification" in window) {
             Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
-                    messaging.getToken({ vapidKey: "BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI" }).then((currentToken) => {
-                        if (currentToken) {
+                    messaging.getToken({ 
+        serviceWorkerRegistration: swReg,
+        vapidKey: "BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI" 
+    }).then((currentToken) => {
+        if (currentToken) {
                             const sanitizedEmail = userEmail.replace(/[.#$\[\]]/g, "");
                             db.ref('command_tokens/' + sanitizedEmail).set({
                                 token: currentToken,
@@ -1948,19 +1952,17 @@
       }
     });
 
-  if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            // Register with an explicit path to the subfolder
-            navigator.serviceWorker.register('/commandcenter2/firebase-messaging-sw.js')
-                .then((registration) => {
-                    console.log('Service Worker registered with scope:', registration.scope);
-                    // Force Firebase to use this specific registration
-                    messaging.useServiceWorker(registration);
-                })
-                .catch((err) => {
-                    console.error('Service Worker registration failed:', err);
-                });
-        });
+ if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // Change './sw.js' to './firebase-messaging-sw.js'
+        navigator.serviceWorker.register('./firebase-messaging-sw.js')
+          .then(reg => {
+            console.log('SW Registered');
+            swReg = reg; // This fills the global variable we made
+            messaging.useServiceWorker(reg);
+          })
+          .catch(err => console.log('SW Error', err));
+      });
     }
 </script>
 </body>
