@@ -1,5 +1,6 @@
 {
   "name": "E&C Command Center",
+  "gcm_sender_id": "103953800507",
   "short_name": "E&C Admin",
   "start_url": "./index.html",
   "display": "standalone",
