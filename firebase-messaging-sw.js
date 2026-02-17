@@ -12,27 +12,23 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('[sw.js] Background message: ', payload);
+  console.log('[firebase-messaging-sw.js] Background message received ', payload);
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
     icon: 'icon2.png',
     data: payload.data,
     requireInteraction: true,
-    tag: payload.data.jobId
+    tag: payload.data.jobId 
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Minimal Service Worker to enable PWA Installability
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open('ec-command-store').then((cache) => cache.addAll([
-      './',
-      './index.html',
-      './manifest.json',
-      './icon2.png'
+      './', './index.html', './manifest.json', './icon2.png'
     ]))
   );
 });
