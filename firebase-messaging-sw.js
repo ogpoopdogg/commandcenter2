@@ -6,8 +6,9 @@ firebase.initializeApp({
   authDomain: "eandccourier-36fcc.firebaseapp.com",
   databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
   projectId: "eandccourier-36fcc",
-  messagingSenderId: "103953800507"
-});
+  messagingSenderId: "1067680083511",
+  appId: "1:1067680083511:android:22d1eb3757302492bd19b2"
+    });
 
 const messaging = firebase.messaging();
 
