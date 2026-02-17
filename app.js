@@ -9,6 +9,11 @@ let currentMode = 'pickup';
 let currentDriverFilter = null;
 let mapBoundsInitialized = false;
 
+// Geofencing Variables
+let drawingManager;
+let geofencePolygons = [];
+let cachedGeofences = {};
+
 function initCommandNotifications(userEmail) {
     if ("Notification" in window) {
         Notification.requestPermission().then((permission) => {
@@ -207,6 +212,58 @@ function openMap() {
             gestureHandling: "greedy",
             styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
         });
+
+        // Init Drawing Manager
+        drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: null,
+            drawingControl: false,
+            polygonOptions: {
+                fillColor: '#ffff00',
+                fillOpacity: 0.3,
+                strokeWeight: 2,
+                clickable: false,
+                editable: true,
+                zIndex: 1
+            }
+        });
+        drawingManager.setMap(mainMap);
+
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+            if (event.type == 'polygon') {
+                drawingManager.setDrawingMode(null);
+                const driverName = prompt("Enter Driver Name for this Zone:");
+                if (driverName) {
+                    const path = event.overlay.getPath().getArray().map(coord => ({lat: coord.lat(), lng: coord.lng()}));
+                    saveGeofence(driverName, path);
+                    event.overlay.setMap(null); // Remove original, it will reload from DB
+                } else {
+                    event.overlay.setMap(null);
+                }
+            }
+        });
+    }
+
+    // Render Geofences
+    geofencePolygons.forEach(p => p.setMap(null));
+    geofencePolygons = [];
+    
+    const dColors = {
+        'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5',
+        'Jess': '#FF69B4', 'Alysha': '#9C27B0', 'Kayla': '#E91E63'
+    };
+
+    for(let name in cachedGeofences) {
+        const color = dColors[name] || '#999999';
+        const poly = new google.maps.Polygon({
+            paths: cachedGeofences[name],
+            strokeColor: color,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: color,
+            fillOpacity: 0.25,
+            map: mainMap
+        });
+        geofencePolygons.push(poly);
     }
     
     for(let k in mapMarkers) { if(mapMarkers[k]) mapMarkers[k].setMap(null); }
@@ -251,6 +308,28 @@ function openMap() {
     });
 }
 
+function toggleDrawingMode() {
+    if (!drawingManager) return;
+    const currentMode = drawingManager.getDrawingMode();
+    if (currentMode) {
+        drawingManager.setDrawingMode(null);
+        drawingManager.setOptions({drawingControl: false});
+    } else {
+        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+        drawingManager.setOptions({
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: ['polygon']
+            }
+        });
+    }
+}
+
+function saveGeofence(name, path) {
+    db.ref('driver_geofences/' + name).set(path);
+}
+
 function viewDriverRoute(name, e) {
     if(e) e.stopPropagation();
     mapBoundsInitialized = false;
@@ -278,6 +357,10 @@ function closeMap() {
     mapBoundsInitialized = false;
     document.getElementById('map-modal').style.display = 'none';
     document.getElementById('map-driver-head').style.display = 'none';
+    if(drawingManager) {
+        drawingManager.setDrawingMode(null);
+        drawingManager.setOptions({drawingControl: false});
+    }
     
     if(mapAllListener) {
         db.ref('driver_locations').off('value', mapAllListener);
@@ -380,6 +463,13 @@ firebase.auth().onAuthStateChanged((user) => {
         
         db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
         
+        // Listen for Geofences
+        db.ref("driver_geofences").on("value", snap => {
+            cachedGeofences = snap.val() || {};
+            // Refresh map if open
+            if(document.getElementById('map-modal').style.display === 'block') openMap();
+        });
+
         const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
         db.ref("pickups").orderByChild("timestamp").startAt(sevenDaysAgo).on("value", snapshot => {
@@ -549,7 +639,7 @@ function createJob() {
     const city = document.getElementById('f-city').value;
     const name = document.getElementById('f-name').value;
     const dropName = document.getElementById('f-drop-name').value;
-    const assigned = document.getElementById('f-driver').value;
+    let assigned = document.getElementById('f-driver').value;
     const infoRaw = document.getElementById('f-info').value;
     const info = infoRaw ? `[${currentUser}]: ${infoRaw}` : "";
     const email = currentMode === 'pickup' ? document.getElementById('f-customer-email-p').value : document.getElementById('f-customer-email-d').value;
@@ -557,31 +647,55 @@ function createJob() {
 
     if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert("Please complete either the full Pickup section or full Delivery section.");
 
-    const jobData = {
-        city: city || dropCity, pickup_location: pickup, destination: drop,
-        delivery_name: dropName,
-        package_details: document.getElementById('f-pkg-details').value,
-        po_number: document.getElementById('f-po').value,
-        name: name,
-        other_info: info,
-        customer_email: email || "",
-        customer_phone: phone || "",
-        status: 'pending', 
-        assigned_to: assigned, 
-        timestamp: Date.now(),
-        created_by: currentUser,
-        last_edit_by: currentUser
+    const finalizeJob = (finalDriver) => {
+        const jobData = {
+            city: city || dropCity, pickup_location: pickup, destination: drop,
+            delivery_name: dropName,
+            package_details: document.getElementById('f-pkg-details').value,
+            po_number: document.getElementById('f-po').value,
+            name: name,
+            other_info: info,
+            customer_email: email || "",
+            customer_phone: phone || "",
+            status: 'pending', 
+            assigned_to: finalDriver, 
+            timestamp: Date.now(),
+            created_by: currentUser,
+            last_edit_by: currentUser
+        };
+
+        const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
+        db.ref(targetNode).push(jobData);
+        
+        // Save addresses for autosuggest
+        if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
+        if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
+
+        resetFormFields();
     };
 
-    const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
-    db.ref(targetNode).push(jobData);
-    
-    // Save addresses for autosuggest
-    if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
-    if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
-
-    resetFormFields();
-    // document.getElementById('f-driver').value = "Unassigned";
+    // Auto Dispatch Logic
+    if (dropAddr && (assigned === 'Unassigned' || !assigned)) {
+        const geocoder = new google.maps.Geocoder();
+        const addressToCode = dropAddr + (dropCity ? ", " + dropCity : "");
+        
+        geocoder.geocode({ 'address': addressToCode }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+                const loc = results[0].geometry.location;
+                // Check Geofences
+                for (let dName in cachedGeofences) {
+                    const poly = new google.maps.Polygon({paths: cachedGeofences[dName]});
+                    if (google.maps.geometry.poly.containsLocation(loc, poly)) {
+                        assigned = dName;
+                        break;
+                    }
+                }
+            }
+            finalizeJob(assigned);
+        });
+    } else {
+        finalizeJob(assigned);
+    }
 }
 
 let pressTimer;
