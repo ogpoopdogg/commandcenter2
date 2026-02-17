@@ -647,7 +647,7 @@ function createJob() {
 
     if(!(name && pickup && city) && !(dropName && dropAddr && dropCity)) return alert("Please complete either the full Pickup section or full Delivery section.");
 
-    const finalizeJob = (finalDriver) => {
+    const finalizeJob = (finalDriver, zone) => {
         const jobData = {
             city: city || dropCity, pickup_location: pickup, destination: drop,
             delivery_name: dropName,
@@ -659,6 +659,7 @@ function createJob() {
             customer_phone: phone || "",
             status: 'pending', 
             assigned_to: finalDriver, 
+            delivery_zone: zone || "Unknown",
             timestamp: Date.now(),
             created_by: currentUser,
             last_edit_by: currentUser
@@ -680,6 +681,7 @@ function createJob() {
         const addressToCode = dropAddr + (dropCity ? ", " + dropCity : "");
         
         geocoder.geocode({ 'address': addressToCode }, (results, status) => {
+            let detectedZone = null;
             if (status === 'OK' && results[0]) {
                 const loc = results[0].geometry.location;
                 // Check Geofences
@@ -687,14 +689,15 @@ function createJob() {
                     const poly = new google.maps.Polygon({paths: cachedGeofences[dName]});
                     if (google.maps.geometry.poly.containsLocation(loc, poly)) {
                         assigned = dName;
+                        detectedZone = dName;
                         break;
                     }
                 }
             }
-            finalizeJob(assigned);
+            finalizeJob(assigned, detectedZone);
         });
     } else {
-        finalizeJob(assigned);
+        finalizeJob(assigned, null);
     }
 }
 
@@ -725,12 +728,11 @@ function viewDetails(id, type) {
     const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
     const driverOpts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 
-    // UPDATED: EDIT FORM STRUCTURE TO MATCH MAIN DISPATCH FORM EXACTLY
     const html = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
             <div style="display:flex;">
-                <button onclick="archiveAsFailed('${id}', '${type}')" style="background:var(--accent); color:#000; border:none; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px; margin-right:10px;">ARCHIVE</button>
+                <button onclick="archiveAsFailed('${id}', '${type}')" style="background:var(--accent); color:#000; border:none; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px; margin-right:10px;">${isPickup ? 'MARK PICKED UP' : 'ARCHIVE'}</button>
                 <button onclick="deleteJob('${id}', '${type}')" style="background:transparent; border:1px solid #b71c1c; color:#ff5555; padding:8px 14px; font-weight:700; cursor:pointer; font-size:12px; border-radius:4px;">DELETE</button>
             </div>
         </div>
@@ -827,18 +829,29 @@ function viewDetails(id, type) {
 }
 
 function archiveAsFailed(id, type) {
-    if(confirm("Archive this job as Failed (Unassigned)?")) {
-            const node = type === 'pickup' ? 'pickups' : 'dropoffs';
-            const existingNote = (type === 'pickup' ? rawPickups[id] : rawDropoffs[id])?.other_info || "";
-            db.ref(node).child(id).update({
-                status: 'completed',
-                assigned_to: 'Unassigned',
-                completed_at: firebase.database.ServerValue.TIMESTAMP,
-                other_info: "[ARCHIVED DND/DNP] " + existingNote,
+    if (type === 'pickup') {
+        if(confirm("Mark this Pickup as SUCCESSFULLY PICKED UP?")) {
+            db.ref('pickups').child(id).update({
+                pickup_status: 'picked_up',
                 last_edit_by: currentUser
             });
             document.getElementById('detailsModal').style.display = 'none';
             document.body.style.overflow = '';
+        }
+    } else {
+        if(confirm("Archive this job as Failed (Unassigned)?")) {
+                const node = 'dropoffs';
+                const existingNote = rawDropoffs[id]?.other_info || "";
+                db.ref(node).child(id).update({
+                    status: 'completed',
+                    assigned_to: 'Unassigned',
+                    completed_at: firebase.database.ServerValue.TIMESTAMP,
+                    other_info: "[ARCHIVED DND/DNP] " + existingNote,
+                    last_edit_by: currentUser
+                });
+                document.getElementById('detailsModal').style.display = 'none';
+                document.body.style.overflow = '';
+        }
     }
 }
 
@@ -1265,6 +1278,9 @@ function renderData() {
             const sNum = stopLookup[id] || stopLookup[matchKey];
             const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
 
+            // Picked Up Logic
+            const pickedUpLabel = p.pickup_status === 'picked_up' ? `<div class="picked-up-badge">PICKED UP BY ${p.assigned_to.toUpperCase()}</div>` : '';
+
             card.innerHTML = `
                 <div style="display:flex; flex-direction:column; width:100%;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -1274,6 +1290,7 @@ function renderData() {
                     <div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${contact || 'No Contact'}</div>
                     <div style="font-size:11px; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.city || 'No City'}</div>
                     ${p.package_details ? `<div style="font-size:11px; color:#aaa; margin-top:2px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📦 ${p.package_details}</div>` : ''}
+                    ${pickedUpLabel}
                 </div>
             `;
             list.appendChild(card);
