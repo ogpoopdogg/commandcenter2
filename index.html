@@ -1948,17 +1948,19 @@
       }
     });
 
-   if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        // Register the specific filename
-        navigator.serviceWorker.register('firebase-messaging-sw.js')
-          .then(reg => {
-            console.log('SW Registered');
-            // This line tells Firebase to use this specific registration
-            messaging.useServiceWorker(reg);
-          })
-          .catch(err => console.log('SW Error', err));
-      });
+  if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            // Register with an explicit path to the subfolder
+            navigator.serviceWorker.register('/commandcenter2/firebase-messaging-sw.js')
+                .then((registration) => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                    // Force Firebase to use this specific registration
+                    messaging.useServiceWorker(registration);
+                })
+                .catch((err) => {
+                    console.error('Service Worker registration failed:', err);
+                });
+        });
     }
 </script>
 </body>
