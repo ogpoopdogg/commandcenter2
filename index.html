@@ -465,7 +465,6 @@
             <div class="crt-animate" style="display: flex; align-items: center;">
                 <img src="icon2.png" class="header-logo" alt="E&C Logo">
                 <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
-                <button class="route-btn" onclick="toggleTerritoryMode()" style="margin-left:15px; background:#444; color:#fff; border:1px solid #666;">Draw Boundaries</button>
             </div>
             <div style="display:flex; flex-direction:column; margin-left:15px; justify-content:center;">
                 <div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:900; animation:dot-pulse 1s infinite; font-size:11px; margin-bottom:2px;"></div>
@@ -510,10 +509,11 @@
         <option value="Alysha">Alysha</option>
         <option value="Kayla">Kayla</option>
     </select>
-    <div style="display: flex; gap: 12px;">
+    <div style="display: flex; gap: 12px; margin-bottom:10px;">
         <button class="primary super-dispatch" onclick="createJob()" style="flex: 1;">Dispatch</button>
         <button id="voice-btn" onclick="startVoiceEntry()" style="width: 60px; background: #111; border: 1px solid #444; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
     </div>
+    <button class="primary" style="background:#444; color:#fff; border-bottom:3px solid #666; font-size:12px; padding:10px;" onclick="toggleTerritoryManager()">Draw Boundaries</button>
     
     <div style="display: flex; justify-content: space-around; align-items: center; gap: 10px; margin-top: 15px;">
         <div id="pending-box" class="stat-box" onclick="requestNotifyPermission()" style="cursor:pointer;">
@@ -534,12 +534,6 @@
 </div>
 
 <div id="driver-stats-panel"></div>
-
-<div id="warehouse-panel" style="margin: 0 15px 20px; border: 2px solid var(--note-blue); border-radius: 8px; padding: 15px; background: #001a33; display:none;">
-    <div class="archive-title" style="color:var(--note-blue); border-bottom:1px solid var(--note-blue); margin-bottom:10px;">Warehouse Queue (At Shop)</div>
-    <div id="list-warehouse" style="display:flex; flex-direction:column; gap:8px;"></div>
-</div>
-
 <button id="toggle-active-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleActiveList()">Active Pickups/Deliveries</button>
 <button id="toggle-dnd-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleDNDList()">Active DND/DNP</button>
 
@@ -606,6 +600,11 @@
 </div>
 
 <div id="board-panel">
+    <div class="history-box" id="warehouse-list-container" style="display:none; flex-direction:column; margin-bottom:20px;">
+        <div class="archive-title" style="color:var(--pro-blue);">Warehouse Queue (At Shop)</div>
+        <div id="list-warehouse"></div>
+    </div>
+
     <div class="history-box" id="active-list-container">
         <div id="filter-reset-ui" style="width:100%; text-align:center; display:none; margin-bottom:15px;">
             <div id="selected-driver-label" style="display:none; margin: 0 auto 25px auto; width:fit-content; font-size:20px; font-weight:900; padding:8px 24px; border-radius:4px; text-transform:uppercase; background:#111; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
@@ -692,14 +691,17 @@
     let driverLocationsData = {};
     let addressData = {};
     let deliveryData = {};
-    let territoryPolygons = {};
-    let drawingManager;
-    let isTerritoryMode = false;
     let currentUser = localStorage.getItem('ec_command_user');
     let currentMode = 'pickup';
     let currentDriverFilter = null;
     let mapBoundsInitialized = false;
-    const SHOP_LOCATION = { lat: 49.8485, lng: -99.9501 };
+
+    // AUTOMATION GLOBALS
+    let drawingManager;
+    let territories = {};
+    const SHOP_LOCATION = { lat: 49.8485, lng: -99.9501 }; // Example Brandon Shop
+    const SHOP_RADIUS = 300; // meters
+    let shopArrivals = {}; // Debounce tracking
 
     const messaging = firebase.messaging();
 
@@ -745,30 +747,6 @@
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
         localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-    }
-
-    function toggleTerritoryMode() {
-        isTerritoryMode = !isTerritoryMode;
-        if(isTerritoryMode) {
-            openMap();
-            drawingManager = new google.maps.drawing.DrawingManager({
-                drawingMode: google.maps.drawing.OverlayType.POLYGON,
-                drawingControl: true,
-                polygonOptions: { fillColor: '#cca300', fillOpacity: 0.3, strokeWeight: 2, editable: true }
-            });
-            drawingManager.setMap(mainMap);
-            google.maps.event.addListener(drawingManager, 'polygoncomplete', function(poly) {
-                const dName = prompt("Assign this territory to which driver? (Matt, Touch, Julian, Jess, Alysha, Kayla)");
-                if(dName) {
-                    const path = poly.getPath().getArray().map(p => ({lat: p.lat(), lng: p.lng()}));
-                    db.ref('territories').child(dName).set(path);
-                }
-                poly.setMap(null);
-            });
-        } else {
-            if(drawingManager) drawingManager.setMap(null);
-            closeMap();
-        }
     }
 
     function toggleActiveList() {
@@ -925,6 +903,7 @@
                 gestureHandling: "greedy",
                 styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
             });
+            initTerritoryVisuals();
         }
         
         for(let k in mapMarkers) { if(mapMarkers[k]) mapMarkers[k].setMap(null); }
@@ -946,6 +925,9 @@
                 const dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
                 const markerLabelText = `${name}\n${timeStr} | ${dateStr}`;
                 
+                // GEOFENCE CHECK
+                checkShopGeofence(name, pos);
+
                 bounds.extend(pos);
                 hasDrivers = true;
 
@@ -986,6 +968,7 @@
                 gestureHandling: "greedy",
                 styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ]
             });
+            initTerritoryVisuals();
         }
         
         renderData();
@@ -1097,6 +1080,7 @@
             document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
             
             db.ref("address_lookup").on("value", snap => { addressData = snap.val() || {}; });
+            db.ref("territories").on("value", snap => { territories = snap.val() || {}; initTerritoryVisuals(); });
             
             const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
@@ -1110,39 +1094,8 @@
                 renderData();
             });
 
-            db.ref("territories").on("value", snap => {
-                const data = snap.val() || {};
-                territoryPolygons = {};
-                for(let dName in data) {
-                    territoryPolygons[dName] = new google.maps.Polygon({ paths: data[dName] });
-                }
-            });
-
             db.ref("driver_locations").on("value", snapshot => {
                 driverLocationsData = snapshot.val() || {};
-                
-                // GEOFENCE LOGIC
-                Object.keys(driverLocationsData).forEach(dName => {
-                    const dLoc = driverLocationsData[dName];
-                    const dist = google.maps.geometry.spherical.computeDistanceBetween(
-                        new google.maps.LatLng(dLoc.lat, dLoc.lng),
-                        new google.maps.LatLng(SHOP_LOCATION.lat, SHOP_LOCATION.lng)
-                    );
-                    
-                    if(dist < 150) {
-                        const check = (list, node) => {
-                            Object.keys(list).forEach(jid => {
-                                const job = list[jid];
-                                if(job.assigned_to === dName && job.status === 'picked_up') {
-                                    db.ref(node).child(jid).update({ status: 'at_shop', last_edit_by: 'SYSTEM_GEOFENCE' });
-                                }
-                            });
-                        };
-                        check(rawPickups, 'pickups');
-                        check(rawDropoffs, 'dropoffs');
-                    }
-                });
-
                 renderData();
             });
         } else {
@@ -1322,15 +1275,104 @@
             last_edit_by: currentUser
         };
 
-        const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
-        db.ref(targetNode).push(jobData);
+        // AUTO-PILOT GEOLOCATION FOR PICKUPS
+        if(currentMode === 'pickup' && dropAddr) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({'address': `${dropAddr}, ${dropCity}`}, (results, status) => {
+                if(status === 'OK') {
+                    jobData.pending_delivery_data = {
+                        name: dropName,
+                        address: dropAddr,
+                        city: dropCity,
+                        lat: results[0].geometry.location.lat(),
+                        lng: results[0].geometry.location.lng()
+                    };
+                }
+                const targetNode = 'pickups';
+                db.ref(targetNode).push(jobData);
+            });
+        } else {
+            const targetNode = currentMode === 'pickup' ? 'pickups' : 'dropoffs';
+            db.ref(targetNode).push(jobData);
+        }
         
         // Save addresses for autosuggest
         if(name) db.ref("address_lookup").child(name.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: pickup, city: city, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
         if(dropName) db.ref("address_lookup").child(dropName.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: document.getElementById('f-drop-address').value, city: document.getElementById('f-drop-city').value, customer_email: email || "", customer_phone: phone || "", last_edit_by: currentUser });
 
         resetFormFields();
-        // document.getElementById('f-driver').value = "Unassigned";
+    }
+
+    // AUTO-PILOT FUNCTIONS
+    function toggleTerritoryManager() {
+        if(!mainMap) { openMap(); setTimeout(toggleTerritoryManager, 500); return; }
+        if(!drawingManager) {
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                drawingControl: true,
+                drawingControlOptions: { position: google.maps.ControlPosition.TOP_CENTER, drawingModes: ['polygon'] }
+            });
+            google.maps.event.addListener(drawingManager, 'overlaycomplete', (event) => {
+                const driver = prompt("Which driver owns this territory?");
+                if(driver) {
+                    const coords = event.overlay.getPath().getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
+                    db.ref("territories").child(driver).set(coords);
+                }
+                event.overlay.setMap(null);
+            });
+        }
+        drawingManager.setMap(drawingManager.getMap() ? null : mainMap);
+    }
+
+    function initTerritoryVisuals() {
+        if(!mainMap) return;
+        const dColors = { 'Matt': '#FF8C00', 'Touch': '#00BFFF', 'Julian': '#3F51B5', 'Jess': '#FF69B4', 'Alysha': '#9C27B0', 'Kayla': '#E91E63' };
+        Object.keys(territories).forEach(driver => {
+            new google.maps.Polygon({
+                paths: territories[driver],
+                strokeColor: dColors[driver] || '#fff',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: dColors[driver] || '#fff',
+                fillOpacity: 0.2,
+                map: mainMap
+            });
+        });
+    }
+
+    function checkShopGeofence(driverName, pos) {
+        const dist = google.maps.geometry.spherical.computeDistanceBetween(new google.maps.LatLng(pos.lat, pos.lng), new google.maps.LatLng(SHOP_LOCATION.lat, SHOP_LOCATION.lng));
+        const now = Date.now();
+        if(dist < SHOP_RADIUS) {
+            if(!shopArrivals[driverName] || (now - shopArrivals[driverName] > 300000)) { // 5 min debounce
+                shopArrivals[driverName] = now;
+                autoUnloadDriver(driverName);
+            }
+        }
+    }
+
+    function autoUnloadDriver(driverName) {
+        Object.keys(rawPickups).forEach(id => {
+            const p = rawPickups[id];
+            if(p.assigned_to === driverName && p.status === 'picked_up') {
+                db.ref("pickups").child(id).update({ status: 'at_shop', last_edit_by: 'AUTO-PILOT' });
+                if(p.pending_delivery_data && p.pending_delivery_data.lat) {
+                    assignTerritoryDriver(id, p);
+                }
+            }
+        });
+    }
+
+    function assignTerritoryDriver(jobId, jobData) {
+        const loc = new google.maps.LatLng(jobData.pending_delivery_data.lat, jobData.pending_delivery_data.lng);
+        let assignedDriver = 'Unassigned';
+        Object.keys(territories).forEach(driver => {
+            const poly = new google.maps.Polygon({ paths: territories[driver] });
+            if(google.maps.geometry.poly.containsLocation(loc, poly)) {
+                assignedDriver = driver;
+            }
+        });
+        db.ref("pickups").child(jobId).update({ assigned_to: assignedDriver, last_edit_by: 'AUTO-PILOT' });
     }
 
     let pressTimer;
@@ -1463,7 +1505,7 @@
     
     function archiveAsFailed(id, type) {
         if(confirm("Archive this job as Failed (Unassigned)?")) {
-            const node = type === 'pickup' ? 'pickups' : 'dropoffs';
+             const node = type === 'pickup' ? 'pickups' : 'dropoffs';
              const existingNote = (type === 'pickup' ? rawPickups[id] : rawDropoffs[id])?.other_info || "";
              db.ref(node).child(id).update({
                  status: 'completed',
@@ -1521,25 +1563,6 @@
         }
     }
 
-    function autoRouteJob(id, type, job) {
-        const destStr = `${job.destination}, ${job.city}, MB`;
-        new google.maps.Geocoder().geocode({address: destStr}, (results, status) => {
-            if(status === 'OK') {
-                const pt = results[0].geometry.location;
-                for(let dName in territoryPolygons) {
-                    if(google.maps.geometry.poly.containsLocation(pt, territoryPolygons[dName])) {
-                        db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).update({
-                            assigned_to: dName,
-                            status: 'pending',
-                            last_edit_by: 'AUTO_ROUTER'
-                        });
-                        break;
-                    }
-                }
-            }
-        });
-    }
-
     function renderData() {
         const pList = document.getElementById("list-pickups"); 
         const dList = document.getElementById("list-deliveries");
@@ -1547,7 +1570,7 @@
         const statsPanel = document.getElementById("driver-stats-panel");
         const searchTerm = document.getElementById("archive-search") ? document.getElementById("archive-search").value.toLowerCase() : "";
         
-        pList.innerHTML = ""; dList.innerHTML = ""; statsPanel.innerHTML = ""; wList.innerHTML = "";
+        pList.innerHTML = ""; dList.innerHTML = ""; wList.innerHTML = ""; statsPanel.innerHTML = "";
         document.getElementById("list-archive").innerHTML = "";
 
         // DND LIST CLEAR
@@ -1739,8 +1762,7 @@
             }
         }
         
-        let pending = 0, assignedCount = 0, noteCount = 0;
-        let warehouseCount = 0;
+        let pending = 0, assignedCount = 0, noteCount = 0, warehouseCount = 0;
         let driverStats = {};
         let dndCount = 0;
 
@@ -1760,11 +1782,7 @@
         }
 
         function processJobs(obj, type) {
-            const list = type === 'pickup' ? pList : dList;
-            
-            // Convert to array for sorting
             let entries = Object.entries(obj);
-            
             if(currentDriverFilter) {
                 entries.sort((a, b) => {
                     const numA = stopLookup[a[0]] || stopLookup[type === 'pickup' ? `${a[1].name} ${a[1].pickup_location}` : `${a[1].delivery_name} ${a[1].destination}`] || 999;
@@ -1776,89 +1794,63 @@
             }
             
             entries.forEach(([id, p]) => {
-                // Filter logic
                 const textSearch = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.customer_email||"")).toLowerCase();
                 if(searchTerm && !textSearch.includes(searchTerm) && p.status !== 'completed') return;
 
-                // WAREHOUSE / AT SHOP logic
+                const infoLower = (p.other_info || "").toLowerCase();
+                const isFailed = infoLower.includes("dnd") || infoLower.includes("dnp");
+                
+                if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
+
+                // WAREHOUSE LOGIC
                 if(p.status === 'at_shop') {
                     warehouseCount++;
                     const card = document.createElement("div");
                     card.className = "history-item";
-                    card.style.background = "#002b52";
-                    card.style.borderLeft = "4px solid var(--note-blue)";
-                    card.onclick = () => viewDetails(id, type);
-                    card.innerHTML = `
-                        <div style="display:flex; justify-content:space-between;">
-                            <span style="font-weight:800; color:var(--note-blue); font-size:11px;">READY FOR ROUTING</span>
-                            <span style="font-size:11px; color:#fff; font-weight:800; cursor:pointer;" onclick="autoRouteJob('${id}', '${type}', ${JSON.stringify(p).replace(/"/g, '&quot;')}); event.stopPropagation();">AUTO-ASSIGN</span>
-                        </div>
-                        <div style="color:#fff; font-size:13px; font-weight:700; margin-top:4px;">${type==='pickup'?p.name:p.delivery_name}</div>
-                        <div style="color:#888; font-size:11px;">${p.destination || p.pickup_location}</div>
-                    `;
-                    document.getElementById("list-warehouse").appendChild(card);
+                    card.style.borderLeft = "4px solid var(--pro-blue)";
+                    card.onclick = () => {
+                        if(p.pending_delivery_data && confirm("Dispatch to Driver " + (p.assigned_to || 'Unassigned') + "?")) {
+                            const newDrop = { ...p, status: 'pending', timestamp: Date.now(), created_by: 'AUTO-PILOT', other_info: "[CHUNKING] " + (p.other_info || "") };
+                            db.ref("dropoffs").push(newDrop);
+                            db.ref("pickups").child(id).update({ status: 'completed', completed_at: Date.now() });
+                        }
+                    };
+                    card.innerHTML = `<div style="display:flex; justify-content:space-between;"><span style="color:var(--pro-blue); font-weight:800;">AT SHOP</span><span style="font-weight:800; color:${dColors[p.assigned_to] || '#fff'}">${p.assigned_to}</span></div><div class="hist-name">${p.name || p.delivery_name}</div><div style="font-size:11px; color:#888;">Dest: ${p.city || ''}</div>`;
+                    wList.appendChild(card);
                     return;
                 }
 
-                // DND/DNP LOGIC for DND LIST
-                const infoLower = (p.other_info || "").toLowerCase();
-                const isFailed = infoLower.includes("dnd") || infoLower.includes("dnp");
-                
-                // MAIN LIST FILTER
-                if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
-
-                // Status check
                 if(p.status === 'completed') {
-                    // Render to Archive
                     const d = new Date(p.completed_at || p.timestamp);
                     const now = new Date();
                     const isToday = d.toDateString() === now.toDateString();
-
-                    // strict "from that day only"
                     if (!isToday) return;
-
-                    // Extended Search for Archive (all info)
                     const fullContent = (p.name + p.pickup_location + p.delivery_name + p.destination + (p.assigned_to||"") + (p.other_info||"") + (p.package_details||"") + (p.po_number||"")).toLowerCase();
                     if (searchTerm && !fullContent.includes(searchTerm)) return;
-
-                    // New Filters
                     if (afDriver && p.assigned_to !== afDriver) return;
                     if (afName && !(p.name.toLowerCase().includes(afName) || p.delivery_name.toLowerCase().includes(afName))) return;
                     if (afCity && !(p.city || "").toLowerCase().includes(afCity)) return;
                     if (afManual && !fullContent.includes(afManual)) return;
 
                     const card = document.createElement("div");
-                    card.className = "history-item"; // Added class for CSS
+                    card.className = "history-item"; 
                     card.onclick = () => viewDetails(id, type);
                     card.style.cursor = "pointer";
                     card.style.borderLeft = "4px solid #333";
                     card.style.background = "var(--card)";
                     card.style.opacity = "0.7";
-                    
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
-                    // Format Date
                     const dateStr = (d.getMonth() + 1) + "/" + d.getDate();
                     const timeStr = formatTime12(p.completed_at || p.timestamp);
-                    const doneTime = `${dateStr} ${timeStr}`;
-
-                    card.innerHTML = `
-                        <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;">
-                             <span style="font-weight:800; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span>
-                             <span style="font-size:16px; color:#00b32d; font-weight:900; text-align:center;">DONE</span>
-                             <span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${doneTime}</span>
-                        </div>
-                        <div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${contact || 'No Contact'}</div>
-                        <div style="color:#555; font-size:11px;">${p.city || ''}</div>
-                    `;
+                    card.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;"><span style="font-weight:800; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:900; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${dateStr} ${timeStr}</span></div><div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${contact || 'No Contact'}</div><div style="color:#555; font-size:11px;">${p.city || ''}</div>`;
                     document.getElementById("list-archive").appendChild(card);
-                    return; // Skip adding to main list
+                    return;
                 }
 
                 const assignedTo = p.assigned_to;
                 const isUnassigned = !assignedTo || assignedTo === 'Unassigned';
                 const isUnassignedFailed = isFailed && isUnassigned;
                 
-                // Active DND Logic: Must be Failed AND Assigned
                 if (isFailed) {
                     dndCount++;
                     const dndCard = document.createElement("div");
@@ -1867,91 +1859,42 @@
                     dndCard.style.border = "2px solid #ff4444";
                     dndCard.style.cursor = "pointer";
                     dndCard.onclick = () => viewDetails(id, type);
-                    
-                    // Card Content Generation (Shared logic simplified)
                     const bg = dColors[assignedTo] || '#00b32d'; 
                     const darkText = ['#00b32d', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
-                    const driverHTML = (assignedTo && assignedTo !== 'Unassigned') ? 
-                        `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${assignedTo}</span>` : 
-                        `<span style="color:#ff4444; font-weight:800; font-size:11px;">UNASSIGNED / FAILED</span>`;
+                    const driverHTML = (assignedTo && assignedTo !== 'Unassigned') ? `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${assignedTo}</span>` : `<span style="color:#ff4444; font-weight:800; font-size:11px;">UNASSIGNED / FAILED</span>`;
                     const contact = type === 'pickup' ? p.name : p.delivery_name;
                     const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
                     const sNum = stopLookup[id] || stopLookup[matchKey];
                     const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
-
-                    dndCard.innerHTML = `
-                        <div style="display:flex; flex-direction:column; width:100%;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                ${badgeHTML || '<div></div>'}
-                                ${driverHTML}
-                            </div>
-                            <div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${contact || 'No Contact'}</div>
-                            <div style="font-size:11px; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.city || 'No City'}</div>
-                            ${p.package_details ? `<div style="font-size:11px; color:#aaa; margin-top:2px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📦 ${p.package_details}</div>` : ''}
-                        </div>
-                    `;
+                    dndCard.innerHTML = `<div style="display:flex; flex-direction:column; width:100%;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">${badgeHTML || '<div></div>'}${driverHTML}</div><div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${contact || 'No Contact'}</div><div style="font-size:11px; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.city || 'No City'}</div>${p.package_details ? `<div style="font-size:11px; color:#aaa; margin-top:2px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📦 ${p.package_details}</div>` : ''}</div>`;
                     dndList.appendChild(dndCard);
-                    
-                    if(driverStats[assignedTo]) {
-                        if(type === 'pickup') driverStats[assignedTo].p++;
-                        else driverStats[assignedTo].d++;
-                    }
+                    if(driverStats[assignedTo]) { if(type === 'pickup') driverStats[assignedTo].p++; else driverStats[assignedTo].d++; }
                     if(p.driver_edited_note) noteCount++;
-                    return; // Don't add to main list
+                    return;
                 }
 
                 if(isUnassigned) pending++;
                 else {
                     assignedCount++;
-                    if(driverStats[assignedTo]) {
-                        if(type === 'pickup') driverStats[assignedTo].p++;
-                        else driverStats[assignedTo].d++;
-                    }
+                    if(driverStats[assignedTo]) { if(type === 'pickup') driverStats[assignedTo].p++; else driverStats[assignedTo].d++; }
                 }
                 if(p.driver_edited_note) noteCount++;
 
                 const card = document.createElement("div");
-                card.className = "history-item"; // Added class for CSS
-                
-                if(isUnassignedFailed) {
-                    card.style.background = "#2b0000";
-                    card.style.border = "2px solid #ff4444";
-                } else if(type === 'pickup' && isUnassigned) {
-                    card.classList.add('urgent-pickup');
-                }
-
+                card.className = "history-item";
+                if(isUnassignedFailed) { card.style.background = "#2b0000"; card.style.border = "2px solid #ff4444"; } else if(type === 'pickup' && isUnassigned) { card.classList.add('urgent-pickup'); }
                 card.onclick = () => viewDetails(id, type);
                 card.style.cursor = "pointer";
-                // Color coding borders based on type
                 card.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
-                
-                // Color Map Logic
                 const bg = dColors[p.assigned_to] || '#00b32d'; 
-                // Light colors need black text, dark colors need white text
                 const darkText = ['#00b32d', '#FF8C00', '#00BFFF', '#FF69B4'].includes(bg);
-                
-                const driverHTML = p.assigned_to ? 
-                    `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : 
-                    `<span style="color:${isUnassignedFailed ? '#ff4444' : '#cc5200'}; font-weight:800; font-size:11px;">${isUnassignedFailed ? 'FAILED ATTEMPT' : 'UNASSIGNED'}</span>`;
-                
+                const driverHTML = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${darkText?'#000':'#fff'}">${p.assigned_to}</span>` : `<span style="color:${isUnassignedFailed ? '#ff4444' : '#cc5200'}; font-weight:800; font-size:11px;">${isUnassignedFailed ? 'FAILED ATTEMPT' : 'UNASSIGNED'}</span>`;
                 const contact = type === 'pickup' ? p.name : p.delivery_name;
-                
-                // Badge Logic
                 const matchKey = type === 'pickup' ? `${p.name} ${p.pickup_location}` : `${p.delivery_name} ${p.destination}`;
                 const sNum = stopLookup[id] || stopLookup[matchKey];
                 const badgeHTML = sNum ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${sNum}</div>` : '';
-
-                card.innerHTML = `
-                    <div style="display:flex; flex-direction:column; width:100%;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                            ${badgeHTML || '<div></div>'}
-                            ${driverHTML}
-                        </div>
-                        <div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${contact || 'No Contact'}</div>
-                        <div style="font-size:11px; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.city || 'No City'}</div>
-                        ${p.package_details ? `<div style="font-size:11px; color:#aaa; margin-top:2px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📦 ${p.package_details}</div>` : ''}
-                    </div>
-                `;
+                card.innerHTML = `<div style="display:flex; flex-direction:column; width:100%;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">${badgeHTML || '<div></div>'}${driverHTML}</div><div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${contact || 'No Contact'}</div><div style="font-size:11px; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.city || 'No City'}</div>${p.package_details ? `<div style="font-size:11px; color:#aaa; margin-top:2px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📦 ${p.package_details}</div>` : ''}</div>`;
+                const list = type === 'pickup' ? pList : dList;
                 list.appendChild(card);
             });
         }
@@ -1959,7 +1902,7 @@
         processJobs(rawPickups, 'pickup');
         processJobs(rawDropoffs, 'delivery');
         
-        document.getElementById('warehouse-panel').style.display = warehouseCount > 0 ? 'block' : 'none';
+        document.getElementById("warehouse-list-container").style.display = warehouseCount > 0 ? "flex" : "none";
 
         const alertDiv = document.getElementById('header-alert');
         const unassignedDiv = document.getElementById('header-unassigned');
@@ -1971,64 +1914,28 @@
         } else {
             alertDiv.style.display = 'none';
             document.getElementById('archive-all-dnd-btn').style.display = 'none';
-            
-            // Auto minimize logic if open
             const dListContainer = document.getElementById('dnd-list-container');
             const dBtn = document.getElementById('toggle-dnd-btn');
-            if (dListContainer.style.display === 'flex') {
-                dListContainer.style.display = 'none';
-                dBtn.classList.remove('btn-pressed');
-                dBtn.style.display = 'block';
-            }
+            if (dListContainer.style.display === 'flex') { dListContainer.style.display = 'none'; dBtn.classList.remove('btn-pressed'); dBtn.style.display = 'block'; }
         }
 
-        if(pending > 0) {
-            unassignedDiv.style.display = 'block';
-            unassignedDiv.innerText = pending + " UNASSIGNED";
-        } else {
-            unassignedDiv.style.display = 'none';
-        }
-
+        if(pending > 0) { unassignedDiv.style.display = 'block'; unassignedDiv.innerText = pending + " UNASSIGNED"; } else { unassignedDiv.style.display = 'none'; }
         const dndBtn = document.getElementById('toggle-dnd-btn');
-        if (dndCount > 0) {
-            dndBtn.classList.add('btn-alert-red');
-        } else {
-            dndBtn.classList.remove('btn-alert-red');
-        }
-
+        if (dndCount > 0) { dndBtn.classList.add('btn-alert-red'); } else { dndBtn.classList.remove('btn-alert-red'); }
         const activeBtn = document.getElementById('toggle-active-btn');
-        if (pending > 0) {
-            activeBtn.classList.add('btn-alert-orange');
-        } else {
-            activeBtn.classList.remove('btn-alert-orange');
-        }
+        if (pending > 0) { activeBtn.classList.add('btn-alert-orange'); } else { activeBtn.classList.remove('btn-alert-orange'); }
 
-        // RENDER DRIVER STATS
         Object.keys(driverStats).forEach(driver => {
             const pCount = driverStats[driver].p;
             const dCount = driverStats[driver].d;
             if(pCount > 0 || dCount > 0) {
-                const total = pCount + dCount;
-                const pFlex = total > 0 ? (pCount / total) : 0;
-                const dFlex = total > 0 ? (dCount / total) : 0;
-                
                 const color = dColors[driver] || '#fff';
                 const duration = (driverLocationsData[driver] && driverLocationsData[driver].total_duration) ? driverLocationsData[driver].total_duration : "";
-
                 const row = document.createElement("div");
                 row.className = "driver-stat-row";
                 row.style.cursor = "pointer";
                 row.onclick = () => filterByDriver(driver);
-                row.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <div class="ds-name" style="color:${color};">${driver}</div>
-                        ${duration ? `<span class="route-time-display">${duration}</span>` : ''}
-                    </div>
-                    <div class="stat-info">
-                        ${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}
-                        ${dCount > 0 ? `<div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>` : ''}
-                    </div>
-                `;
+                row.innerHTML = `<div style="display:flex; align-items:center;"><div class="ds-name" style="color:${color};">${driver}</div>${duration ? `<span class="route-time-display">${duration}</span>` : ''}</div><div class="stat-info">${pCount > 0 ? `<div class="stat-item">Pickups <span class="stat-val-p">${pCount}</span></div>` : ''}${dCount > 0 ? `<div class="stat-item">Deliveries <span class="stat-val-d">${dCount}</span></div>` : ''}</div>`;
                 statsPanel.appendChild(row);
             }
         });
@@ -2063,11 +1970,10 @@
 
  if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        // Change './sw.js' to './firebase-messaging-sw.js'
         navigator.serviceWorker.register('./firebase-messaging-sw.js')
           .then(reg => {
             console.log('SW Registered');
-            swReg = reg; // This fills the global variable we made
+            swReg = reg; 
             messaging.useServiceWorker(reg);
           })
           .catch(err => console.log('SW Error', err));
