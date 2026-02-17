@@ -463,7 +463,7 @@
         <div id="user-display"></div>
         <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleTheme()">
             <div class="crt-animate" style="display: flex; align-items: center;">
-                <img src="icon-512.png" class="header-logo" alt="E&C Logo">
+                <img src="icon2.png" class="header-logo" alt="E&C Logo">
                 <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
             </div>
             <div style="display:flex; flex-direction:column; margin-left:15px; justify-content:center;">
@@ -669,11 +669,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry"></script>
-
-
-   
-
-    const db = firebase.database();
+<script>
+    firebase.initializeApp({
+        apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
+        authDomain: "eandccourier-36fcc.firebaseapp.com",
+        databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
+        projectId: "eandccourier-36fcc"
+    });
+   const db = firebase.database();
     let rawPickups = {};
     let rawDropoffs = {};
     let driverLocationsData = {};
