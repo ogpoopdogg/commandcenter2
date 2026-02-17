@@ -695,7 +695,7 @@
         if ("Notification" in window) {
             Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
-                    messaging.getToken({ vapidKey: "BMw-sFqU0eX8rUe-..." }).then((currentToken) => {
+                    messaging.getToken({ vapidKey: "BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI" }).then((currentToken) => {
                         if (currentToken) {
                             const sanitizedEmail = userEmail.replace(/[.#$\[\]]/g, "");
                             db.ref('command_tokens/' + sanitizedEmail).set({
