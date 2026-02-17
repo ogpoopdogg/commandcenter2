@@ -212,6 +212,7 @@
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
     <button class="close-map" onclick="zoomToAll()" style="top:130px; background:#448800;">ZOOM OUT</button>
+    <button class="close-map" onclick="toggleDrawingMode()" style="top:180px; background:#cc5200;">DRAW ZONES</button>
     <div id="route-time-badge" style="position:absolute; top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green); display:none;"></div>
     <div id="map-driver-head" style="position:absolute; top:15px; right:80px; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:900; font-size:16px; display:none; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
     <div id="route-list"></div>
@@ -231,7 +232,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing"></script>
 
 <script src="firebase-config.js"></script>
 <script src="app.js"></script>
