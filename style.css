@@ -298,6 +298,7 @@ button.primary.super-dispatch {
 .hist-name { font-size: 14px; color: var(--text); text-transform: uppercase; font-weight: 700; margin-top: 5px; }
 
 .urgent-pickup { border: 1px solid #b71c1c !important; box-shadow: inset 0 0 10px rgba(183, 28, 28, 0.2); }
+.picked-up-badge { display: inline-block; background: #000; color: var(--active-green); font-size: 10px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--active-green); margin-top: 5px; font-weight: 900; }
 
 #search-footer { 
     position: fixed; 
