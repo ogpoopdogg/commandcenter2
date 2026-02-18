@@ -382,7 +382,7 @@
 <script>
     firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
     const db = firebase.database(), messaging = firebase.messaging();
-    let swReg = null, rawPickups = {}, rawDropoffs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
+    let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
     const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 
     function initCommandNotifications(email) {
@@ -522,8 +522,7 @@
             document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
             db.ref("address_lookup").on("value", s => addressData = s.val() || {});
             const start = Date.now() - (604800000);
-            db.ref("pickups").orderByChild("timestamp").startAt(start).on("value", s => { rawPickups = s.val() || {}; renderData(); });
-            db.ref("dropoffs").orderByChild("timestamp").startAt(start).on("value", s => { rawDropoffs = s.val() || {}; renderData(); });
+            db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() || {}; renderData(); });
             db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() || {}; renderData(); });
         } else { document.getElementById('login-overlay').style.display = 'flex'; }
     });
@@ -578,14 +577,13 @@
     function archiveAllDND() {
         if(!confirm("Archive ALL active DND/DNP jobs?")) return;
         const updates = {}, ts = firebase.database.ServerValue.TIMESTAMP;
-        const check = (list, node) => Object.keys(list).forEach(id => {
-            const j = list[id], info = (j.other_info || "").toLowerCase();
+        Object.keys(rawJobs).forEach(id => {
+            const j = rawJobs[id], info = (j.other_info || "").toLowerCase();
             if(j.status !== 'completed' && (info.includes("dnd") || info.includes("dnp"))) {
-                updates[`/${node}/${id}/status`] = 'completed'; updates[`/${node}/${id}/completed_at`] = ts;
-                updates[`/${node}/${id}/last_edit_by`] = currentUser; updates[`/${node}/${id}/other_info`] = "[ARCHIVED ALL] " + j.other_info;
+                updates[`/jobs/${id}/status`] = 'completed'; updates[`/jobs/${id}/completed_at`] = ts;
+                updates[`/jobs/${id}/last_edit_by`] = currentUser; updates[`/jobs/${id}/other_info`] = "[ARCHIVED ALL] " + j.other_info;
             }
         });
-        check(rawPickups, 'pickups'); check(rawDropoffs, 'dropoffs');
         if(Object.keys(updates).length) db.ref().update(updates);
         toggleDNDList();
     }
@@ -595,10 +593,10 @@
         const info = document.getElementById('f-info').value ? `[${currentUser}]: ${document.getElementById('f-info').value}` : "";
         const email = currentMode === 'pickup' ? document.getElementById('f-customer-email-p').value : document.getElementById('f-customer-email-d').value;
         const phone = currentMode === 'pickup' ? document.getElementById('f-customer-phone-p').value : document.getElementById('f-customer-phone-d').value;
-        if(!(name && p && city) && !(dName && dAddr && dCity)) return alert("Please complete either Pickup or Delivery section.");
+        if(!(name && p) || !(dName && dAddr)) return alert("Please complete both Pickup and Delivery sections.");
 
-        const job = { city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: 'pending', assigned_to: asgn, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
-        db.ref(currentMode === 'pickup' ? 'pickups' : 'dropoffs').push(job);
+        const job = { city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: 'pending_pickup', assigned_to: asgn, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
+        db.ref('jobs').push(job);
         
         const save = (n, a, c) => { if(n) db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email||"", customer_phone: phone||"", last_edit_by: currentUser }); };
         save(name, p, city); save(dName, dAddr, dCity);
@@ -610,17 +608,17 @@
     function cancelPress() { clearTimeout(pressTimer); }
     function handleLinkClick(el, type) { if(el.readOnly && el.value) window.location.href = (type === 'email' ? 'mailto:' : 'tel:') + el.value; }
 
-    function viewDetails(id, type) {
-        const isPickup = type === 'pickup', data = isPickup ? rawPickups[id] : rawDropoffs[id]; if(!data) return;
+    function viewDetails(id) {
+        const data = rawJobs[id]; if(!data) return;
         const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
         const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
         const opts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
         const html = `
             <div class="flex jb ac mb-20">
-                <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT ${isPickup?'PICKUP':'DELIVERY'}</div>
+                <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT JOB</div>
                 <div class="flex">
-                    <button onclick="archiveAsFailed('${id}', '${type}')" class="btn-archive">ARCHIVE</button>
-                    <button onclick="deleteJob('${id}', '${type}')" class="btn-delete">DELETE</button>
+                    <button onclick="archiveAsFailed('${id}')" class="btn-archive">ARCHIVE</button>
+                    <button onclick="deleteJob('${id}')" class="btn-delete">DELETE</button>
                 </div>
             </div>
             <div class="flex col gap-0">
@@ -630,8 +628,8 @@
                     <div class="input-wrap f-1"><input id="e-city-p" value="${val(data.city)}" placeholder="City"><button class="copy-btn" onclick="copyField('e-city-p')">${copySvg}</button></div>
                 </div>
                 <div class="flex-row">
-                    <div class="input-wrap f-1-5"><input id="e-email-p" type="email" value="${isPickup ? val(data.customer_email) : ''}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-p')">${copySvg}</button></div>
-                    <div class="input-wrap f-1"><input id="e-phone-p" type="tel" value="${isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-p')">${copySvg}</button></div>
+                    <div class="input-wrap f-1-5"><input id="e-email-p" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-p')">${copySvg}</button></div>
+                    <div class="input-wrap f-1"><input id="e-phone-p" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-p')">${copySvg}</button></div>
                 </div>
                 <div class="input-wrap mb-12"><input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions"><button class="copy-btn" onclick="copyField('e-pkg')">${copySvg}</button></div>
                 <div class="input-wrap mb-12"><input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref"><button class="copy-btn" onclick="copyField('e-po')">${copySvg}</button></div>
@@ -643,37 +641,37 @@
                     <div class="input-wrap f-1"><input id="e-city-d" value="${val(data.city)}" placeholder="City"><button class="copy-btn" onclick="copyField('e-city-d')">${copySvg}</button></div>
                 </div>
                 <div class="flex-row">
-                    <div class="input-wrap f-1-5"><input id="e-email-d" type="email" value="${!isPickup ? val(data.customer_email) : ''}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-d')">${copySvg}</button></div>
-                    <div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${!isPickup ? val(data.customer_phone) : ''}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-d')">${copySvg}</button></div>
+                    <div class="input-wrap f-1-5"><input id="e-email-d" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-d')">${copySvg}</button></div>
+                    <div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-d')">${copySvg}</button></div>
                 </div>
                 <select id="e-driver" class="driver-select mb-12">${opts}</select>
             </div>
-            <div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}', '${type}')" class="btn-save">SAVE</button></div>`;
+            <div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>`;
         
         document.querySelector('#detailsModal .modal-content').innerHTML = html;
         const ta = document.getElementById('e-note'); if(ta) ta.style.height = ta.scrollHeight + 'px';
         document.getElementById('detailsModal').style.display = 'block'; document.body.style.overflow = 'hidden';
     }
     
-    function archiveAsFailed(id, type) {
+    function archiveAsFailed(id) {
         if(confirm("Archive this job as Failed (Unassigned)?")) {
-             const node = type === 'pickup' ? 'pickups' : 'dropoffs', note = (type === 'pickup' ? rawPickups[id] : rawDropoffs[id])?.other_info || "";
-             db.ref(node).child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, other_info: "[ARCHIVED DND/DNP] " + note, last_edit_by: currentUser });
+             const note = rawJobs[id]?.other_info || "";
+             db.ref('jobs').child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, other_info: "[ARCHIVED DND/DNP] " + note, last_edit_by: currentUser });
              document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = '';
         }
     }
 
-    function saveEdit(id, type) {
+    function saveEdit(id) {
         let n = document.getElementById('e-note').value, add = document.getElementById('e-add-note').value;
         if(add.trim()) n = (n ? n + " " : "") + `[${currentUser}]: ${add.trim()}`;
-        const newD = document.getElementById('e-driver').value, old = (type === 'pickup' ? rawPickups[id] : rawDropoffs[id]).other_info.toLowerCase();
+        const newD = document.getElementById('e-driver').value, old = rawJobs[id].other_info.toLowerCase();
         if ((old.includes("dnd") || old.includes("dnp")) && newD !== 'Unassigned') { n = n.replace(/dnd/gi, "").replace(/dnp/gi, "") + ` [reassigned by ${currentUser}]`; }
-        db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).update({
-            assigned_to: newD, package_details: document.getElementById('e-pkg').value, po_number: document.getElementById('e-po').value, name: document.getElementById('e-name').value, pickup_location: document.getElementById('e-pickup').value, city: type === 'pickup' ? document.getElementById('e-city-p').value : document.getElementById('e-city-d').value, delivery_name: document.getElementById('e-drop-name').value, destination: document.getElementById('e-drop').value, other_info: n, customer_email: type === 'pickup' ? document.getElementById('e-email-p').value : document.getElementById('e-email-d').value, customer_phone: type === 'pickup' ? document.getElementById('e-phone-p').value : document.getElementById('e-phone-d').value, last_edit_by: currentUser
+        db.ref('jobs').child(id).update({
+            assigned_to: newD, package_details: document.getElementById('e-pkg').value, po_number: document.getElementById('e-po').value, name: document.getElementById('e-name').value, pickup_location: document.getElementById('e-pickup').value, city: document.getElementById('e-city-p').value || document.getElementById('e-city-d').value, delivery_name: document.getElementById('e-drop-name').value, destination: document.getElementById('e-drop').value, other_info: n, customer_email: document.getElementById('e-email-p').value, customer_phone: document.getElementById('e-phone-p').value, last_edit_by: currentUser
         }).then(() => { document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; });
     }
 
-    function deleteJob(id, type) { if(confirm("Delete this dispatch completely?")) { db.ref(type === 'pickup' ? 'pickups' : 'dropoffs').child(id).remove(); document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; } }
+    function deleteJob(id) { if(confirm("Delete this dispatch completely?")) { db.ref('jobs').child(id).remove(); document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; } }
 
     function renderData() {
         const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
@@ -712,8 +710,12 @@
                      activePolyline = new google.maps.Polyline({ path: path, geodesic: true, strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5, map: mainMap });
                      Object.keys(mapMarkers).forEach(k => { if(k !== currentDriverFilter && !k.startsWith('job_')) { mapMarkers[k].setMap(null); delete mapMarkers[k]; } });
                      const jobs = [];
-                     Object.entries(rawPickups).forEach(([i,j])=>{if(j.assigned_to===currentDriverFilter&&j.status==='pending')jobs.push({...j,t:'pickup',id:i})});
-                     Object.entries(rawDropoffs).forEach(([i,j])=>{if(j.assigned_to===currentDriverFilter&&j.status==='pending')jobs.push({...j,t:'drop',id:i})});
+                     Object.entries(rawJobs).forEach(([i,j])=>{
+                         if(j.assigned_to===currentDriverFilter) {
+                             if(j.status === 'pending_pickup') jobs.push({...j, t:'pickup', id:i});
+                             else if(j.status === 'pending_delivery') jobs.push({...j, t:'drop', id:i});
+                         }
+                     });
                      const geo = new google.maps.Geocoder();
                      jobs.forEach((j, i) => {
                          const addr = `${j.t==='pickup'?j.pickup_location:j.destination}, ${j.city||''}`, lbl = j.t==='pickup'?j.name:j.delivery_name;
@@ -731,50 +733,54 @@
         for(let i=0; i<opts.length; i++) if(!['Unassigned','Assign Driver'].includes(opts[i].value)) driverStats[opts[i].value] = { p: 0, d: 0 };
         const dColors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
 
-        const proc = (obj, type) => {
-            let ent = Object.entries(obj);
-            if(currentDriverFilter) ent.sort((a,b) => (stopLookup[a[0]]||999) - (stopLookup[b[0]]||999)); else ent.reverse();
-            ent.forEach(([id, p]) => {
-                if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
-                const info = (p.other_info||"").toLowerCase(), isFailed = info.includes("dnd") || info.includes("dnp");
-                if(p.status === 'completed') {
-                    if (new Date(p.completed_at||p.timestamp).toDateString() !== new Date().toDateString()) return;
-                    if (afD && p.assigned_to !== afD) return;
-                    if (afN && !(p.name.toLowerCase().includes(afN) || p.delivery_name.toLowerCase().includes(afN))) return;
-                    if (afC && !(p.city||"").toLowerCase().includes(afC)) return;
-                    if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
-                    const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id, type);
-                    Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", background:"var(--card)", opacity:"0.7"});
-                    c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;"><span style="font-weight:800; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:900; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${type==='pickup'?p.name:p.delivery_name}</div><div style="color:#555; font-size:11px;">${p.city||''}</div>`;
-                    arcList.appendChild(c); return;
-                }
-                const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
-                if (isFailed) {
-                    dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card";
-                    Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id, type);
-                    const bg = dColors[asgn] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
-                    const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span style="color:#ff4444; font-weight:800; font-size:11px;">FAILED</span>`;
-                    const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
-                    c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${type==='pickup'?p.name:p.delivery_name}</div><div style="font-size:11px; color:#888;">${p.city||''}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold;">📦 ${p.package_details}</div>`:''}</div>`;
-                    dndList.appendChild(c);
-                    if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
-                    if(p.driver_edited_note) noteCount++; return;
-                }
-                if(isU) pending++; else { assignedCount++; if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++; }
-                if(p.driver_edited_note) noteCount++;
-                
-                const c = document.createElement("div"); c.className = "history-item " + (type==='pickup'&&isU ? 'urgent-pickup' : ''); c.onclick = () => viewDetails(id, type);
-                c.style.cursor = "pointer"; c.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
-                if(isFailed&&isU) Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444"});
-                
-                const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
-                const dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; font-weight:800; font-size:11px;">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
+        let ent = Object.entries(rawJobs);
+        if(currentDriverFilter) ent.sort((a,b) => (stopLookup[a[0]]||999) - (stopLookup[b[0]]||999)); else ent.reverse();
+        ent.forEach(([id, p]) => {
+            if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
+            const info = (p.other_info||"").toLowerCase(), isFailed = info.includes("dnd") || info.includes("dnp");
+            if(p.status === 'completed') {
+                if (new Date(p.completed_at||p.timestamp).toDateString() !== new Date().toDateString()) return;
+                if (afD && p.assigned_to !== afD) return;
+                if (afN && !(p.name.toLowerCase().includes(afN) || p.delivery_name.toLowerCase().includes(afN))) return;
+                if (afC && !(p.city||"").toLowerCase().includes(afC)) return;
+                if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
+                const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
+                Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", background:"var(--card)", opacity:"0.7"});
+                c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;"><span style="font-weight:800; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:900; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="color:#777; font-size:13px; font-weight:700; margin-top:4px;">${p.name} -> ${p.delivery_name}</div><div style="color:#555; font-size:11px;">${p.city||''}</div>`;
+                arcList.appendChild(c); return;
+            }
+            
+            const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
+            const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
+            const isDepot = type === 'delivery' && isU;
+
+            if (isFailed) {
+                dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card";
+                Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id);
+                const bg = dColors[asgn] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+                const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span style="color:#ff4444; font-weight:800; font-size:11px;">FAILED</span>`;
                 const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
                 c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${type==='pickup'?p.name:p.delivery_name}</div><div style="font-size:11px; color:#888;">${p.city||''}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold;">📦 ${p.package_details}</div>`:''}</div>`;
-                (type === 'pickup' ? pList : dList).appendChild(c);
-            });
-        };
-        proc(rawPickups, 'pickup'); proc(rawDropoffs, 'delivery');
+                dndList.appendChild(c);
+                if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
+                if(p.driver_edited_note) noteCount++; return;
+            }
+            if(isU && !isDepot) pending++; else { if(!isDepot) assignedCount++; if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++; }
+            if(p.driver_edited_note) noteCount++;
+            
+            const c = document.createElement("div"); c.className = "history-item " + (type==='pickup'&&isU ? 'urgent-pickup' : ''); c.onclick = () => viewDetails(id);
+            c.style.cursor = "pointer"; c.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
+            if(isFailed&&isU) Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444"});
+            if(isDepot) Object.assign(c.style, {borderLeft:"4px solid #0056b3", background:"#001a33"});
+            
+            const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+            let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; font-weight:800; font-size:11px;">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
+            if(isDepot) dH = `<span style="color:#00BFFF; font-weight:900; font-size:11px; letter-spacing:1px;">AT DEPOT</span>`;
+
+            const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
+            c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${type==='pickup'?p.name:p.delivery_name}</div><div style="font-size:11px; color:#888;">${p.city||''}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold;">📦 ${p.package_details}</div>`:''}</div>`;
+            (type === 'pickup' ? pList : dList).appendChild(c);
+        });
         
         const ad = document.getElementById('header-alert'), ud = document.getElementById('header-unassigned');
         if(dndCount > 0) { ad.style.display = 'block'; ad.innerText = dndCount + " DND/DNP"; document.getElementById('archive-all-dnd-btn').style.display = 'block'; }
