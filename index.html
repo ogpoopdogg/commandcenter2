@@ -636,29 +636,38 @@
             resetFormFields();
         };
 
-        if (asgn === 'Unassigned' && Object.keys(driverZones).length > 0) {
+        if (asgn === 'Unassigned') {
             const geocoder = new google.maps.Geocoder();
-            const addr = currentMode === 'pickup' ? p : dAddr;
-            const c = currentMode === 'pickup' ? city : dCity;
-            geocoder.geocode({ 'address': addr + (c ? ", " + c : "") }, (results, status) => {
+            const targetAddr = currentMode === 'pickup' ? p : dAddr;
+            const targetCity = currentMode === 'pickup' ? city : dCity;
+            
+            geocoder.geocode({ 'address': targetAddr + (targetCity ? ", " + targetCity : "") }, (results, status) => {
                 let autoAssign = 'Unassigned';
                 if (status === 'OK' && results[0]) {
                     const loc = results[0].geometry.location;
                     const now = new Date();
                     const currentMins = now.getHours() * 60 + now.getMinutes();
+
                     for (let d in driverZones) {
                         const z = driverZones[d];
                         if (z && z.paths) {
                              if (z.start && z.end) {
                                  const [sh, sm] = z.start.split(':').map(Number);
                                  const [eh, em] = z.end.split(':').map(Number);
-                                 if (currentMins < (sh*60+sm) || currentMins > (eh*60+em)) continue;
+                                 const startMins = sh * 60 + sm;
+                                 const endMins = eh * 60 + em;
+                                 if (currentMins < startMins || currentMins > endMins) continue;
                              }
+                             
                              let match = false;
-                             for(let path of z.paths) {
-                                 const poly = new google.maps.Polygon({ paths: path });
-                                 if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
+                             for(let i = 0; i < z.paths.length; i++) {
+                                 const poly = new google.maps.Polygon({ paths: z.paths[i] });
+                                 if (google.maps.geometry.poly.containsLocation(loc, poly)) { 
+                                     match = true; 
+                                     break; 
+                                 }
                              }
+                             
                              if (match) {
                                  autoAssign = d;
                                  break;
