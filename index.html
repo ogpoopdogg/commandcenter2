@@ -554,7 +554,7 @@
     function handleCityInput(val, type) {
         const box = document.getElementById(type === 'pickup' ? 'city-suggestions-p' : 'city-suggestions-d');
         if(val.length < 1) { box.style.display = 'none'; return; }
-        const matches = Object.keys(addressData).filter(k => (addressData[k].city || "").toLowerCase().startsWith(val.toLowerCase()));
+        const matches = Object.keys(addressData).filter(k => (addressData[k].city || "").toLowerCase().startsWith(val.trim().toLowerCase()));
         if(matches.length === 0) { box.style.display = 'none'; return; }
         const fn = type === 'pickup' ? 'selectClient' : 'selectDropClient';
         box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="${fn}('${k}')">${k} (${addressData[k].city})</div>`).join('');
@@ -564,7 +564,7 @@
     function showSuggestions(val, id, mapFn) {
         const box = document.getElementById(id);
         if(val.length < 1) { box.style.display = 'none'; return; }
-        const m = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.toLowerCase()));
+        const m = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.replace(/[.#$\[\]\/]/g, "").trim().toLowerCase()));
         if(m.length === 0) { box.style.display = 'none'; return; }
         box.innerHTML = m.map(mapFn).join(''); box.style.display = 'block';
     }
