@@ -336,12 +336,15 @@
             <div id="list-pickups"></div>
         </div>
         <div class="archive-column">
-             <div class="archive-title" style="color:#00BFFF;">At Depot</div>
-             <div id="list-depot"></div>
-        </div>
-        <div class="archive-column">
             <div class="archive-title" style="color:#0099cc;">In Transit</div>
             <div id="list-transit"></div>
+        </div>
+        <div class="archive-column">
+             <div class="archive-title" style="color:#00BFFF; display:flex; justify-content:space-between; align-items:center;">
+                <span>At Depot</span>
+                <button onclick="autoAssignDepotJobs()" style="background:transparent; border:1px solid #00BFFF; color:#00BFFF; padding:2px 6px; font-size:10px; border-radius:4px; cursor:pointer; text-transform:uppercase; font-weight:800;">Auto Assign</button>
+             </div>
+             <div id="list-depot"></div>
         </div>
         <div class="archive-column">
             <div class="archive-title" style="color:var(--active-green);">Deliveries</div>
@@ -816,8 +819,6 @@
         const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
         pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = "";
         
-        depotList.innerHTML = '<button onclick="autoAssignDepotJobs()" class="w-100 mb-15 bold pointer u-case" style="background:#00BFFF; color:#000; border:none; padding:10px; border-radius:6px;">Auto-Assign Depot</button>';
-
         const filterUI = document.getElementById('filter-reset-ui'); if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
         const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
         
