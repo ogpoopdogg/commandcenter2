@@ -169,6 +169,19 @@
         .btn-zone { padding: 5px 10px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .btn-zone:hover { background: #333; border-color: var(--accent); }
         .btn-zone.active-draw { background: var(--accent); color: #000; }
+        
+        .day-row { display: flex; gap: 4px; margin-bottom: 8px; }
+        .day-toggle { flex: 1; padding: 6px 0; background: var(--bg); border: 1px solid var(--border); color: #666; font-size: 10px; font-weight: 700; cursor: pointer; border-radius: 4px; text-align: center; }
+        .day-toggle.day-active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        @media (max-width: 768px) {
+            #active-list-container, .zone-split { flex-direction: column; height: auto; }
+            .archive-column { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 20px; margin-bottom: 20px; }
+            .archive-column:last-child { border-bottom: none; margin-bottom: 0; }
+            input, select, button, .mode-btn { min-height: 44px; }
+            #map, #zone-map { height: 350px; min-height: 350px; }
+            .header-logo-group { width: auto; }
+        }
     </style>
 </head>
 <body>
@@ -196,7 +209,7 @@
             </div>
         </div>
     </div>
-    <div id="clock" class="clock"></div>
+    <button id="locate-btn" onclick="openMap()" style="width: 120px; height: 34px; font-size: 11px; margin-left: 10px;">Driver Map</button>
 </header>
 
 <div id="entry-panel">
@@ -241,9 +254,6 @@
         <div id="pending-box" class="stat-box pointer" onclick="requestNotifyPermission()">
             <span class="stat-label">Pending</span>
             <div id="stat-pending" class="stat-number">0</div>
-        </div>
-        <div class="stat-box">
-            <button id="locate-btn" onclick="openMap()">Driver Map</button>
         </div>
         <div class="stat-box">
              <button onclick="openZoneManager()" class="route-btn" style="background:var(--header-bg); color:var(--accent);">ZONE MGR</button>
@@ -543,8 +553,6 @@
     }
 
     function requestNotifyPermission() { if ("Notification" in window) Notification.requestPermission(); }
-    function updateClock() { document.getElementById('clock').innerText = formatTime12(new Date()); }
-    setInterval(updateClock, 1000); updateClock();
 
     function setMode(mode) {
         currentMode = mode;
@@ -651,11 +659,13 @@
                     const loc = results[0].geometry.location;
                     const now = new Date();
                     const currentMins = now.getHours() * 60 + now.getMinutes();
+                    const currentDay = now.toLocaleDateString('en-US', { weekday: 'short' });
                     let bestDriver = 'Unassigned';
 
                     for (let d in driverZones) {
                         const z = driverZones[d];
                         if (z && z.paths) {
+                             if (z.days && !z.days.includes(currentDay)) continue;
                              if (z.start && z.end) {
                                  const [sh, sm] = z.start.split(':').map(Number);
                                  const [eh, em] = z.end.split(':').map(Number);
@@ -710,10 +720,12 @@
                     const loc = results[0].geometry.location;
                     const now = new Date();
                     const currentMins = now.getHours() * 60 + now.getMinutes();
+                    const currentDay = now.toLocaleDateString('en-US', { weekday: 'short' });
 
                     for (let d in driverZones) {
                         const z = driverZones[d];
                         if (z && z.paths) {
+                             if (z.days && !z.days.includes(currentDay)) continue;
                              if (z.start && z.end) {
                                  const [sh, sm] = z.start.split(':').map(Number);
                                  const [eh, em] = z.end.split(':').map(Number);
@@ -991,6 +1003,7 @@
     function renderZoneRoster() {
         const drivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
         const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         let html = '';
         if(zoneMap) { for(let k in zonePolygons) { if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null)); else if(zonePolygons[k]) zonePolygons[k].setMap(null); } zonePolygons = {}; }
         drivers.forEach(d => {
@@ -1002,8 +1015,17 @@
                      zonePolygons[d].push(poly);
                 });
             }
+            
+            let dayHtml = '<div class="day-row">';
+            days.forEach(day => {
+                const isActive = (z.days && z.days.includes(day)) ? 'day-active' : '';
+                dayHtml += `<div class="day-toggle ${isActive}" onclick="toggleDay('${d}', '${day}')">${day[0]}</div>`;
+            });
+            dayHtml += '</div>';
+            
             html += `<div class="zone-driver-row">
                 <div class="zone-driver-name" style="color:${colors[d]}">${d}</div>
+                ${dayHtml}
                 <div class="flex gap-10 mb-6">
                     <input type="time" id="z-start-${d}" value="${z.start||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
                     <input type="time" id="z-end-${d}" value="${z.end||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
@@ -1015,6 +1037,14 @@
             </div>`;
         });
         document.getElementById('zone-roster').innerHTML = html;
+    }
+
+    function toggleDay(driver, day) {
+        const z = driverZones[driver] || {};
+        let days = z.days || [];
+        if (days.includes(day)) days = days.filter(d => d !== day);
+        else days.push(day);
+        db.ref('driver_zones/' + driver + '/days').set(days);
     }
 
     function drawZoneFor(name, color) {
