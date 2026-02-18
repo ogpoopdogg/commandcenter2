@@ -336,6 +336,10 @@
             <div id="list-pickups"></div>
         </div>
         <div class="archive-column">
+             <div class="archive-title" style="color:#00BFFF;">At Depot</div>
+             <div id="list-depot"></div>
+        </div>
+        <div class="archive-column">
             <div class="archive-title" style="color:#0099cc;">In Transit</div>
             <div id="list-transit"></div>
         </div>
@@ -620,6 +624,62 @@
         if(Object.keys(updates).length) db.ref().update(updates);
         toggleDNDList();
     }
+    
+    function autoAssignDepotJobs() {
+        const jobsToAssign = [];
+        Object.entries(rawJobs).forEach(([id, job]) => {
+            if(job.status === 'pending_delivery' && (job.assigned_to === 'Unassigned' || !job.assigned_to)) {
+                jobsToAssign.push({id, ...job});
+            }
+        });
+        
+        if(jobsToAssign.length === 0) return alert("No depot jobs to assign.");
+        if(!confirm(`Attempt to auto-assign ${jobsToAssign.length} jobs?`)) return;
+
+        const geocoder = new google.maps.Geocoder();
+        const processJob = (index) => {
+            if(index >= jobsToAssign.length) return alert("Auto-assignment complete.");
+            
+            const job = jobsToAssign[index];
+            const addr = job.destination + (job.city ? ", " + job.city : "");
+            
+            geocoder.geocode({ 'address': addr }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const loc = results[0].geometry.location;
+                    const now = new Date();
+                    const currentMins = now.getHours() * 60 + now.getMinutes();
+                    let bestDriver = 'Unassigned';
+
+                    for (let d in driverZones) {
+                        const z = driverZones[d];
+                        if (z && z.paths) {
+                             if (z.start && z.end) {
+                                 const [sh, sm] = z.start.split(':').map(Number);
+                                 const [eh, em] = z.end.split(':').map(Number);
+                                 const startMins = sh * 60 + sm;
+                                 const endMins = eh * 60 + em;
+                                 if (currentMins < startMins || currentMins > endMins) continue;
+                             }
+                             
+                             let match = false;
+                             for(let i = 0; i < z.paths.length; i++) {
+                                 const poly = new google.maps.Polygon({ paths: z.paths[i] });
+                                 if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
+                             }
+                             if (match) { bestDriver = d; break; }
+                        }
+                    }
+                    
+                    if(bestDriver !== 'Unassigned') {
+                        db.ref('jobs').child(job.id).update({ assigned_to: bestDriver });
+                    }
+                }
+                setTimeout(() => processJob(index + 1), 600);
+            });
+        };
+        
+        processJob(0);
+    }
 
     function createJob() {
         const p = document.getElementById('f-pickup').value, dAddr = document.getElementById('f-drop-address').value, dCity = document.getElementById('f-drop-city').value, city = document.getElementById('f-city').value, name = document.getElementById('f-name').value, dName = document.getElementById('f-drop-name').value, asgn = document.getElementById('f-driver').value;
@@ -636,7 +696,7 @@
             resetFormFields();
         };
 
-        if (asgn === 'Unassigned') {
+        if (asgn === 'Unassigned' && currentMode === 'pickup') {
             const geocoder = new google.maps.Geocoder();
             const targetAddr = currentMode === 'pickup' ? p : dAddr;
             const targetCity = currentMode === 'pickup' ? city : dCity;
@@ -753,9 +813,11 @@
     function deleteJob(id) { if(confirm("Delete this dispatch completely?")) { db.ref('jobs').child(id).remove(); document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; } }
 
     function renderData() {
-        const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
-        pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = "";
+        const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
+        pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = "";
         
+        depotList.innerHTML = '<button onclick="autoAssignDepotJobs()" class="w-100 mb-15 bold pointer u-case" style="background:#00BFFF; color:#000; border:none; padding:10px; border-radius:6px;">Auto-Assign Depot</button>';
+
         const filterUI = document.getElementById('filter-reset-ui'); if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
         const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
         
@@ -860,7 +922,7 @@
             const c = document.createElement("div"); c.className = "history-item " + (type==='pickup'&&isU ? 'urgent-pickup' : ''); c.onclick = () => viewDetails(id);
             c.style.cursor = "pointer"; c.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
             if(isFailed&&isU) Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444"});
-            if(isDepot) Object.assign(c.style, {borderLeft:"4px solid #0056b3", background:"#001a33"});
+            if(isDepot) Object.assign(c.style, {borderLeft:"4px solid #00BFFF", background:"#001a33"});
             
             const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
             let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; font-weight:800; font-size:11px;">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
@@ -868,7 +930,12 @@
 
             const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
             c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${type==='pickup'?p.name:p.delivery_name}</div><div style="font-size:11px; color:#888;">${p.city||''}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold;">📦 ${p.package_details}</div>`:''}</div>`;
-            (type === 'pickup' ? pList : dList).appendChild(c);
+            
+            if(isDepot) {
+                depotList.appendChild(c);
+            } else {
+                (type === 'pickup' ? pList : dList).appendChild(c);
+            }
         });
         
         const ad = document.getElementById('header-alert'), ud = document.getElementById('header-unassigned');
