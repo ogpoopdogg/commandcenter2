@@ -595,7 +595,7 @@
         const phone = currentMode === 'pickup' ? document.getElementById('f-customer-phone-p').value : document.getElementById('f-customer-phone-d').value;
         if(!(name && p) || !(dName && dAddr)) return alert("Please complete both Pickup and Delivery sections.");
 
-        const job = { city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: 'pending_pickup', assigned_to: asgn, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
+        const job = { city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: currentMode === 'delivery' ? 'pending_delivery' : 'pending_pickup', assigned_to: asgn, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
         db.ref('jobs').push(job);
         
         const save = (n, a, c) => { if(n) db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email||"", customer_phone: phone||"", last_edit_by: currentUser }); };
