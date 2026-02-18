@@ -336,6 +336,10 @@
             <div id="list-pickups"></div>
         </div>
         <div class="archive-column">
+            <div class="archive-title" style="color:#0099cc;">In Transit</div>
+            <div id="list-transit"></div>
+        </div>
+        <div class="archive-column">
             <div class="archive-title" style="color:var(--active-green);">Deliveries</div>
             <div id="list-deliveries"></div>
         </div>
@@ -644,14 +648,18 @@
                     const currentMins = now.getHours() * 60 + now.getMinutes();
                     for (let d in driverZones) {
                         const z = driverZones[d];
-                        if (z && z.path) {
+                        if (z && z.paths) {
                              if (z.start && z.end) {
                                  const [sh, sm] = z.start.split(':').map(Number);
                                  const [eh, em] = z.end.split(':').map(Number);
                                  if (currentMins < (sh*60+sm) || currentMins > (eh*60+em)) continue;
                              }
-                             const poly = new google.maps.Polygon({ paths: z.path });
-                             if (google.maps.geometry.poly.containsLocation(loc, poly)) {
+                             let match = false;
+                             for(let path of z.paths) {
+                                 const poly = new google.maps.Polygon({ paths: path });
+                                 if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
+                             }
+                             if (match) {
                                  autoAssign = d;
                                  break;
                              }
@@ -736,8 +744,8 @@
     function deleteJob(id) { if(confirm("Delete this dispatch completely?")) { db.ref('jobs').child(id).remove(); document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; } }
 
     function renderData() {
-        const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
-        pList.innerHTML = ""; dList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = "";
+        const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
+        pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = "";
         
         const filterUI = document.getElementById('filter-reset-ui'); if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
         const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
@@ -813,6 +821,16 @@
             }
             
             const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
+            if(p.status === 'in_transit') {
+                assignedCount++; if(driverStats[asgn]) driverStats[asgn].d++;
+                const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
+                c.style.cursor = "pointer"; c.style.borderLeft = "4px solid #0099cc";
+                const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+                let dH = `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>`;
+                const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:#0099cc; color:#fff; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div class="hist-name" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.delivery_name}</div><div style="font-size:11px; color:#888;">${p.city||''}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold;">📦 ${p.package_details}</div>`:''}</div>`;
+                tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
+            }
             const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
             const isDepot = type === 'delivery' && isU;
 
@@ -880,7 +898,9 @@
         google.maps.event.addListener(drawingManager, 'overlaycomplete', function(e) {
             if (e.type === 'polygon' && activeDrawingDriver) {
                 const path = e.overlay.getPath().getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
-                db.ref('driver_zones/' + activeDrawingDriver + '/path').set(path);
+                const currentPaths = (driverZones[activeDrawingDriver] && driverZones[activeDrawingDriver].paths) || [];
+                currentPaths.push(path);
+                db.ref('driver_zones/' + activeDrawingDriver + '/paths').set(currentPaths);
                 e.overlay.setMap(null); 
                 drawingManager.setDrawingMode(null);
                 activeDrawingDriver = null;
@@ -893,11 +913,15 @@
         const drivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
         const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
         let html = '';
-        if(zoneMap) { for(let k in zonePolygons) { zonePolygons[k].setMap(null); } zonePolygons = {}; }
+        if(zoneMap) { for(let k in zonePolygons) { if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null)); else if(zonePolygons[k]) zonePolygons[k].setMap(null); } zonePolygons = {}; }
         drivers.forEach(d => {
             const z = driverZones[d] || {};
-            if(z.path && zoneMap) {
-                zonePolygons[d] = new google.maps.Polygon({ paths: z.path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
+            if(z.paths && zoneMap) {
+                zonePolygons[d] = [];
+                z.paths.forEach(path => {
+                     const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
+                     zonePolygons[d].push(poly);
+                });
             }
             html += `<div class="zone-driver-row">
                 <div class="zone-driver-name" style="color:${colors[d]}">${d}</div>
@@ -920,7 +944,7 @@
         drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
     }
 
-    function clearZoneFor(name) { if(confirm('Clear zone for ' + name + '?')) db.ref('driver_zones/' + name + '/path').remove(); }
+    function clearZoneFor(name) { if(confirm('Clear zone for ' + name + '?')) db.ref('driver_zones/' + name + '/paths').remove(); }
     function saveZone(name) { db.ref('driver_zones/' + name).update({ start: document.getElementById('z-start-'+name).value, end: document.getElementById('z-end-'+name).value }); }
 
     let deferredPrompt; const installBtn = document.getElementById('install-btn');
