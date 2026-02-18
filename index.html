@@ -158,6 +158,17 @@
         .link-input{color:#4da6ff;text-decoration:underline;cursor:pointer}
         .btn-cancel{background:#222;color:#ccc;border:1px solid #333;padding:16px;font-weight:700;cursor:pointer;font-size:14px;border-radius:6px}
         .btn-save{background:var(--active-green);color:#000;border:none;padding:16px;font-weight:800;text-transform:uppercase;cursor:pointer;font-size:14px;border-radius:6px}
+
+        /* ZONE MANAGER */
+        .zone-split { display: flex; height: 500px; gap: 20px; }
+        .zone-roster { flex: 1; overflow-y: auto; padding-right: 10px; }
+        #zone-map { flex: 2; border: 1px solid var(--accent); border-radius: 4px; }
+        .zone-driver-row { background: var(--input-bg); padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 4px; }
+        .zone-driver-name { font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 5px; }
+        .zone-controls { display: flex; gap: 5px; margin-top: 5px; }
+        .btn-zone { padding: 5px 10px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .btn-zone:hover { background: #333; border-color: var(--accent); }
+        .btn-zone.active-draw { background: var(--accent); color: #000; }
     </style>
 </head>
 <body>
@@ -233,6 +244,9 @@
         </div>
         <div class="stat-box">
             <button id="locate-btn" onclick="openMap()">Driver Map</button>
+        </div>
+        <div class="stat-box">
+             <button onclick="openZoneManager()" class="route-btn" style="background:var(--header-bg); color:var(--accent);">ZONE MGR</button>
         </div>
         <div id="assigned-box" class="stat-box">
             <span class="stat-label">Assigned</span>
@@ -372,17 +386,31 @@
     </div>
 </div>
 
+<div id="zone-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
+        <h2 class="modal-h2">Driver Zone Manager</h2>
+        <div class="zone-split">
+            <div class="zone-roster" id="zone-roster"></div>
+            <div id="zone-map"></div>
+        </div>
+        <div style="margin-top:15px; text-align:right;">
+            <button onclick="document.getElementById('zone-modal').style.display='none'" class="btn-cancel">CLOSE</button>
+        </div>
+    </div>
+</div>
+
 <button id="install-btn">Install App</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing"></script>
 <script>
     firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
     const db = firebase.database(), messaging = firebase.messaging();
     let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
+    let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null;
     const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 
     function initCommandNotifications(email) {
@@ -524,6 +552,7 @@
             const start = Date.now() - (604800000);
             db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() || {}; renderData(); });
             db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() || {}; renderData(); });
+            db.ref("driver_zones").on("value", s => driverZones = s.val() || {});
         } else { document.getElementById('login-overlay').style.display = 'flex'; }
     });
 
@@ -595,12 +624,45 @@
         const phone = currentMode === 'pickup' ? document.getElementById('f-customer-phone-p').value : document.getElementById('f-customer-phone-d').value;
         if(!(name && p) || !(dName && dAddr)) return alert("Please complete both Pickup and Delivery sections.");
 
-        const job = { city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: currentMode === 'delivery' ? 'pending_delivery' : 'pending_pickup', assigned_to: asgn, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
-        db.ref('jobs').push(job);
-        
-        const save = (n, a, c) => { if(n) db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email||"", customer_phone: phone||"", last_edit_by: currentUser }); };
-        save(name, p, city); save(dName, dAddr, dCity);
-        resetFormFields();
+        const finalizeJob = (finalDriver) => {
+            const job = { city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: currentMode === 'delivery' ? 'pending_delivery' : 'pending_pickup', assigned_to: finalDriver, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
+            db.ref('jobs').push(job);
+            const save = (n, a, c) => { if(n) db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email||"", customer_phone: phone||"", last_edit_by: currentUser }); };
+            save(name, p, city); save(dName, dAddr, dCity);
+            resetFormFields();
+        };
+
+        if (asgn === 'Unassigned' && Object.keys(driverZones).length > 0) {
+            const geocoder = new google.maps.Geocoder();
+            const addr = currentMode === 'pickup' ? p : dAddr;
+            const c = currentMode === 'pickup' ? city : dCity;
+            geocoder.geocode({ 'address': addr + (c ? ", " + c : "") }, (results, status) => {
+                let autoAssign = 'Unassigned';
+                if (status === 'OK' && results[0]) {
+                    const loc = results[0].geometry.location;
+                    const now = new Date();
+                    const currentMins = now.getHours() * 60 + now.getMinutes();
+                    for (let d in driverZones) {
+                        const z = driverZones[d];
+                        if (z && z.path) {
+                             if (z.start && z.end) {
+                                 const [sh, sm] = z.start.split(':').map(Number);
+                                 const [eh, em] = z.end.split(':').map(Number);
+                                 if (currentMins < (sh*60+sm) || currentMins > (eh*60+em)) continue;
+                             }
+                             const poly = new google.maps.Polygon({ paths: z.path });
+                             if (google.maps.geometry.poly.containsLocation(loc, poly)) {
+                                 autoAssign = d;
+                                 break;
+                             }
+                        }
+                    }
+                }
+                finalizeJob(autoAssign);
+            });
+        } else {
+            finalizeJob(asgn);
+        }
     }
 
     let pressTimer;
@@ -804,6 +866,62 @@
         document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
         document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
     }
+
+    function openZoneManager() {
+        document.getElementById('zone-modal').style.display = 'block';
+        if (!zoneMap) initZoneMap();
+        renderZoneRoster();
+    }
+    
+    function initZoneMap() {
+        zoneMap = new google.maps.Map(document.getElementById("zone-map"), { center: { lat: 49.8425, lng: -99.9497 }, zoom: 12, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+        drawingManager = new google.maps.drawing.DrawingManager({ drawingControl: false, polygonOptions: { editable: true } });
+        drawingManager.setMap(zoneMap);
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(e) {
+            if (e.type === 'polygon' && activeDrawingDriver) {
+                const path = e.overlay.getPath().getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
+                db.ref('driver_zones/' + activeDrawingDriver + '/path').set(path);
+                e.overlay.setMap(null); 
+                drawingManager.setDrawingMode(null);
+                activeDrawingDriver = null;
+                renderZoneRoster();
+            }
+        });
+    }
+
+    function renderZoneRoster() {
+        const drivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+        const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
+        let html = '';
+        if(zoneMap) { for(let k in zonePolygons) { zonePolygons[k].setMap(null); } zonePolygons = {}; }
+        drivers.forEach(d => {
+            const z = driverZones[d] || {};
+            if(z.path && zoneMap) {
+                zonePolygons[d] = new google.maps.Polygon({ paths: z.path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
+            }
+            html += `<div class="zone-driver-row">
+                <div class="zone-driver-name" style="color:${colors[d]}">${d}</div>
+                <div class="flex gap-10 mb-6">
+                    <input type="time" id="z-start-${d}" value="${z.start||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
+                    <input type="time" id="z-end-${d}" value="${z.end||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
+                </div>
+                <div class="zone-controls">
+                    <button class="btn-zone" onclick="drawZoneFor('${d}', '${colors[d]}')">DRAW ZONE</button>
+                    <button class="btn-zone" onclick="clearZoneFor('${d}')">CLEAR</button>
+                </div>
+            </div>`;
+        });
+        document.getElementById('zone-roster').innerHTML = html;
+    }
+
+    function drawZoneFor(name, color) {
+        activeDrawingDriver = name;
+        drawingManager.setOptions({ polygonOptions: { fillColor: color, fillOpacity: 0.3, strokeWeight: 2, strokeColor: color, editable: true } });
+        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    }
+
+    function clearZoneFor(name) { if(confirm('Clear zone for ' + name + '?')) db.ref('driver_zones/' + name + '/path').remove(); }
+    function saveZone(name) { db.ref('driver_zones/' + name).update({ start: document.getElementById('z-start-'+name).value, end: document.getElementById('z-end-'+name).value }); }
 
     let deferredPrompt; const installBtn = document.getElementById('install-btn');
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'block'; });
