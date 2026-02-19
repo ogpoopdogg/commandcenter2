@@ -160,8 +160,15 @@
         .btn-save{background:var(--active-green);color:#000;border:none;padding:16px;font-weight:800;text-transform:uppercase;cursor:pointer;font-size:14px;border-radius:6px}
 
         /* ZONE MANAGER */
-        .zone-driver-row { background: var(--input-bg); padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 4px; }
-        .zone-driver-name { font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 5px; }
+        .zone-driver-row { background: var(--input-bg); padding: 10px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 4px; }
+        .zone-driver-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px; }
+        .zone-driver-name { font-weight: 800; color: var(--accent); text-transform: uppercase; font-size: 14px; }
+        .btn-zone-add { background: var(--active-green); color: #000; border: none; padding: 4px 10px; font-weight: 800; font-size: 10px; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
+        
+        .zone-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .zone-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .btn-zone-del { background: transparent; color: #b71c1c; border: 1px solid #b71c1c; padding: 2px 6px; font-size: 9px; cursor: pointer; text-transform: uppercase; border-radius: 3px; font-weight: 700; }
+        
         .btn-zone { padding: 5px 10px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .btn-zone:hover { background: #333; border-color: var(--accent); }
         .btn-zone.active-draw { background: var(--accent); color: #000; }
@@ -172,10 +179,14 @@
         
         #zone-schedule-view { display: block; }
         #zone-map-view { display: none; height: 500px; display: flex; flex-direction: column; }
-        #zone-map-controls { position: absolute; top: 10px; right: 10px; width: 220px; background: rgba(0,0,0,0.85); border: 1px solid #444; border-radius: 6px; padding: 10px; max-height: calc(100% - 20px); overflow-y: auto; z-index: 10; }
-        .z-ctrl-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #333; }
-        .z-ctrl-row:last-child { border-bottom: none; margin-bottom: 0; }
-        .z-name { font-weight: 800; font-size: 12px; text-transform: uppercase; }
+        
+        .zone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; background: var(--header-bg); border-top: 1px solid var(--border); }
+        .zone-driver-btn { padding: 12px; background: var(--btn-bg); border: 1px solid var(--border); color: var(--text); font-weight: 800; text-transform: uppercase; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .zone-driver-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+        
+        #active-driver-zone-panel { display: none; padding: 10px; background: var(--card); border-top: 1px solid var(--accent); max-height: 150px; overflow-y: auto; }
+        .active-zone-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
+        .active-zone-label { font-size: 12px; font-weight: 700; color: #ccc; }
 
         @media (max-width: 768px) {
             #active-list-container { flex-direction: column; height: auto; }
@@ -415,7 +426,7 @@
         <div id="zone-schedule-view">
             <div class="flex jb ac mb-15">
                 <h2 class="modal-h2 m-0">DRIVER SCHEDULES</h2>
-                <button class="btn-zone" style="font-size:12px; padding:10px;" onclick="showZoneMap()">OPEN MAP / DRAW ZONES</button>
+                <button class="btn-zone" style="font-size:12px; padding:10px;" onclick="showZoneMap()">OPEN MAP EDITOR</button>
             </div>
             <div class="zone-roster" id="zone-roster" style="max-height:60vh; overflow-y:auto; -webkit-overflow-scrolling:touch;"></div>
         </div>
@@ -425,10 +436,11 @@
                 <h2 class="modal-h2 m-0">ZONE MAP EDITOR</h2>
                 <button class="btn-zone" style="font-size:12px; padding:10px;" onclick="showZoneSchedule()">BACK TO SCHEDULES</button>
             </div>
-            <div class="flex f-1" style="overflow:hidden; position:relative; border:1px solid var(--accent);">
+            <div class="flex f-1" style="overflow:hidden; position:relative; border:1px solid var(--accent); box-sizing: border-box;">
                 <div id="zone-map" style="width:100%; height:100%;"></div>
-                <div id="zone-map-controls"></div>
             </div>
+            <div id="active-driver-zone-panel"></div>
+            <div class="zone-grid" id="zone-driver-grid"></div>
         </div>
 
         <div style="margin-top:15px; text-align:right;">
@@ -448,7 +460,7 @@
     firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
     const db = firebase.database(), messaging = firebase.messaging();
     let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
-    let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null;
+    let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
     const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 
     function initCommandNotifications(email) {
@@ -684,24 +696,31 @@
                     let bestDriver = 'Unassigned';
 
                     for (let d in driverZones) {
-                        const z = driverZones[d];
-                        if (z && z.paths) {
-                             if (z.days && !z.days.includes(currentDay)) continue;
-                             if (z.start && z.end) {
-                                 const [sh, sm] = z.start.split(':').map(Number);
-                                 const [eh, em] = z.end.split(':').map(Number);
-                                 const startMins = sh * 60 + sm;
-                                 const endMins = eh * 60 + em;
-                                 if (currentMins < startMins || currentMins > endMins) continue;
-                             }
-                             
-                             let match = false;
-                             for(let i = 0; i < z.paths.length; i++) {
-                                 const poly = new google.maps.Polygon({ paths: z.paths[i] });
-                                 if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
-                             }
-                             if (match) { bestDriver = d; break; }
+                        const zoneData = driverZones[d];
+                        if (zoneData) {
+                            for (let zId in zoneData) {
+                                const z = zoneData[zId];
+                                if (!z) continue;
+                                if (z.days && !z.days.includes(currentDay)) continue;
+                                if (z.start && z.end) {
+                                     const [sh, sm] = z.start.split(':').map(Number);
+                                     const [eh, em] = z.end.split(':').map(Number);
+                                     const startMins = sh * 60 + sm;
+                                     const endMins = eh * 60 + em;
+                                     if (currentMins < startMins || currentMins > endMins) continue;
+                                }
+                                
+                                let match = false;
+                                if (z.paths) {
+                                    for(let i = 0; i < z.paths.length; i++) {
+                                        const poly = new google.maps.Polygon({ paths: z.paths[i] });
+                                        if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
+                                    }
+                                }
+                                if (match) { bestDriver = d; break; }
+                            }
                         }
+                        if (bestDriver !== 'Unassigned') break;
                     }
                     
                     if(bestDriver !== 'Unassigned') {
@@ -744,31 +763,31 @@
                     const currentDay = now.toLocaleDateString('en-US', { weekday: 'short' });
 
                     for (let d in driverZones) {
-                        const z = driverZones[d];
-                        if (z && z.paths) {
-                             if (z.days && !z.days.includes(currentDay)) continue;
-                             if (z.start && z.end) {
-                                 const [sh, sm] = z.start.split(':').map(Number);
-                                 const [eh, em] = z.end.split(':').map(Number);
-                                 const startMins = sh * 60 + sm;
-                                 const endMins = eh * 60 + em;
-                                 if (currentMins < startMins || currentMins > endMins) continue;
-                             }
-                             
-                             let match = false;
-                             for(let i = 0; i < z.paths.length; i++) {
-                                 const poly = new google.maps.Polygon({ paths: z.paths[i] });
-                                 if (google.maps.geometry.poly.containsLocation(loc, poly)) { 
-                                     match = true; 
-                                     break; 
-                                 }
-                             }
-                             
-                             if (match) {
-                                 autoAssign = d;
-                                 break;
-                             }
+                        const zoneData = driverZones[d];
+                        if (zoneData) {
+                            for (let zId in zoneData) {
+                                const z = zoneData[zId];
+                                if (!z) continue;
+                                if (z.days && !z.days.includes(currentDay)) continue;
+                                if (z.start && z.end) {
+                                     const [sh, sm] = z.start.split(':').map(Number);
+                                     const [eh, em] = z.end.split(':').map(Number);
+                                     const startMins = sh * 60 + sm;
+                                     const endMins = eh * 60 + em;
+                                     if (currentMins < startMins || currentMins > endMins) continue;
+                                }
+                                
+                                let match = false;
+                                if (z.paths) {
+                                    for(let i = 0; i < z.paths.length; i++) {
+                                        const poly = new google.maps.Polygon({ paths: z.paths[i] });
+                                        if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
+                                    }
+                                }
+                                if (match) { autoAssign = d; break; }
+                            }
                         }
+                        if (autoAssign !== 'Unassigned') break;
                     }
                 }
                 finalizeJob(autoAssign);
@@ -1024,14 +1043,21 @@
         drawingManager = new google.maps.drawing.DrawingManager({ drawingControl: false, polygonOptions: { editable: true } });
         drawingManager.setMap(zoneMap);
         google.maps.event.addListener(drawingManager, 'overlaycomplete', function(e) {
-            if (e.type === 'polygon' && activeDrawingDriver) {
+            if (e.type === 'polygon' && activeDrawingDriver && activeDrawingZoneId) {
                 const path = e.overlay.getPath().getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
-                const currentPaths = (driverZones[activeDrawingDriver] && driverZones[activeDrawingDriver].paths) || [];
-                currentPaths.push(path);
-                db.ref('driver_zones/' + activeDrawingDriver + '/paths').set(currentPaths);
+                
+                let existingPaths = [];
+                const z = driverZones[activeDrawingDriver] && driverZones[activeDrawingDriver][activeDrawingZoneId];
+                if (z && z.paths) existingPaths = z.paths;
+                existingPaths.push(path);
+
+                db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(existingPaths);
+                
                 e.overlay.setMap(null); 
                 drawingManager.setDrawingMode(null);
                 activeDrawingDriver = null;
+                activeDrawingZoneId = null;
+                document.getElementById('active-driver-zone-panel').style.display = 'none';
                 renderZoneMapInterface();
             }
         });
@@ -1044,21 +1070,38 @@
         let html = '';
         
         drivers.forEach(d => {
-            const z = driverZones[d] || {};
-            let dayHtml = '<div class="day-row">';
-            days.forEach(day => {
-                const isActive = (z.days && z.days.includes(day)) ? 'day-active' : '';
-                dayHtml += `<div class="day-toggle ${isActive}" onclick="toggleDay('${d}', '${day}')">${day[0]}</div>`;
-            });
-            dayHtml += '</div>';
+            const driverData = driverZones[d] || {};
+            let zonesHtml = '';
             
+            Object.keys(driverData).forEach(zId => {
+                const z = driverData[zId];
+                let dayHtml = '<div class="day-row">';
+                days.forEach(day => {
+                    const isActive = (z.days && z.days.includes(day)) ? 'day-active' : '';
+                    dayHtml += `<div class="day-toggle ${isActive}" onclick="toggleDay('${d}', '${zId}', '${day}')">${day[0]}</div>`;
+                });
+                dayHtml += '</div>';
+
+                zonesHtml += `
+                <div class="zone-item">
+                    <div class="zone-item-header">
+                        <input type="text" value="${z.label || ''}" placeholder="Zone Label" onchange="saveZone('${d}', '${zId}', 'label', this.value)" style="width: 150px; font-size: 11px; padding: 4px; margin:0; background: transparent; color: #fff; border-bottom: 1px solid #555; border-radius: 0; border-top:0; border-left:0; border-right:0;">
+                        <button class="btn-zone-del" onclick="deleteZone('${d}', '${zId}')">DELETE</button>
+                    </div>
+                    ${dayHtml}
+                    <div class="flex gap-10">
+                        <input type="time" value="${z.start||''}" onchange="saveZone('${d}', '${zId}', 'start', this.value)" style="margin:0; padding:4px;">
+                        <input type="time" value="${z.end||''}" onchange="saveZone('${d}', '${zId}', 'end', this.value)" style="margin:0; padding:4px;">
+                    </div>
+                </div>`;
+            });
+
             html += `<div class="zone-driver-row">
-                <div class="zone-driver-name" style="color:${colors[d]}">${d}</div>
-                ${dayHtml}
-                <div class="flex gap-10">
-                    <input type="time" id="z-start-${d}" value="${z.start||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
-                    <input type="time" id="z-end-${d}" value="${z.end||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
+                <div class="zone-driver-header">
+                    <div class="zone-driver-name" style="color:${colors[d]}">${d}</div>
+                    <button class="btn-zone-add" onclick="addZone('${d}')">+ ADD ZONE</button>
                 </div>
+                ${zonesHtml}
             </div>`;
         });
         document.getElementById('zone-roster').innerHTML = html;
@@ -1069,49 +1112,101 @@
         const drivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
         const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
         
-        for(let k in zonePolygons) { if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null)); else if(zonePolygons[k]) zonePolygons[k].setMap(null); }
+        // Clear polygons
+        for(let k in zonePolygons) { 
+             if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null));
+        }
         zonePolygons = {};
         
+        // Draw all zones
         drivers.forEach(d => {
-            const z = driverZones[d] || {};
-            if(z.paths) {
-                zonePolygons[d] = [];
-                z.paths.forEach(path => {
-                     const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
-                     zonePolygons[d].push(poly);
-                });
-            }
+            const driverData = driverZones[d] || {};
+            zonePolygons[d] = [];
+            
+            Object.values(driverData).forEach(z => {
+                if(z.paths) {
+                    z.paths.forEach(path => {
+                         const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
+                         zonePolygons[d].push(poly);
+                    });
+                }
+            });
         });
         
+        // Render Driver Grid
         let html = '';
         drivers.forEach(d => {
-             html += `<div class="z-ctrl-row">
-                <div class="z-name" style="color:${colors[d]}">${d}</div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-zone" onclick="drawZoneFor('${d}', '${colors[d]}')">DRAW</button>
-                    <button class="btn-zone" onclick="clearZoneFor('${d}')">CLEAR</button>
-                </div>
-            </div>`;
+             html += `<button class="zone-driver-btn" onclick="selectDriverForMap('${d}', '${colors[d]}')" style="color:${colors[d]}">${d}</button>`;
         });
-        document.getElementById('zone-map-controls').innerHTML = html;
+        document.getElementById('zone-driver-grid').innerHTML = html;
     }
 
-    function toggleDay(driver, day) {
-        const z = driverZones[driver] || {};
+    function selectDriverForMap(driver, color) {
+        const panel = document.getElementById('active-driver-zone-panel');
+        const driverData = driverZones[driver] || {};
+        const keys = Object.keys(driverData);
+        
+        if (keys.length === 0) {
+            panel.innerHTML = `<div style="text-align:center; color:#777; font-size:12px;">No zones created for ${driver}. Go to Schedule view to add one.</div>`;
+        } else {
+            let html = `<div style="font-weight:800; color:${color}; text-transform:uppercase; margin-bottom:8px;">${driver} ZONES</div>`;
+            keys.forEach(zId => {
+                const z = driverData[zId];
+                html += `
+                <div class="active-zone-row">
+                    <div class="active-zone-label">${z.label || 'Unnamed Zone'}</div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-zone" onclick="drawZoneFor('${driver}', '${zId}', '${color}')">DRAW</button>
+                        <button class="btn-zone" onclick="clearZoneFor('${driver}', '${zId}')">CLEAR</button>
+                    </div>
+                </div>`;
+            });
+            panel.innerHTML = html;
+        }
+        panel.style.display = 'block';
+    }
+
+    function addZone(driver) {
+        const newRef = db.ref('driver_zones/' + driver).push();
+        newRef.set({ label: 'New Zone', start: '', end: '', days: [], paths: [] });
+    }
+
+    function deleteZone(driver, zoneId) {
+        if(confirm('Delete this zone?')) {
+            db.ref(`driver_zones/${driver}/${zoneId}`).remove();
+        }
+    }
+
+    function toggleDay(driver, zoneId, day) {
+        const z = driverZones[driver][zoneId] || {};
         let days = z.days || [];
         if (days.includes(day)) days = days.filter(d => d !== day);
         else days.push(day);
-        db.ref('driver_zones/' + driver + '/days').set(days);
+        db.ref(`driver_zones/${driver}/${zoneId}/days`).set(days);
     }
 
-    function drawZoneFor(name, color) {
-        activeDrawingDriver = name;
+    function saveZone(driver, zoneId, field, value) {
+        db.ref(`driver_zones/${driver}/${zoneId}/${field}`).set(value);
+    }
+
+    function drawZoneFor(driver, zoneId, color) {
+        const z = driverZones[driver][zoneId];
+        if (!z.label || z.label === 'New Zone') {
+            const lbl = prompt("Enter a label for this Zone (e.g., Morning Run)", z.label || "");
+            if (lbl) db.ref(`driver_zones/${driver}/${zoneId}/label`).set(lbl);
+        }
+        activeDrawingDriver = driver;
+        activeDrawingZoneId = zoneId;
         drawingManager.setOptions({ polygonOptions: { fillColor: color, fillOpacity: 0.3, strokeWeight: 2, strokeColor: color, editable: true } });
         drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
     }
 
-    function clearZoneFor(name) { if(confirm('Clear zone for ' + name + '?')) db.ref('driver_zones/' + name + '/paths').remove(); }
-    function saveZone(name) { db.ref('driver_zones/' + name).update({ start: document.getElementById('z-start-'+name).value, end: document.getElementById('z-end-'+name).value }); }
+    function clearZoneFor(driver, zoneId) { 
+        if(confirm('Clear map area for this zone?')) {
+            db.ref(`driver_zones/${driver}/${zoneId}/paths`).remove();
+            setTimeout(() => selectDriverForMap(driver, {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'}[driver]), 200);
+        } 
+    }
 
     let deferredPrompt; const installBtn = document.getElementById('install-btn');
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'block'; });
