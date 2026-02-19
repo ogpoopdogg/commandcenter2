@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>E&C COMMAND CENTER</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#cca300">
+    <style>
+        :root { 
+            --accent: #cca300; --bg: #222; --card: #141414; --text: #e0e0e0; 
+            --active-green: #00b32d; --archive-orange: #cc5200; --note-blue: #0099cc; --pro-blue: #0056b3;
+            --header-bg: #000; --input-bg: #141414; --border: #333; --stat-bg: #161616; --modal-bg: #181818; --btn-bg: #1c1c1c;
+        }
+        body.light-mode {
+            --bg: #f0f2f5; --card: #fff; --text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
+        }
+        body.light-mode .hist-time, body.light-mode .stat-label, body.light-mode .archive-title { color: #000 !important; }
+        body.light-mode .route-time-display { color: #000 !important; border-color: #000 !important; box-shadow: none !important; }
+        body.light-mode .back-to-all-btn { background: #fff !important; color: #000 !important; border-color: #000 !important; }
+        body.light-mode button.primary.super-dispatch { background: #e0e0e0 !important; color: #000 !important; border: 1px solid #ccc !important; box-shadow: none !important; text-shadow: none !important; }
+        body.light-mode #voice-btn { background: #fff !important; border-color: #ccc !important; }
+        body.light-mode #mic-icon { fill: #000 !important; }
+        body.light-mode .dnd-card .hist-name { color: #fff !important; }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
+        header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .header-logo { height: 28px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
+        
+        @keyframes logo-glow { from { filter: drop-shadow(0 0 1px var(--accent)); transform: scale(1); } to { filter: drop-shadow(0 0 5px var(--accent)); transform: scale(1.02); } }
+        @keyframes dot-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+        .pulsing-dot { animation: dot-pulse 2s infinite ease-in-out; }
+
+        #locate-btn, .route-btn { background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover; color: #002244; border: 1px solid #444; border-radius: 6px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        #locate-btn { padding: 0; width: 100%; height: 50px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        #locate-btn:active { transform: scale(0.98); }
+        .route-btn { border: 1px solid var(--accent); padding: 10px 24px; font-size: 13px; white-space: nowrap; }
+
+        #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
+        #map { width: 100%; height: 100%; }
+        .close-map { position: absolute; top: 70px; right: 20px; z-index: 3001; background: #b71c1c; color: white; border: none; width: 140px; height: 40px; font-weight: 800; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+        .driver-map-label { color: #00ff00 !important; font-weight: 800; text-shadow: 0 0 2px #000; }
+        #route-list { position: absolute; top: 130px; left: 20px; width: 280px; max-height: calc(100% - 150px); overflow-y: auto; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 6px; padding: 15px; z-index: 3001; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #install-btn { display: none; background: var(--pro-blue); color: #fff; border: none; padding: 10px 16px; font-size: 12px; font-weight: 800; border-radius: 6px; cursor: pointer; text-transform: uppercase; position: absolute; right: 15px; bottom: 15px; z-index: 1002; }
+
+        @keyframes subtle-glow { 0% { box-shadow: 0 0 2px rgba(204, 163, 0, 0.1); border-color: #333; } 50% { box-shadow: 0 0 8px rgba(204, 163, 0, 0.2); border-color: var(--accent); } 100% { box-shadow: 0 0 2px rgba(204, 163, 0, 0.1); border-color: #333; } }
+        .glow-field { border: 1px solid var(--border); transition: border-color 0.3s; }
+        .glow-field:focus { border-color: var(--accent); outline: none; }
+
+        .stats-bar { display: flex; background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 10px; }
+        #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 15px; box-shadow: 0 0 8px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 20px; }
+        #board-panel { padding: 20px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        
+        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0; padding: 8px; background: var(--stat-bg); border: 1px solid var(--border); }
+        .stat-label { display: block; font-size: 10px; color: #777; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
+        .stat-number { font-family: 'Segoe UI', sans-serif; font-weight: 800; line-height: 1; }
+        #stat-pending { font-size: 22px; color: var(--accent); }
+        #stat-assigned { font-size: 22px; color: var(--active-green); }
+        #stat-note { font-size: 22px; color: var(--note-blue); }
+        .high-alert { background: #1a1a00 !important; border: 1px solid var(--active-green); }
+        .unassigned-glow { border: 1px solid var(--accent) !important; z-index: 10; box-shadow: 0 0 10px rgba(204, 163, 0, 0.2); }
+
+        .shiny-text { background: linear-gradient(to right, var(--accent) 20%, #ccc 50%, var(--accent) 80%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: text-shine 3s linear infinite; }
+        @keyframes text-shine { to { background-position: 200% center; } }
+
+        input, select, textarea { width: 100%; padding: 10px 12px; padding-right: 35px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 15px; margin-bottom: 6px; box-sizing: border-box; transition: border 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; background: var(--input-bg); }
+        
+        .flex-row { display: flex; gap: 6px; }
+        .driver-select { width: 100%; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); font-weight: 600; padding: 14px; border-radius: 6px; margin-bottom: 12px; }
+        
+        @keyframes professional-pulse { 0% { box-shadow: inset 0 0 5px rgba(0, 179, 45, 0.1); border-color: var(--active-green); } 50% { box-shadow: inset 0 0 20px rgba(0, 179, 45, 0.3), 0 0 10px rgba(255, 255, 255, 0.1); border-color: #4dff88; } 100% { box-shadow: inset 0 0 5px rgba(0, 179, 45, 0.1); border-color: var(--active-green); } }
+
+        button.primary { width: 100%; padding: 16px; background: var(--btn-bg); color: var(--text); font-weight: 800; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 6px; text-transform: uppercase; font-size: 15px; letter-spacing: 1.5px; transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2); overflow: hidden; }
+        button.primary:hover { background: #252525; border-color: var(--accent); transform: translateY(-2px); }
+        button.primary:active { transform: translateY(1px); }
+        button.primary.super-dispatch { background: #000 !important; color: var(--active-green) !important; border: 1px solid var(--active-green) !important; box-shadow: 0 0 10px rgba(0, 179, 45, 0.1) !important; animation: professional-pulse 3s infinite ease-in-out !important; text-shadow: 0 0 5px rgba(0, 179, 45, 0.5); letter-spacing: 2px; }
+
+        .history-box { display: none; margin-top: 20px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2); padding: 20px; gap: 20px; flex-wrap: wrap; }
+        .archive-column { flex: 1 1 0; min-width: 0; border-right: 1px solid var(--border); padding-right: 20px; }
+        .archive-column:last-child { border-right: none; padding-right: 0; }
+        .archive-title { font-size: 13px; font-weight: 800; color: #666; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; letter-spacing: 1px; }
+
+        .history-item { background: var(--card); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 6px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .history-item:hover { background: var(--input-bg); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .hist-driver { font-weight: 800; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hist-time { font-size: 11px; color: #777; margin-top: 8px; font-family: monospace; font-weight: bold; }
+        .hist-name { font-size: 14px; color: var(--text); text-transform: uppercase; font-weight: 700; margin-top: 5px; }
+        .urgent-pickup { border: 1px solid #b71c1c !important; box-shadow: inset 0 0 10px rgba(183, 28, 28, 0.2); }
+
+        #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--header-bg); border-top: 1px solid var(--border); padding: 15px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
+        #archive-search { width: 100%; padding: 14px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-weight: 600; border-radius: 6px; font-size: 15px; }
+        #archive-search:focus { border-color: var(--accent); }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(2px); }
+        .modal-content { background: var(--modal-bg); margin: 5% auto; padding: 30px; width: 90%; max-width: 550px; border: 1px solid var(--accent); color: var(--text); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; }
+        
+        #login-overlay { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        .login-box { width: 100%; max-width: 350px; background: #111; padding: 40px; border-radius: 12px; border: 1px solid #222; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-input { width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none; }
+        .login-submit { width: 100%; padding: 14px; margin-top: 20px; background: var(--accent); border: none; color: #000; font-weight: 800; font-size: 16px; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+        #user-display { color: var(--active-green); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
+
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--accent); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text); font-weight: 500; font-size: 14px; }
+        .suggestion-item:hover { background: var(--accent); color: #000; }
+        .voice-active { fill: var(--active-green) !important; filter: drop-shadow(0 0 5px var(--active-green)); }
+        
+        .mode-switch-container { display: flex; margin-bottom: 15px; background: var(--input-bg); border-radius: 6px; padding: 4px; border: 1px solid var(--border); }
+        .mode-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 13px; background: transparent; color: #666; border-radius: 4px; transition: 0.2s; }
+        .mode-btn.active-mode { background: var(--accent); color: #000; }
+        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
+
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 5px rgba(204,163,0,0.1); border-color: #333; } 50% { box-shadow: 0 0 20px rgba(204,163,0,0.3); border-color: var(--accent); } 100% { box-shadow: 0 0 5px rgba(204,163,0,0.1); border-color: #333; } }
+        #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2); margin-bottom: 20px; }
+        .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: var(--stat-bg); border-radius: 6px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 50px; animation: pulse-glow 4s infinite ease-in-out; }
+        .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
+        .ds-name { color: var(--text); font-weight: 700; font-size: 12px; width: auto; padding-right: 10px; text-transform: uppercase; }
+        .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
+        .stat-item { font-size: 9px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
+        .stat-val-p { color: var(--accent); font-size: 12px; font-weight: 800; }
+        .stat-val-d { color: var(--active-green); font-size: 12px; font-weight: 800; }
+        
+        .input-wrap { position: relative; width: 100%; display: flex; align-items: center; }
+        .input-wrap input, .input-wrap select, .input-wrap textarea { margin-bottom: 0; width: 100%; }
+        .copy-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
+        .copy-btn:hover { color: var(--accent); }
+        .copy-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+        .route-time-display { font-size:12px; color:#fff; margin-left:8px; font-weight:800; border:1px solid var(--accent); padding:2px 6px; border-radius:6px; box-shadow:0 0 5px var(--accent); animation:pulse-glow 2s infinite; }
+        .back-to-all-btn { background:#222; border:1px solid var(--accent); color:var(--accent); padding:10px 24px; font-weight:800; border-radius:6px; text-transform:uppercase; cursor:pointer; }
+        
+        @keyframes crt-turn-on { 0% { transform: scaleY(0.005) scaleX(0); opacity: 0; filter: brightness(0); } 50% { transform: scaleY(0.005) scaleX(1); opacity: 1; } 100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); } }
+        .crt-animate { animation: crt-turn-on 3s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+        @keyframes pulse-red-btn { 0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } 50% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); border-color: #ff4444; background: rgba(255,0,0,0.1); } 100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } }
+        @keyframes pulse-orange-btn { 0% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } 50% { box-shadow: 0 0 15px rgba(255, 140, 0, 0.7); border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); } 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } }
+        .btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
+        .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
+
+        .btn-pressed { box-shadow: inset 0 0 10px rgba(0,0,0,0.8) !important; background: #111 !important; color: #888 !important; border-bottom: 1px solid var(--border) !important; transform: translateY(2px) !important; }
+        body.light-mode .btn-pressed { background: #ddd !important; color: #555 !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important; border-bottom: 1px solid #bbb !important; }
+
+        /* UTIL CLASSES */
+        .w-100{width:100%}.m-0{margin:0}.mb-0{margin-bottom:0}.mb-6{margin-bottom:6px}.mb-12{margin-bottom:12px}.mb-15{margin-bottom:15px}.mb-20{margin-bottom:20px}.mt-0{margin-top:0}.mt-15{margin-top:15px}.mt-30{margin-top:30px}
+        .flex{display:flex}.col{flex-direction:column}.ac{align-items:center}.jc{justify-content:center}.jb{justify-content:space-between}.gap-10{gap:10px}.gap-12{gap:12px}.wrap{flex-wrap:wrap}
+        .f-1{flex:1}.f-1-5{flex:1.5}.f-2{flex:2}
+        .rel{position:relative}.abs{position:absolute}.fix{position:fixed}
+        .bold{font-weight:800}.u-case{text-transform:uppercase}.pointer{cursor:pointer}.none{display:none}
+        .border-b{border-bottom:1px solid var(--border)}
+        .header-logo-group{display:flex;flex-direction:column;width:100%}
+        .clock{font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+        .voice-icon{width:60px;background:#111;border:1px solid #444;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .suggestion-reset{position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:800;cursor:pointer;color:#666;text-transform:uppercase;z-index:10}
+        .modal-h2{color:var(--accent);margin-top:0;font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+        .btn-archive{background:var(--accent);color:#000;border:none;padding:8px 14px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px;margin-right:10px}
+        .btn-delete{background:transparent;border:1px solid #b71c1c;color:#ff5555;padding:8px 14px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px}
+        .link-input{color:#4da6ff;text-decoration:underline;cursor:pointer}
+        .btn-cancel{background:#222;color:#ccc;border:1px solid #333;padding:16px;font-weight:700;cursor:pointer;font-size:14px;border-radius:6px}
+        .btn-save{background:var(--active-green);color:#000;border:none;padding:16px;font-weight:800;text-transform:uppercase;cursor:pointer;font-size:14px;border-radius:6px}
+
+        /* ZONE MANAGER */
+        .zone-driver-row { background: var(--input-bg); padding: 10px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 4px; }
+        .zone-driver-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px; }
+        .zone-driver-name { font-weight: 800; color: var(--accent); text-transform: uppercase; font-size: 14px; }
+        .btn-zone-add { background: var(--active-green); color: #000; border: none; padding: 4px 10px; font-weight: 800; font-size: 10px; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
+        
+        .zone-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .zone-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .btn-zone-del { background: transparent; color: #b71c1c; border: 1px solid #b71c1c; padding: 2px 6px; font-size: 9px; cursor: pointer; text-transform: uppercase; border-radius: 3px; font-weight: 700; }
+        
+        .btn-zone { padding: 5px 10px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .btn-zone:hover { background: #333; border-color: var(--accent); }
+        .btn-zone.active-draw { background: var(--accent); color: #000; }
+        
+        .day-row { display: flex; gap: 4px; margin-bottom: 8px; }
+        .day-toggle { flex: 1; padding: 6px 0; background: var(--bg); border: 1px solid var(--border); color: #666; font-size: 10px; font-weight: 700; cursor: pointer; border-radius: 4px; text-align: center; }
+        .day-toggle.day-active { background: var(--accent); color: #000; border-color: var(--accent); }
+        
+        #zone-schedule-view { display: block; }
+        #zone-map-view { display: none; height: 500px; display: flex; flex-direction: column; }
+        
+        .zone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; background: var(--header-bg); border-top: 1px solid var(--border); }
+        .zone-driver-btn { padding: 12px; background: var(--btn-bg); border: 1px solid var(--border); color: var(--text); font-weight: 800; text-transform: uppercase; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .zone-driver-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+        
+        #active-driver-zone-panel { display: none; padding: 10px; background: var(--card); border-top: 1px solid var(--accent); max-height: 150px; overflow-y: auto; }
+        .active-zone-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
+        .active-zone-label { font-size: 12px; font-weight: 700; color: #ccc; }
+
+        @media (max-width: 768px) {
+            #active-list-container { flex-direction: column; height: auto; }
+            .archive-column { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 20px; margin-bottom: 20px; }
+            .archive-column:last-child { border-bottom: none; margin-bottom: 0; }
+            input, select, button, .mode-btn { min-height: 44px; }
+            #map { height: 100%; min-height: 100%; }
+            .header-logo-group { width: auto; }
+            .modal-content { padding: 15px; width: 98%; margin: 2% auto; }
+            #zone-map-view { height: 85vh !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-overlay">
+    <div class="login-box">
+        <h2 style="color: var(--accent); font-weight: 900; letter-spacing: 1px; margin-top:0;">COMMAND LOGIN</h2>
+        <input type="email" id="login-user" class="login-input" placeholder="Email" autofocus>
+        <input type="password" id="login-pin" class="login-input" placeholder="Password">
+        <button class="login-submit" onclick="attemptLogin()">Authorize</button>
+    </div>
+</div>
+
+<header>
+    <div class="header-logo-group">
+        <div id="user-display"></div>
+        <div class="flex ac pointer" onclick="toggleTheme()">
+            <div class="crt-animate flex ac">
+                <img src="icon2.png" class="header-logo" alt="E&C Logo">
+                <span class="shiny-text" style="font-size: 18px; font-weight: 800; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
+            </div>
+            <div class="flex col jc" style="margin-left:15px;">
+                <div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:900; animation:dot-pulse 1s infinite; font-size:11px; margin-bottom:2px;"></div>
+                <div id="header-alert" style="display:none; color:red; font-weight:900; animation:dot-pulse 1s infinite; font-size:11px;"></div>
+            </div>
+        </div>
+    </div>
+    <button id="locate-btn" onclick="openMap()" style="width: 120px; height: 34px; font-size: 11px; margin-left: 10px;">Driver Map</button>
+</header>
+
+<div id="entry-panel">
+    <div class="mode-switch-container">
+        <button class="mode-btn active-mode" id="btn-mode-pickup" onclick="setMode('pickup')">Schedule Pickup</button>
+        <button class="mode-btn" id="btn-mode-delivery" onclick="setMode('delivery')">Schedule Delivery</button>
+    </div>
+
+    <div id="top-input-section"></div>
+    
+    <div class="input-wrap mb-6">
+        <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
+        <button class="copy-btn" onclick="copyField('f-pkg-details')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+    </div>
+    <div class="input-wrap mb-6">
+        <input type="text" id="f-po" placeholder="PO / Reference">
+        <button class="copy-btn" onclick="copyField('f-po')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+    </div>
+    <div class="input-wrap mb-6">
+        <input type="text" id="f-info" placeholder="Driver Notes...">
+        <button class="copy-btn" onclick="copyField('f-info')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+    </div>
+
+    <div id="bottom-input-section" style="margin-top: 5px;"></div>
+
+    <select id="f-driver" class="driver-select" style="margin-bottom: 15px; border: 1px solid var(--accent);">
+        <option value="Unassigned" selected disabled hidden>Assign Driver</option>
+        <option value="Unassigned">UNASSIGNED</option>
+        <option value="Matt">Matt</option>
+        <option value="Touch">Touch</option>
+        <option value="Julian">Julian</option>
+        <option value="Jess">Jess</option>
+        <option value="Alysha">Alysha</option>
+        <option value="Kayla">Kayla</option>
+    </select>
+    <div class="flex gap-12">
+        <button class="primary super-dispatch f-1" onclick="createJob()">Dispatch</button>
+        <button id="voice-btn" onclick="startVoiceEntry()" class="voice-icon"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+    </div>
+    
+    <div class="stats-bar mt-15" style="background:transparent; border:none;">
+        <div id="pending-box" class="stat-box pointer" onclick="requestNotifyPermission()">
+            <span class="stat-label">Pending</span>
+            <div id="stat-pending" class="stat-number">0</div>
+        </div>
+        <div class="stat-box">
+             <button onclick="openZoneManager()" class="route-btn" style="background:var(--header-bg); color:var(--accent);">ZONE MGR</button>
+        </div>
+        <div id="assigned-box" class="stat-box">
+            <span class="stat-label">Assigned</span>
+            <div id="stat-assigned" class="stat-number">0</div>
+        </div>
+        <div id="note-box" class="stat-box none"><span class="stat-label">Note</span><div id="stat-note" class="stat-number">0</div></div>
+    </div>
+</div>
+
+<div id="driver-stats-panel"></div>
+<button id="toggle-active-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleActiveList()">Active Pickups/Deliveries</button>
+<button id="toggle-dnd-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleDNDList()">Active DND/DNP</button>
+
+<div class="none">
+    <div id="group-pickup">
+        <div class="rel">
+            <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
+            <button class="copy-btn" onclick="copyField('f-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            <div id="suggestions" class="suggestions-box"></div>
+            <div onclick="resetFormFields()" class="suggestion-reset">RESET</div>
+        </div>
+        <div class="flex-row">
+            <div class="input-wrap f-2">
+                <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address">
+                <button class="copy-btn" onclick="copyField('f-pickup')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            </div>
+            <div class="input-wrap f-1">
+                <input type="text" id="f-city" class="glow-field" placeholder="City/Town" oninput="handleCityInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('city-suggestions-p').style.display='none', 200)">
+                <button class="copy-btn" onclick="copyField('f-city')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+                <div id="city-suggestions-p" class="suggestions-box"></div>
+            </div>
+        </div>
+        <div class="flex-row">
+            <div class="input-wrap f-1-5">
+                <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Email">
+                <button class="copy-btn" onclick="copyField('f-customer-email-p')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            </div>
+            <div class="input-wrap f-1">
+                <input type="tel" id="f-customer-phone-p" class="glow-field" placeholder="Phone Number" oninput="formatPhone(this)">
+                <button class="copy-btn" onclick="copyField('f-customer-phone-p')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="group-drop">
+        <div class="rel">
+            <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
+            <button class="copy-btn" onclick="copyField('f-drop-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            <div id="drop-suggestions" class="suggestions-box"></div>
+            <div onclick="resetFormFields()" class="suggestion-reset">RESET</div>
+        </div>
+        <div class="flex-row">
+            <div class="input-wrap f-2">
+                <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address">
+                <button class="copy-btn" onclick="copyField('f-drop-address')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            </div>
+            <div class="input-wrap f-1">
+                <input type="text" id="f-drop-city" class="glow-field" placeholder="City/Town" oninput="handleCityInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('city-suggestions-d').style.display='none', 200)">
+                <button class="copy-btn" onclick="copyField('f-drop-city')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+                <div id="city-suggestions-d" class="suggestions-box"></div>
+            </div>
+        </div>
+        <div class="flex-row">
+            <div class="input-wrap f-1-5">
+                <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Email">
+                <button class="copy-btn" onclick="copyField('f-customer-email-d')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            </div>
+            <div class="input-wrap f-1">
+                <input type="tel" id="f-customer-phone-d" class="glow-field" placeholder="Phone Number" oninput="formatPhone(this)">
+                <button class="copy-btn" onclick="copyField('f-customer-phone-d')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="board-panel">
+    <div class="history-box" id="active-list-container">
+        <div id="filter-reset-ui" class="w-100 text-center none mb-15">
+            <div id="selected-driver-label" class="none bold uppercase" style="margin: 0 auto 25px auto; width:fit-content; font-size:20px; padding:8px 24px; border-radius:4px; background:#111; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
+            <div class="flex jc gap-15">
+                <button id="view-route-btn" class="route-btn none">View Current Route</button>
+                <button onclick="clearDriverFilter()" class="back-to-all-btn">Back to All</button>
+            </div>
+        </div>
+        <div class="archive-column">
+            <div class="archive-title" style="color:var(--archive-orange);">Pickups</div>
+            <div id="list-pickups"></div>
+        </div>
+        <div class="archive-column">
+            <div class="archive-title" style="color:#0099cc;">In Transit</div>
+            <div id="list-transit"></div>
+        </div>
+        <div class="archive-column">
+             <div class="archive-title" style="color:#00BFFF; display:flex; justify-content:space-between; align-items:center;">
+                <span>At Depot</span>
+                <button onclick="autoAssignDepotJobs()" style="background:transparent; border:1px solid #00BFFF; color:#00BFFF; padding:2px 6px; font-size:10px; border-radius:4px; cursor:pointer; text-transform:uppercase; font-weight:800;">Auto Assign</button>
+             </div>
+             <div id="list-depot"></div>
+        </div>
+        <div class="archive-column">
+            <div class="archive-title" style="color:var(--active-green);">Deliveries</div>
+            <div id="list-deliveries"></div>
+        </div>
+        <input type="text" id="active-search" class="glow-field w-100 mt-15" placeholder="Search Active Pickups/Deliveries..." style="text-align:center; box-sizing:border-box;" onkeyup="filterActiveCards(this.value)">
+        <button onclick="toggleActiveList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:12px; border-radius:6px;">Minimize Pickups/Deliveries List</button>
+    </div>
+
+    <div class="history-box col" id="dnd-list-container">
+        <div class="archive-title" style="color:#ff4444;">Active DND/DNP</div>
+        <button id="archive-all-dnd-btn" onclick="archiveAllDND()" class="none mb-15 bold pointer u-case" style="background:#b71c1c; color:#fff; border:none; padding:10px; border-radius:6px;">Archive All Failed</button>
+        <div id="list-dnd"></div>
+        <button onclick="toggleDNDList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:12px; border-radius:6px;">Minimize Active DND/DNP</button>
+    </div>
+
+    <div class="mt-30" style="padding: 15px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 0 8px rgba(255,255,255,0.2);">
+        <div class="archive-title" style="color: #666; border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
+        <div class="flex-row mb-15">
+             <select id="af-driver" class="driver-select mb-0 f-1" onchange="renderData()">
+                <option value="">All</option>
+                <option value="Unassigned">Unassigned</option>
+                <option value="Matt">Matt</option>
+                <option value="Touch">Touch</option>
+                <option value="Julian">Julian</option>
+                <option value="Jess">Jess</option>
+                <option value="Alysha">Alysha</option>
+                <option value="Kayla">Kayla</option>
+            </select>
+            <input id="af-name" placeholder="Name" class="glow-field f-1" onkeyup="renderData()">
+            <input id="af-city" placeholder="City" class="glow-field f-1" onkeyup="renderData()">
+        </div>
+        <input id="af-manual-search" placeholder="Manual Search (Today's Archive)..." class="glow-field mb-15" onkeyup="renderData()" onfocus="document.getElementById('board-panel').scrollIntoView({behavior:'smooth'})">
+        <div id="list-archive" class="flex col" style="gap: 8px;"></div>
+    </div>
+</div>
+
+<div id="map-modal">
+    <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
+    <button class="close-map" onclick="zoomToAll()" style="top:130px; background:#448800;">ZOOM OUT</button>
+    <div id="route-time-badge" class="none abs" style="top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:800; border:1px solid var(--active-green);"></div>
+    <div id="map-driver-head" class="none abs" style="top:15px; right:80px; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:900; font-size:16px; box-shadow:0 4px 15px rgba(0,0,0,0.5); white-space:nowrap;"></div>
+    <div id="route-list"></div>
+    <div id="map"></div>
+</div>
+
+<div id="detailsModal" class="modal" onclick="this.style.display='none';document.body.style.overflow=''">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h2 id="m-title" class="modal-h2">Job Details</h2>
+        <div id="m-body"></div>
+    </div>
+</div>
+
+<div id="zone-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
+        <div id="zone-schedule-view">
+            <div class="flex jb ac mb-15">
+                <h2 class="modal-h2 m-0">DRIVER SCHEDULES</h2>
+                <button class="btn-zone" style="font-size:12px; padding:10px;" onclick="showZoneMap()">OPEN MAP EDITOR</button>
+            </div>
+            <div class="zone-roster" id="zone-roster" style="max-height:60vh; overflow-y:auto; -webkit-overflow-scrolling:touch;"></div>
+        </div>
+
+        <div id="zone-map-view" class="none col" style="height:70vh;">
+            <div class="flex jb ac mb-10">
+                <h2 class="modal-h2 m-0">ZONE MAP EDITOR</h2>
+                <button class="btn-zone" style="font-size:12px; padding:10px;" onclick="showZoneSchedule()">BACK TO SCHEDULES</button>
+            </div>
+            <div class="flex f-1" style="overflow:hidden; position:relative; border:1px solid var(--accent); box-sizing: border-box;">
+                <div id="zone-map" style="width:100%; height:100%;"></div>
+            </div>
+            <div id="active-driver-zone-panel"></div>
+            <div class="zone-grid" id="zone-driver-grid"></div>
+        </div>
+
+        <div style="margin-top:15px; text-align:right;">
+            <button onclick="document.getElementById('zone-modal').style.display='none'" class="btn-cancel">CLOSE</button>
+        </div>
+    </div>
+</div>
+
+<button id="install-btn">Install App</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing"></script>
+<script>
+    firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
+    const db = firebase.database(), messaging = firebase.messaging();
+    let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
+    let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
+    const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+
+    function initCommandNotifications(email) {
+        if ("Notification" in window) {
+            Notification.requestPermission().then(perm => {
+                if (perm === 'granted') {
+                    messaging.getToken({ serviceWorkerRegistration: swReg, vapidKey: "BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI" }).then(token => {
+                        if (token) db.ref('command_tokens/' + email.replace(/[.#$\[\]]/g, "")).set({ token: token, user: email, updated: firebase.database.ServerValue.TIMESTAMP });
+                    }).catch(e => console.log('Token Error', e));
+                }
+            });
+            messaging.onMessage(payload => {
+                new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+                const a = document.getElementById('header-alert');
+                a.style.display = 'block'; a.innerText = "⚠️ " + payload.notification.title;
+                setTimeout(() => { if(!document.getElementById('list-dnd').innerHTML) a.style.display = 'none'; }, 5000);
+            });
+        }
+    }
+
+    if (localStorage.getItem('ec_theme') === 'light') document.body.classList.add('light-mode');
+    function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
+    function toggleActiveList() { toggleList('active-list-container', 'toggle-active-btn', 'dnd-list-container', 'toggle-dnd-btn'); }
+    function toggleDNDList() { toggleList('dnd-list-container', 'toggle-dnd-btn', 'active-list-container', 'toggle-active-btn'); }
+    function toggleList(openId, openBtnId, closeId, closeBtnId) {
+        const list = document.getElementById(openId), btn = document.getElementById(openBtnId);
+        if (list.style.display === 'none' || list.style.display === '') { list.style.display = 'flex'; btn.classList.add('btn-pressed'); document.getElementById(closeId).style.display = 'none'; document.getElementById(closeBtnId).classList.remove('btn-pressed'); } 
+        else { list.style.display = 'none'; btn.classList.remove('btn-pressed'); btn.style.display = 'block'; }
+    }
+
+    function filterByDriver(name) {
+        currentDriverFilter = name; renderData();
+        document.getElementById('active-list-container').style.display = 'flex';
+        document.getElementById('toggle-active-btn').classList.add('btn-pressed');
+        document.getElementById('dnd-list-container').style.display = 'none';
+        document.getElementById('toggle-dnd-btn').classList.remove('btn-pressed');
+        document.getElementById('toggle-active-btn').style.display = 'none';
+        const rb = document.getElementById("view-route-btn");
+        if(rb) { rb.style.display = "inline-block"; rb.onclick = (e) => viewDriverRoute(name, e); }
+    }
+    
+    function clearDriverFilter() {
+        currentDriverFilter = null;
+        if(document.getElementById("view-route-btn")) document.getElementById("view-route-btn").style.display = "none";
+        document.getElementById('toggle-active-btn').style.display = 'block';
+        if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
+        renderData();
+    }
+
+    function attemptLogin() {
+        const e = document.getElementById('login-user').value.trim(), p = document.getElementById('login-pin').value.trim();
+        if(e && p) firebase.auth().signInWithEmailAndPassword(e, p).catch(err => alert("Login Failed: " + err.message));
+    }
+
+    function formatTime12(ts) { if (!ts) return '--:--'; const d = new Date(ts); return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }); }
+    function formatPhone(i) { let x = i.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/); i.value = !x[2] ? x[1] : '(' + x[1] + ')-' + x[2] + (x[3] ? '-' + x[3] : ''); }
+
+    function copyField(id) {
+        const el = document.getElementById(id);
+        if(el) {
+            el.select(); navigator.clipboard.writeText(el.value);
+            const p = document.createElement("div"), r = window.event.target.getBoundingClientRect();
+            p.innerText = "COPIED TO CLIPBOARD"; Object.assign(p.style, {position:"fixed", left:(r.right+10)+"px", top:r.top+"px", background:"var(--active-green)", color:"#000", padding:"4px 8px", fontSize:"10px", fontWeight:"900", borderRadius:"4px", zIndex:"10000", pointerEvents:"none", boxShadow:"0 2px 10px rgba(0,0,0,0.5)", opacity:"0", transition:"opacity 0.3s, transform 0.3s"});
+            document.body.appendChild(p); requestAnimationFrame(() => { p.style.opacity = "1"; p.style.transform = "translateX(5px)"; });
+            setTimeout(() => { p.style.opacity = "0"; p.style.transform = "translateX(10px)"; setTimeout(() => document.body.removeChild(p), 300); }, 1500);
+        }
+    }
+
+    function filterActiveCards(val) {
+        val = val.toLowerCase();
+        ['list-pickups', 'list-transit', 'list-depot', 'list-deliveries'].forEach(id => {
+            const list = document.getElementById(id);
+            if(list) Array.from(list.children).forEach(c => c.style.display = c.innerText.toLowerCase().includes(val) ? '' : 'none');
+        });
+    }
+
+    let mainMap, mapMarkers = {}, activePolyline = null, listeningRef = null, mapAllListener = null;
+
+    function openMap() {
+        document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; document.getElementById('map-modal').style.display = 'block'; document.getElementById('route-time-badge').style.display = 'none'; currentDriverFilter = null;
+        setTimeout(() => { if(mainMap) google.maps.event.trigger(mainMap, "resize"); }, 100);
+        if (!mainMap) mainMap = new google.maps.Map(document.getElementById("map"), { gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+        for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
+        mapMarkers = {}; if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
+        if(mapAllListener) db.ref('driver_locations').off('value', mapAllListener);
+        
+        mapAllListener = db.ref('driver_locations').on('value', snap => {
+            const drivers = snap.val(), bounds = new google.maps.LatLngBounds(); let hasDrivers = false;
+            for (let name in drivers) {
+                const d = drivers[name], pos = { lat: d.lat, lng: d.lng };
+                const label = `${name}\n${formatTime12(d.gps_timestamp || d.timestamp)} | ${new Date(d.gps_timestamp||d.timestamp).toLocaleDateString()}`;
+                bounds.extend(pos); hasDrivers = true;
+                if (mapMarkers[name]) { mapMarkers[name].setPosition(pos); mapMarkers[name].setLabel({ text: label, className: "pulsing-dot driver-map-label" }); } 
+                else { mapMarkers[name] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) }, label: { text: label, className: "pulsing-dot driver-map-label" }, title: name }); }
+            }
+            if (hasDrivers && !mapBoundsInitialized) { mainMap.fitBounds(bounds); mapBoundsInitialized = true; google.maps.event.addListenerOnce(mainMap, 'idle', () => { if (mainMap.getZoom() > 16) mainMap.setZoom(16); }); }
+        });
+    }
+
+    function viewDriverRoute(name, e) {
+        if(e) e.stopPropagation(); mapBoundsInitialized = false;
+        if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
+        currentDriverFilter = name; document.getElementById('map-modal').style.display = 'block';
+        if (!mainMap) mainMap = new google.maps.Map(document.getElementById("map"), { gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+        renderData(); setTimeout(() => google.maps.event.trigger(mainMap, "resize"), 100);
+    }
+
+    function closeMap() {
+        mapBoundsInitialized = false; document.getElementById('map-modal').style.display = 'none'; document.getElementById('map-driver-head').style.display = 'none';
+        if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
+        if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
+        for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
+        mapMarkers = {};
+    }
+    
+    function zoomToDensest() {
+        const bounds = new google.maps.LatLngBounds(); let found = false;
+        Object.keys(mapMarkers).forEach(k => { if(mapMarkers[k].getPosition()) { bounds.extend(mapMarkers[k].getPosition()); found = true; } });
+        if(activePolyline) { activePolyline.getPath().forEach(p => bounds.extend(p)); found = true; }
+        if(found) mainMap.fitBounds(bounds);
+    }
+    function zoomToAll() {
+        const bounds = new google.maps.LatLngBounds(); let found = false;
+        Object.keys(mapMarkers).forEach(k => { if(mapMarkers[k].getPosition()) { bounds.extend(mapMarkers[k].getPosition()); found = true; } });
+        if(activePolyline) { activePolyline.getPath().forEach(p => bounds.extend(p)); found = true; }
+        if(found) { mainMap.fitBounds(bounds); google.maps.event.addListenerOnce(mainMap, 'idle', () => mainMap.setZoom(mainMap.getZoom() - 1)); }
+    }
+
+    function requestNotifyPermission() { if ("Notification" in window) Notification.requestPermission(); }
+
+    function setMode(mode) {
+        currentMode = mode;
+        const top = document.getElementById('top-input-section'), bot = document.getElementById('bottom-input-section'), grpP = document.getElementById('group-pickup'), grpD = document.getElementById('group-drop'), btnP = document.getElementById('btn-mode-pickup'), btnD = document.getElementById('btn-mode-delivery');
+        if(mode === 'pickup') { top.appendChild(grpP); bot.appendChild(grpD); btnP.classList.add('active-mode'); btnD.classList.remove('active-mode', 'delivery-mode'); } 
+        else { top.appendChild(grpD); bot.appendChild(grpP); btnP.classList.remove('active-mode'); btnD.classList.add('active-mode', 'delivery-mode'); }
+    }
+    setMode('pickup');
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if(user) {
+            if (!["desirae@ec.com", "celeste@ec.com"].includes(user.email)) { alert("ACCESS DENIED"); firebase.auth().signOut(); document.getElementById('login-overlay').style.display = 'flex'; return; }
+            currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
+            document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
+            db.ref("address_lookup").on("value", s => addressData = s.val() || {});
+            const start = Date.now() - (604800000);
+            db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() || {}; renderData(); });
+            db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() || {}; renderData(); });
+            db.ref("driver_zones").on("value", s => { 
+                driverZones = s.val() || {}; 
+                renderZoneRoster(); 
+                if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface(); 
+            });
+        } else { document.getElementById('login-overlay').style.display = 'flex'; }
+    });
+
+    function resetFormFields() { ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; }); }
+
+    function startVoiceEntry() {
+        const S = window.SpeechRecognition || window.webkitSpeechRecognition; if (!S) return alert("Voice API not supported");
+        const rec = new S(); rec.lang = 'en-US'; rec.start();
+        document.getElementById('mic-icon').classList.add('voice-active');
+        rec.onresult = (e) => {
+            let s = e.results[0][0].transcript.toLowerCase();
+            if (s.trim() === "dispatch") { createJob(); return; }
+            const map = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
+            Object.keys(map).forEach(w => s = s.replace(new RegExp(`\\b${w}\\b`, 'g'), map[w]));
+            let m = s.match(/\bfor\s+(matt|touch|julian|jess|alysha|kayla)\b/);
+            if (m) document.getElementById('f-driver').value = m[1].charAt(0).toUpperCase() + m[1].slice(1);
+        };
+        rec.onend = () => document.getElementById('mic-icon').classList.remove('voice-active');
+    }
+
+    function handleNameInput(val) { showSuggestions(val, 'suggestions', k => `<div class="suggestion-item" onclick="selectClient('${k}')">${k}</div>`); }
+    function selectClient(name) { fillForm(name, 'f-name', 'f-pickup', 'f-city', 'f-customer-email-p', 'f-customer-phone-p', 'suggestions', 'city-suggestions-p'); }
+
+    function handleDropNameInput(val) { showSuggestions(val, 'drop-suggestions', k => `<div class="suggestion-item" onclick="selectDropClient('${k}')">${k}</div>`); }
+    function selectDropClient(name) { fillForm(name, 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-customer-email-d', 'f-customer-phone-d', 'drop-suggestions', 'city-suggestions-d'); }
+
+    function handleCityInput(val, type) {
+        const box = document.getElementById(type === 'pickup' ? 'city-suggestions-p' : 'city-suggestions-d');
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const matches = Object.keys(addressData).filter(k => (addressData[k].city || "").toLowerCase().startsWith(val.trim().toLowerCase()));
+        if(matches.length === 0) { box.style.display = 'none'; return; }
+        const fn = type === 'pickup' ? 'selectClient' : 'selectDropClient';
+        box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="${fn}('${k}')">${k} (${addressData[k].city})</div>`).join('');
+        box.style.display = 'block';
+    }
+
+    function showSuggestions(val, id, mapFn) {
+        const box = document.getElementById(id);
+        if(val.length < 1) { box.style.display = 'none'; return; }
+        const m = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.replace(/[.#$\[\]\/]/g, "").trim().toLowerCase()));
+        if(m.length === 0) { box.style.display = 'none'; return; }
+        box.innerHTML = m.map(mapFn).join(''); box.style.display = 'block';
+    }
+    function fillForm(name, nId, aId, cId, eId, pId, sId, csId) {
+        const d = addressData[name]; if(!d) return;
+        document.getElementById(nId).value = name; document.getElementById(aId).value = d.address||""; document.getElementById(cId).value = d.city||"";
+        if(d.customer_email) document.getElementById(eId).value = d.customer_email; if(d.customer_phone) document.getElementById(pId).value = d.customer_phone;
+        document.getElementById(sId).style.display = 'none'; document.getElementById(csId).style.display = 'none';
+    }
+
+    function archiveAllDND() {
+        if(!confirm("Archive ALL active DND/DNP jobs?")) return;
+        const updates = {}, ts = firebase.database.ServerValue.TIMESTAMP;
+        Object.keys(rawJobs).forEach(id => {
+            const j = rawJobs[id], info = (j.other_info || "").toLowerCase();
+            if(j.status !== 'completed' && (info.includes("dnd") || info.includes("dnp"))) {
+                updates[`/jobs/${id}/status`] = 'completed'; updates[`/jobs/${id}/completed_at`] = ts;
+                updates[`/jobs/${id}/last_edit_by`] = currentUser; updates[`/jobs/${id}/other_info`] = "[ARCHIVED ALL] " + j.other_info;
+            }
+        });
+        if(Object.keys(updates).length) db.ref().update(updates);
+        toggleDNDList();
+    }
+    
+    function autoAssignDepotJobs() {
+        const jobsToAssign = [];
+        Object.entries(rawJobs).forEach(([id, job]) => {
+            if(job.status === 'pending_delivery' && (job.assigned_to === 'Unassigned' || !job.assigned_to)) {
+                jobsToAssign.push({id, ...job});
+            }
+        });
+        
+        if(jobsToAssign.length === 0) return alert("No depot jobs to assign.");
+        if(!confirm(`Attempt to auto-assign ${jobsToAssign.length} jobs?`)) return;
+
+        const geocoder = new google.maps.Geocoder();
+        const processJob = (index) => {
+            if(index >= jobsToAssign.length) return alert("Auto-assignment complete.");
+            
+            const job = jobsToAssign[index];
+            const addr = job.destination + (job.delivery_city ? ", " + job.delivery_city : (job.city ? ", " + job.city : ""));
+            
+            geocoder.geocode({ 'address': addr }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const loc = results[0].geometry.location;
+                    const now = new Date();
+                    const currentMins = now.getHours() * 60 + now.getMinutes();
+                    const currentDay = now.toLocaleDateString('en-US', { weekday: 'short' });
+                    let bestDriver = 'Unassigned';
+
+                    for (let d in driverZones) {
+                        const zoneData = driverZones[d];
+                        if (zoneData) {
+                            for (let zId in zoneData) {
+                                const z = zoneData[zId];
+                                if (!z) continue;
+                                if (z.days && !z.days.includes(currentDay)) continue;
+                                if (z.start && z.end) {
+                                     const [sh, sm] = z.start.split(':').map(Number);
+                                     const [eh, em] = z.end.split(':').map(Number);
+                                     const startMins = sh * 60 + sm;
+                                     const endMins = eh * 60 + em;
+                                     if (currentMins < startMins || currentMins > endMins) continue;
+                                }
+                                
+                                let match = false;
+                                if (z.paths) {
+                                    for(let i = 0; i < z.paths.length; i++) {
+                                        const poly = new google.maps.Polygon({ paths: z.paths[i] });
+                                        if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
+                                    }
+                                }
+                                if (match) { bestDriver = d; break; }
+                            }
+                        }
+                        if (bestDriver !== 'Unassigned') break;
+                    }
+                    
+                    if(bestDriver !== 'Unassigned') {
+                        db.ref('jobs').child(job.id).update({ assigned_to: bestDriver });
+                    }
+                }
+                setTimeout(() => processJob(index + 1), 600);
+            });
+        };
+        
+        processJob(0);
+    }
+
+    function createJob() {
+        const p = document.getElementById('f-pickup').value, dAddr = document.getElementById('f-drop-address').value, dCity = document.getElementById('f-drop-city').value, city = document.getElementById('f-city').value, name = document.getElementById('f-name').value, dName = document.getElementById('f-drop-name').value, asgn = document.getElementById('f-driver').value;
+        const info = document.getElementById('f-info').value ? `[${currentUser}]: ${document.getElementById('f-info').value}` : "";
+        const email = currentMode === 'pickup' ? document.getElementById('f-customer-email-p').value : document.getElementById('f-customer-email-d').value;
+        const phone = currentMode === 'pickup' ? document.getElementById('f-customer-phone-p').value : document.getElementById('f-customer-phone-d').value;
+        
+        const hasP = name.trim() && p.trim() && city.trim(); const hasD = dName.trim() && dAddr.trim() && dCity.trim();
+        if(!hasP && !hasD) return alert("Complete Pickup (Name, Address, City) OR Delivery (Name, Address, City).");
+
+        const finalizeJob = (finalDriver) => {
+            const job = { pickup_city: city, delivery_city: dCity, city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: currentMode === 'delivery' ? 'pending_delivery' : 'pending_pickup', assigned_to: finalDriver, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
+            db.ref('jobs').push(job);
+            const save = (n, a, c) => { if(n) db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email||"", customer_phone: phone||"", last_edit_by: currentUser }); };
+            save(name, p, city); save(dName, dAddr, dCity);
+            resetFormFields();
+        };
+
+        if (asgn === 'Unassigned' && currentMode === 'pickup') {
+            const geocoder = new google.maps.Geocoder();
+            const targetAddr = currentMode === 'pickup' ? p : dAddr;
+            const targetCity = currentMode === 'pickup' ? city : dCity;
+            
+            geocoder.geocode({ 'address': targetAddr + (targetCity ? ", " + targetCity : "") }, (results, status) => {
+                let autoAssign = 'Unassigned';
+                if (status === 'OK' && results[0]) {
+                    const loc = results[0].geometry.location;
+                    const now = new Date();
+                    const currentMins = now.getHours() * 60 + now.getMinutes();
+                    const currentDay = now.toLocaleDateString('en-US', { weekday: 'short' });
+
+                    for (let d in driverZones) {
+                        const zoneData = driverZones[d];
+                        if (zoneData) {
+                            for (let zId in zoneData) {
+                                const z = zoneData[zId];
+                                if (!z) continue;
+                                if (z.days && !z.days.includes(currentDay)) continue;
+                                if (z.start && z.end) {
+                                     const [sh, sm] = z.start.split(':').map(Number);
+                                     const [eh, em] = z.end.split(':').map(Number);
+                                     const startMins = sh * 60 + sm;
+                                     const endMins = eh * 60 + em;
+                                     if (currentMins < startMins || currentMins > endMins) continue;
+                                }
+                                
+                                let match = false;
+                                if (z.paths) {
+                                    for(let i = 0; i < z.paths.length; i++) {
+                                        const poly = new google.maps.Polygon({ paths: z.paths[i] });
+                                        if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
+                                    }
+                                }
+                                if (match) { autoAssign = d; break; }
+                            }
+                        }
+                        if (autoAssign !== 'Unassigned') break;
+                    }
+                }
+                finalizeJob(autoAssign);
+            });
+        } else {
+            finalizeJob(asgn);
+        }
+    }
+
+    let pressTimer;
+    function startPress(el) { pressTimer = setTimeout(() => { el.readOnly = false; el.style.color = 'var(--text)'; el.style.textDecoration = 'none'; el.style.cursor = 'text'; el.focus(); if(navigator.vibrate) navigator.vibrate(50); }, 1500); }
+    function cancelPress() { clearTimeout(pressTimer); }
+    function handleLinkClick(el, type) { if(el.readOnly && el.value) window.location.href = (type === 'email' ? 'mailto:' : 'tel:') + el.value; }
+
+    function viewDetails(id) {
+        const data = rawJobs[id]; if(!data) return;
+        const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
+        const drivers = ['Unassigned', 'Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+        const opts = drivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
+        const html = `
+            <div class="flex jb ac mb-20">
+                <div style="font-weight:800; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT JOB</div>
+                <div class="flex">
+                    <button onclick="archiveAsFailed('${id}')" class="btn-archive">ARCHIVE</button>
+                    <button onclick="deleteJob('${id}')" class="btn-delete">DELETE</button>
+                </div>
+            </div>
+            <div class="flex col gap-0">
+                <div class="input-wrap mb-12"><input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name"><button class="copy-btn" onclick="copyField('e-name')">${copySvg}</button></div>
+                <div class="flex-row">
+                    <div class="input-wrap f-2"><input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address"><button class="copy-btn" onclick="copyField('e-pickup')">${copySvg}</button></div>
+                    <div class="input-wrap f-1"><input id="e-city-p" value="${val(data.pickup_city||data.city)}" placeholder="City"><button class="copy-btn" onclick="copyField('e-city-p')">${copySvg}</button></div>
+                </div>
+                <div class="flex-row">
+                    <div class="input-wrap f-1-5"><input id="e-email-p" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-p')">${copySvg}</button></div>
+                    <div class="input-wrap f-1"><input id="e-phone-p" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-p')">${copySvg}</button></div>
+                </div>
+                <div class="input-wrap mb-12"><input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions"><button class="copy-btn" onclick="copyField('e-pkg')">${copySvg}</button></div>
+                <div class="input-wrap mb-12"><input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref"><button class="copy-btn" onclick="copyField('e-po')">${copySvg}</button></div>
+                <div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:12px; resize:none; overflow:hidden; min-height:60px;">${val(data.other_info)}</textarea><button class="copy-btn" onclick="copyField('e-note')">${copySvg}</button></div>
+                <div class="input-wrap mb-12"><input id="e-add-note" placeholder="Add New Note (Appends to above)"><button class="copy-btn" onclick="copyField('e-add-note')">${copySvg}</button></div>
+                <div class="input-wrap mb-12"><input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name"><button class="copy-btn" onclick="copyField('e-drop-name')">${copySvg}</button></div>
+                <div class="flex-row">
+                    <div class="input-wrap f-2"><input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address"><button class="copy-btn" onclick="copyField('e-drop')">${copySvg}</button></div>
+                    <div class="input-wrap f-1"><input id="e-city-d" value="${val(data.delivery_city||data.city)}" placeholder="City"><button class="copy-btn" onclick="copyField('e-city-d')">${copySvg}</button></div>
+                </div>
+                <div class="flex-row">
+                    <div class="input-wrap f-1-5"><input id="e-email-d" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-d')">${copySvg}</button></div>
+                    <div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-d')">${copySvg}</button></div>
+                </div>
+                <select id="e-driver" class="driver-select mb-12">${opts}</select>
+            </div>
+            <div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>`;
+        
+        document.querySelector('#detailsModal .modal-content').innerHTML = html;
+        const ta = document.getElementById('e-note'); if(ta) ta.style.height = ta.scrollHeight + 'px';
+        document.getElementById('detailsModal').style.display = 'block'; document.body.style.overflow = 'hidden';
+    }
+    
+    function archiveAsFailed(id) {
+        if(confirm("Archive this job as Failed (Unassigned)?")) {
+             const note = rawJobs[id]?.other_info || "";
+             db.ref('jobs').child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, other_info: "[ARCHIVED DND/DNP] " + note, last_edit_by: currentUser });
+             document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = '';
+        }
+    }
+
+    function saveEdit(id) {
+        let n = document.getElementById('e-note').value, add = document.getElementById('e-add-note').value;
+        if(add.trim()) n = (n ? n + " " : "") + `[${currentUser}]: ${add.trim()}`;
+        const newD = document.getElementById('e-driver').value, old = rawJobs[id].other_info.toLowerCase();
+        if ((old.includes("dnd") || old.includes("dnp")) && newD !== 'Unassigned') { n = n.replace(/dnd/gi, "").replace(/dnp/gi, "") + ` [reassigned by ${currentUser}]`; }
+        db.ref('jobs').child(id).update({
+            assigned_to: newD, package_details: document.getElementById('e-pkg').value, po_number: document.getElementById('e-po').value, name: document.getElementById('e-name').value, pickup_location: document.getElementById('e-pickup').value, pickup_city: document.getElementById('e-city-p').value, delivery_city: document.getElementById('e-city-d').value, city: document.getElementById('e-city-p').value || document.getElementById('e-city-d').value, delivery_name: document.getElementById('e-drop-name').value, destination: document.getElementById('e-drop').value, other_info: n, customer_email: document.getElementById('e-email-p').value, customer_phone: document.getElementById('e-phone-p').value, last_edit_by: currentUser
+        }).then(() => { document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; });
+    }
+
+    function deleteJob(id) { if(confirm("Delete this dispatch completely?")) { db.ref('jobs').child(id).remove(); document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; } }
+
+    function renderData() {
+        const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
+        pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = "";
+        
+        const filterUI = document.getElementById('filter-reset-ui'); if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
+        const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
+        
+        let stopLookup = {}, pending = 0, assignedCount = 0, noteCount = 0, dndCount = 0, driverStats = {};
+        if(currentDriverFilter && driverLocationsData[currentDriverFilter]) {
+            const d = driverLocationsData[currentDriverFilter];
+            if(d.route_order && Array.isArray(d.route_order)) d.route_order.forEach((jid, i) => stopLookup[jid] = i + 1);
+            else if (d.route_string) d.route_string.split(' | ').forEach(p => { const i = p.indexOf('. '); if(i > -1) stopLookup[p.substring(i+2).trim()] = parseInt(p.substring(0, i)); });
+        }
+
+        if(currentDriverFilter) {
+            const d = driverLocationsData[currentDriverFilter], l = document.getElementById("selected-driver-label");
+            if(l) { 
+                const c = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'}[currentDriverFilter] || '#fff';
+                Object.assign(l.style, {display:"block", borderColor:c, color:c, boxShadow:`0 0 15px ${c}`});
+                l.innerHTML = currentDriverFilter + (d?.total_duration ? `<br><span style="font-size:14px; color:#fff;">ETA: ${d.total_duration}</span>` : "");
+            }
+            const mh = document.getElementById("map-driver-head");
+            if(mh) { mh.style.display = "block"; mh.innerText = currentDriverFilter; mh.style.color = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'}[currentDriverFilter] || '#fff'; }
+            
+            if(document.getElementById('map-modal').style.display === 'block' && mainMap && d) {
+                 const b = document.getElementById("route-time-badge"); b.innerText = "ROUTE TIME: " + (d.total_duration||""); b.style.display = d.total_duration ? "block" : "none";
+                 document.getElementById('route-list').style.display = 'none';
+                 const pos = { lat: d.lat, lng: d.lng };
+                 if(mapMarkers[currentDriverFilter]) { mapMarkers[currentDriverFilter].setPosition(pos); mapMarkers[currentDriverFilter].setIcon({ path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) }); mapMarkers[currentDriverFilter].setLabel(null); }
+                 else { mapMarkers[currentDriverFilter] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) } }); }
+
+                 if(d.active_route) {
+                     if(activePolyline) activePolyline.setMap(null);
+                     const path = google.maps.geometry.encoding.decodePath(d.active_route);
+                     activePolyline = new google.maps.Polyline({ path: path, geodesic: true, strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5, map: mainMap });
+                     Object.keys(mapMarkers).forEach(k => { if(k !== currentDriverFilter && !k.startsWith('job_')) { mapMarkers[k].setMap(null); delete mapMarkers[k]; } });
+                     const jobs = [];
+                     Object.entries(rawJobs).forEach(([i,j])=>{
+                         if(j.assigned_to===currentDriverFilter) {
+                             if(j.status === 'pending_pickup') jobs.push({...j, t:'pickup', id:i});
+                             else if(j.status === 'pending_delivery') jobs.push({...j, t:'drop', id:i});
+                         }
+                     });
+                     const geo = new google.maps.Geocoder();
+                     const usedLabels = new Set();
+                     jobs.forEach((j, i) => {
+                         const addr = `${j.t==='pickup'?j.pickup_location:j.destination}, ${j.city||''}`, lbl = j.t==='pickup'?j.name:j.delivery_name;
+                         const s = stopLookup[j.id] || stopLookup[`${lbl} ${j.t==='pickup'?j.pickup_location:j.destination}`];
+                         let fLbl = "";
+                         if (!usedLabels.has(lbl)) {
+                             fLbl = s ? `${s}. ${lbl}` : lbl;
+                             usedLabels.add(lbl);
+                         }
+                         const k = `job_${i}`;
+                         if(mapMarkers[k]) mapMarkers[k].setMap(null);
+                         const mark = (loc) => mapMarkers[k] = new google.maps.Marker({ map: mainMap, position: loc, label: fLbl ? { text: fLbl, color: "#00b32d", fontWeight: "bold", fontSize: "12px", className: "driver-map-label" } : null, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5, fillColor: '#ff0000', fillOpacity: 1, strokeWeight: 1, strokeColor: 'white', labelOrigin: new google.maps.Point(0, i%2===0?-15:15) } });
+                         if(j.lat&&j.lng) mark({lat:parseFloat(j.lat),lng:parseFloat(j.lng)}); else geo.geocode({'address':addr}, (r,status) => { if(status==='OK') mark(r[0].geometry.location); });
+                     });
+                     if (!mapBoundsInitialized) { const b = new google.maps.LatLngBounds(); path.forEach(p => b.extend(p)); mainMap.fitBounds(b); mapBoundsInitialized = true; }
+                 } else if(!activePolyline) mainMap.setCenter(pos);
+            }
+        }
+        
+        const opts = document.getElementById('f-driver').options;
+        for(let i=0; i<opts.length; i++) if(!['Unassigned','Assign Driver'].includes(opts[i].value)) driverStats[opts[i].value] = { p: 0, d: 0 };
+        const dColors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
+
+        let ent = Object.entries(rawJobs);
+        if(currentDriverFilter) ent.sort((a,b) => (stopLookup[a[0]]||999) - (stopLookup[b[0]]||999)); else ent.reverse();
+        ent.forEach(([id, p]) => {
+            if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
+            const info = (p.other_info||"").toLowerCase(), isFailed = info.includes("dnd") || info.includes("dnp");
+            const searchCity = (p.pickup_city || "") + " " + (p.delivery_city || "") + " " + (p.city || "");
+            if(p.status === 'completed') {
+                if (new Date(p.completed_at||p.timestamp).toDateString() !== new Date().toDateString()) return;
+                if (afD && p.assigned_to !== afD) return;
+                if (afN && !(p.name.toLowerCase().includes(afN) || p.delivery_name.toLowerCase().includes(afN))) return;
+                if (afC && !searchCity.toLowerCase().includes(afC)) return;
+                if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
+                const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
+                Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", background:"var(--card)", opacity:"0.7"});
+                c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:800; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:900; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffcc00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
+                arcList.appendChild(c); return;
+            }
+            
+            const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
+            if(p.status === 'in_transit') {
+                assignedCount++; if(driverStats[asgn]) driverStats[asgn].d++;
+                const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
+                c.style.cursor = "pointer"; c.style.borderLeft = "4px solid #0099cc";
+                const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+                let dH = `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>`;
+                const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:#0099cc; color:#fff; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+                tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
+            }
+            const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
+            const isDepot = type === 'delivery' && isU;
+
+            if (isFailed) {
+                dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card";
+                Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id);
+                const bg = dColors[asgn] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+                const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span style="color:#ff4444; font-weight:800; font-size:11px;">FAILED</span>`;
+                const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+                dndList.appendChild(c);
+                if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
+                if(p.driver_edited_note) noteCount++; return;
+            }
+            if(isU && !isDepot) pending++; else { if(!isDepot) assignedCount++; if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++; }
+            if(p.driver_edited_note) noteCount++;
+            
+            const c = document.createElement("div"); c.className = "history-item " + (type==='pickup'&&isU ? 'urgent-pickup' : ''); c.onclick = () => viewDetails(id);
+            c.style.cursor = "pointer"; c.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
+            if(isFailed&&isU) Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444"});
+            if(isDepot) Object.assign(c.style, {borderLeft:"4px solid #00BFFF", background:"#001a33"});
+            
+            const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+            let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; font-weight:800; font-size:11px;">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
+            if(isDepot) dH = `<span style="color:#00BFFF; font-weight:900; font-size:11px; letter-spacing:1px;">AT DEPOT</span>`;
+
+            const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
+            c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+            
+            if(isDepot) {
+                depotList.appendChild(c);
+            } else {
+                (type === 'pickup' ? pList : dList).appendChild(c);
+            }
+        });
+        
+        const ad = document.getElementById('header-alert'), ud = document.getElementById('header-unassigned');
+        if(dndCount > 0) { ad.style.display = 'block'; ad.innerText = dndCount + " DND/DNP"; document.getElementById('archive-all-dnd-btn').style.display = 'block'; }
+        else { ad.style.display = 'none'; document.getElementById('archive-all-dnd-btn').style.display = 'none'; if (dndList.parentElement.style.display === 'flex') toggleDNDList(); }
+        ud.style.display = pending > 0 ? 'block' : 'none'; ud.innerText = pending + " UNASSIGNED";
+        
+        const dbn = document.getElementById('toggle-dnd-btn'), abn = document.getElementById('toggle-active-btn');
+        dndCount > 0 ? dbn.classList.add('btn-alert-red') : dbn.classList.remove('btn-alert-red');
+        pending > 0 ? abn.classList.add('btn-alert-orange') : abn.classList.remove('btn-alert-orange');
+
+        Object.keys(driverStats).forEach(d => {
+            const p = driverStats[d].p, del = driverStats[d].d;
+            if(p > 0 || del > 0) {
+                const r = document.createElement("div"); r.className = "driver-stat-row pointer"; r.onclick = () => filterByDriver(d);
+                const dur = (driverLocationsData[d]?.total_duration) || "";
+                r.innerHTML = `<div class="flex ac"><div class="ds-name" style="color:${dColors[d]||'#fff'};">${d}</div>${dur ? `<span class="route-time-display">${dur}</span>` : ''}</div><div class="stat-info">${p>0?`<div class="stat-item">Pickups <span class="stat-val-p">${p}</span></div>`:''}${del>0?`<div class="stat-item">Deliveries <span class="stat-val-d">${del}</span></div>`:''}</div>`;
+                sPanel.appendChild(r);
+            }
+        });
+        document.getElementById("stat-pending").innerText = pending; document.getElementById("stat-assigned").innerText = assignedCount; document.getElementById("stat-note").innerText = noteCount;
+        document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
+        document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
+    }
+
+    function openZoneManager() {
+        document.getElementById('zone-modal').style.display = 'block';
+        showZoneSchedule();
+    }
+    
+    function showZoneSchedule() {
+        document.getElementById('zone-schedule-view').style.display = 'block';
+        document.getElementById('zone-map-view').style.display = 'none';
+        renderZoneRoster();
+    }
+    
+    function showZoneMap() {
+        document.getElementById('zone-schedule-view').style.display = 'none';
+        document.getElementById('zone-map-view').style.display = 'flex';
+        if (!zoneMap) initZoneMap();
+        else { 
+            google.maps.event.trigger(zoneMap, "resize"); 
+            zoneMap.setCenter({ lat: 49.8425, lng: -99.9497 }); 
+        }
+        renderZoneMapInterface();
+    }
+    
+    function initZoneMap() {
+        zoneMap = new google.maps.Map(document.getElementById("zone-map"), { center: { lat: 49.8425, lng: -99.9497 }, zoom: 12, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+        drawingManager = new google.maps.drawing.DrawingManager({ drawingControl: false, polygonOptions: { editable: true } });
+        drawingManager.setMap(zoneMap);
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(e) {
+            if (e.type === 'polygon' && activeDrawingDriver && activeDrawingZoneId) {
+                const path = e.overlay.getPath().getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
+                
+                let existingPaths = [];
+                const z = driverZones[activeDrawingDriver] && driverZones[activeDrawingDriver][activeDrawingZoneId];
+                if (z && z.paths) existingPaths = z.paths;
+                existingPaths.push(path);
+
+                db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(existingPaths);
+                
+                e.overlay.setMap(null); 
+                drawingManager.setDrawingMode(null);
+                activeDrawingDriver = null;
+                activeDrawingZoneId = null;
+                document.getElementById('active-driver-zone-panel').style.display = 'none';
+                renderZoneMapInterface();
+            }
+        });
+    }
+
+    function renderZoneRoster() {
+        const drivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+        const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        let html = '';
+        
+        drivers.forEach(d => {
+            const driverData = driverZones[d] || {};
+            let zonesHtml = '';
+            
+            Object.keys(driverData).forEach(zId => {
+                const z = driverData[zId];
+                let dayHtml = '<div class="day-row">';
+                days.forEach(day => {
+                    const isActive = (z.days && z.days.includes(day)) ? 'day-active' : '';
+                    dayHtml += `<div class="day-toggle ${isActive}" onclick="toggleDay('${d}', '${zId}', '${day}')">${day[0]}</div>`;
+                });
+                dayHtml += '</div>';
+
+                zonesHtml += `
+                <div class="zone-item">
+                    <div class="zone-item-header">
+                        <input type="text" value="${z.label || ''}" placeholder="Zone Label" onchange="saveZone('${d}', '${zId}', 'label', this.value)" style="width: 150px; font-size: 11px; padding: 4px; margin:0; background: transparent; color: #fff; border-bottom: 1px solid #555; border-radius: 0; border-top:0; border-left:0; border-right:0;">
+                        <button class="btn-zone-del" onclick="deleteZone('${d}', '${zId}')">DELETE</button>
+                    </div>
+                    ${dayHtml}
+                    <div class="flex gap-10">
+                        <input type="time" value="${z.start||''}" onchange="saveZone('${d}', '${zId}', 'start', this.value)" style="margin:0; padding:4px;">
+                        <input type="time" value="${z.end||''}" onchange="saveZone('${d}', '${zId}', 'end', this.value)" style="margin:0; padding:4px;">
+                    </div>
+                </div>`;
+            });
+
+            html += `<div class="zone-driver-row">
+                <div class="zone-driver-header">
+                    <div class="zone-driver-name" style="color:${colors[d]}">${d}</div>
+                    <button class="btn-zone-add" onclick="addZone('${d}')">+ ADD ZONE</button>
+                </div>
+                ${zonesHtml}
+            </div>`;
+        });
+        document.getElementById('zone-roster').innerHTML = html;
+    }
+    
+    function renderZoneMapInterface() {
+        if(!zoneMap) return;
+        const drivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+        const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
+        
+        // Clear polygons
+        for(let k in zonePolygons) { 
+             if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null));
+        }
+        zonePolygons = {};
+        
+        // Draw all zones
+        drivers.forEach(d => {
+            const driverData = driverZones[d] || {};
+            zonePolygons[d] = [];
+            
+            Object.values(driverData).forEach(z => {
+                if(z.paths) {
+                    z.paths.forEach(path => {
+                         const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
+                         zonePolygons[d].push(poly);
+                    });
+                }
+            });
+        });
+        
+        // Render Driver Grid
+        let html = '';
+        drivers.forEach(d => {
+             html += `<button class="zone-driver-btn" onclick="selectDriverForMap('${d}', '${colors[d]}')" style="color:${colors[d]}">${d}</button>`;
+        });
+        document.getElementById('zone-driver-grid').innerHTML = html;
+    }
+
+    function selectDriverForMap(driver, color) {
+        const panel = document.getElementById('active-driver-zone-panel');
+        const driverData = driverZones[driver] || {};
+        const keys = Object.keys(driverData);
+        
+        if (keys.length === 0) {
+            panel.innerHTML = `<div style="text-align:center; color:#777; font-size:12px;">No zones created for ${driver}. Go to Schedule view to add one.</div>`;
+        } else {
+            let html = `<div style="font-weight:800; color:${color}; text-transform:uppercase; margin-bottom:8px;">${driver} ZONES</div>`;
+            keys.forEach(zId => {
+                const z = driverData[zId];
+                html += `
+                <div class="active-zone-row">
+                    <div class="active-zone-label">${z.label || 'Unnamed Zone'}</div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-zone" onclick="drawZoneFor('${driver}', '${zId}', '${color}')">DRAW</button>
+                        <button class="btn-zone" onclick="clearZoneFor('${driver}', '${zId}')">CLEAR</button>
+                    </div>
+                </div>`;
+            });
+            panel.innerHTML = html;
+        }
+        panel.style.display = 'block';
+    }
+
+    function addZone(driver) {
+        const newRef = db.ref('driver_zones/' + driver).push();
+        newRef.set({ label: 'New Zone', start: '', end: '', days: [], paths: [] });
+    }
+
+    function deleteZone(driver, zoneId) {
+        if(confirm('Delete this zone?')) {
+            db.ref(`driver_zones/${driver}/${zoneId}`).remove();
+        }
+    }
+
+    function toggleDay(driver, zoneId, day) {
+        const z = driverZones[driver][zoneId] || {};
+        let days = z.days || [];
+        if (days.includes(day)) days = days.filter(d => d !== day);
+        else days.push(day);
+        db.ref(`driver_zones/${driver}/${zoneId}/days`).set(days);
+    }
+
+    function saveZone(driver, zoneId, field, value) {
+        db.ref(`driver_zones/${driver}/${zoneId}/${field}`).set(value);
+    }
+
+    function drawZoneFor(driver, zoneId, color) {
+        const z = driverZones[driver][zoneId];
+        if (!z.label || z.label === 'New Zone') {
+            const lbl = prompt("Enter a label for this Zone (e.g., Morning Run)", z.label || "");
+            if (lbl) db.ref(`driver_zones/${driver}/${zoneId}/label`).set(lbl);
+        }
+        activeDrawingDriver = driver;
+        activeDrawingZoneId = zoneId;
+        drawingManager.setOptions({ polygonOptions: { fillColor: color, fillOpacity: 0.3, strokeWeight: 2, strokeColor: color, editable: true } });
+        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    }
+
+    function clearZoneFor(driver, zoneId) { 
+        if(confirm('Clear map area for this zone?')) {
+            db.ref(`driver_zones/${driver}/${zoneId}/paths`).remove();
+            setTimeout(() => selectDriverForMap(driver, {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'}[driver]), 200);
+        } 
+    }
+
+    let deferredPrompt; const installBtn = document.getElementById('install-btn');
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'block'; });
+    installBtn.addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') installBtn.style.display = 'none'; deferredPrompt = null; } });
+    if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./firebase-messaging-sw.js').then(r => { swReg = r; messaging.useServiceWorker(r); }).catch(e => console.log('SW Error', e)));
+</script>
+</body>
+</html>
