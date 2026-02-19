@@ -160,12 +160,8 @@
         .btn-save{background:var(--active-green);color:#000;border:none;padding:16px;font-weight:800;text-transform:uppercase;cursor:pointer;font-size:14px;border-radius:6px}
 
         /* ZONE MANAGER */
-        .zone-split { display: flex; height: 500px; gap: 20px; }
-        .zone-roster { flex: 1; overflow-y: auto; padding-right: 10px; }
-        #zone-map { flex: 2; border: 1px solid var(--accent); border-radius: 4px; }
         .zone-driver-row { background: var(--input-bg); padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 4px; }
         .zone-driver-name { font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 5px; }
-        .zone-controls { display: flex; gap: 5px; margin-top: 5px; }
         .btn-zone { padding: 5px 10px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .btn-zone:hover { background: #333; border-color: var(--accent); }
         .btn-zone.active-draw { background: var(--accent); color: #000; }
@@ -173,13 +169,20 @@
         .day-row { display: flex; gap: 4px; margin-bottom: 8px; }
         .day-toggle { flex: 1; padding: 6px 0; background: var(--bg); border: 1px solid var(--border); color: #666; font-size: 10px; font-weight: 700; cursor: pointer; border-radius: 4px; text-align: center; }
         .day-toggle.day-active { background: var(--accent); color: #000; border-color: var(--accent); }
+        
+        #zone-schedule-view { display: block; }
+        #zone-map-view { display: none; height: 500px; display: flex; flex-direction: column; }
+        #zone-map-controls { position: absolute; top: 10px; right: 10px; width: 220px; background: rgba(0,0,0,0.85); border: 1px solid #444; border-radius: 6px; padding: 10px; max-height: calc(100% - 20px); overflow-y: auto; z-index: 10; }
+        .z-ctrl-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #333; }
+        .z-ctrl-row:last-child { border-bottom: none; margin-bottom: 0; }
+        .z-name { font-weight: 800; font-size: 12px; text-transform: uppercase; }
 
         @media (max-width: 768px) {
-            #active-list-container, .zone-split { flex-direction: column; height: auto; }
+            #active-list-container { flex-direction: column; height: auto; }
             .archive-column { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 20px; margin-bottom: 20px; }
             .archive-column:last-child { border-bottom: none; margin-bottom: 0; }
             input, select, button, .mode-btn { min-height: 44px; }
-            #map, #zone-map { height: 350px; min-height: 350px; }
+            #map { height: 350px; min-height: 350px; }
             .header-logo-group { width: auto; }
         }
     </style>
@@ -409,11 +412,25 @@
 
 <div id="zone-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
     <div class="modal-content" style="max-width: 900px; width: 95%;">
-        <h2 class="modal-h2">Driver Zone Manager</h2>
-        <div class="zone-split">
-            <div class="zone-roster" id="zone-roster"></div>
-            <div id="zone-map"></div>
+        <div id="zone-schedule-view">
+            <div class="flex jb ac mb-15">
+                <h2 class="modal-h2 m-0">DRIVER SCHEDULES</h2>
+                <button class="btn-zone" style="font-size:12px; padding:10px;" onclick="showZoneMap()">OPEN MAP / DRAW ZONES</button>
+            </div>
+            <div class="zone-roster" id="zone-roster" style="max-height:60vh; overflow-y:auto; -webkit-overflow-scrolling:touch;"></div>
         </div>
+
+        <div id="zone-map-view" class="none col" style="height:70vh;">
+            <div class="flex jb ac mb-10">
+                <h2 class="modal-h2 m-0">ZONE MAP EDITOR</h2>
+                <button class="btn-zone" style="font-size:12px; padding:10px;" onclick="showZoneSchedule()">BACK TO SCHEDULES</button>
+            </div>
+            <div class="flex f-1" style="overflow:hidden; position:relative; border:1px solid var(--accent);">
+                <div id="zone-map" style="width:100%; height:100%;"></div>
+                <div id="zone-map-controls"></div>
+            </div>
+        </div>
+
         <div style="margin-top:15px; text-align:right;">
             <button onclick="document.getElementById('zone-modal').style.display='none'" class="btn-cancel">CLOSE</button>
         </div>
@@ -571,7 +588,11 @@
             const start = Date.now() - (604800000);
             db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() || {}; renderData(); });
             db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() || {}; renderData(); });
-            db.ref("driver_zones").on("value", s => driverZones = s.val() || {});
+            db.ref("driver_zones").on("value", s => { 
+                driverZones = s.val() || {}; 
+                renderZoneRoster(); 
+                if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface(); 
+            });
         } else { document.getElementById('login-overlay').style.display = 'flex'; }
     });
 
@@ -978,8 +999,24 @@
 
     function openZoneManager() {
         document.getElementById('zone-modal').style.display = 'block';
-        if (!zoneMap) initZoneMap();
+        showZoneSchedule();
+    }
+    
+    function showZoneSchedule() {
+        document.getElementById('zone-schedule-view').style.display = 'block';
+        document.getElementById('zone-map-view').style.display = 'none';
         renderZoneRoster();
+    }
+    
+    function showZoneMap() {
+        document.getElementById('zone-schedule-view').style.display = 'none';
+        document.getElementById('zone-map-view').style.display = 'flex';
+        if (!zoneMap) initZoneMap();
+        else { 
+            google.maps.event.trigger(zoneMap, "resize"); 
+            zoneMap.setCenter({ lat: 49.8425, lng: -99.9497 }); 
+        }
+        renderZoneMapInterface();
     }
     
     function initZoneMap() {
@@ -995,7 +1032,7 @@
                 e.overlay.setMap(null); 
                 drawingManager.setDrawingMode(null);
                 activeDrawingDriver = null;
-                renderZoneRoster();
+                renderZoneMapInterface();
             }
         });
     }
@@ -1005,17 +1042,9 @@
         const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         let html = '';
-        if(zoneMap) { for(let k in zonePolygons) { if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null)); else if(zonePolygons[k]) zonePolygons[k].setMap(null); } zonePolygons = {}; }
+        
         drivers.forEach(d => {
             const z = driverZones[d] || {};
-            if(z.paths && zoneMap) {
-                zonePolygons[d] = [];
-                z.paths.forEach(path => {
-                     const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
-                     zonePolygons[d].push(poly);
-                });
-            }
-            
             let dayHtml = '<div class="day-row">';
             days.forEach(day => {
                 const isActive = (z.days && z.days.includes(day)) ? 'day-active' : '';
@@ -1026,17 +1055,45 @@
             html += `<div class="zone-driver-row">
                 <div class="zone-driver-name" style="color:${colors[d]}">${d}</div>
                 ${dayHtml}
-                <div class="flex gap-10 mb-6">
+                <div class="flex gap-10">
                     <input type="time" id="z-start-${d}" value="${z.start||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
                     <input type="time" id="z-end-${d}" value="${z.end||''}" onchange="saveZone('${d}')" style="margin:0; padding:4px;">
-                </div>
-                <div class="zone-controls">
-                    <button class="btn-zone" onclick="drawZoneFor('${d}', '${colors[d]}')">DRAW ZONE</button>
-                    <button class="btn-zone" onclick="clearZoneFor('${d}')">CLEAR</button>
                 </div>
             </div>`;
         });
         document.getElementById('zone-roster').innerHTML = html;
+    }
+    
+    function renderZoneMapInterface() {
+        if(!zoneMap) return;
+        const drivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+        const colors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
+        
+        for(let k in zonePolygons) { if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null)); else if(zonePolygons[k]) zonePolygons[k].setMap(null); }
+        zonePolygons = {};
+        
+        drivers.forEach(d => {
+            const z = driverZones[d] || {};
+            if(z.paths) {
+                zonePolygons[d] = [];
+                z.paths.forEach(path => {
+                     const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: colors[d], fillOpacity: 0.3, strokeColor: colors[d], strokeWeight: 2 });
+                     zonePolygons[d].push(poly);
+                });
+            }
+        });
+        
+        let html = '';
+        drivers.forEach(d => {
+             html += `<div class="z-ctrl-row">
+                <div class="z-name" style="color:${colors[d]}">${d}</div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-zone" onclick="drawZoneFor('${d}', '${colors[d]}')">DRAW</button>
+                    <button class="btn-zone" onclick="clearZoneFor('${d}')">CLEAR</button>
+                </div>
+            </div>`;
+        });
+        document.getElementById('zone-map-controls').innerHTML = html;
     }
 
     function toggleDay(driver, day) {
