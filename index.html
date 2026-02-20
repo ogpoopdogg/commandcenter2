@@ -22,6 +22,7 @@
         body.light-mode #voice-btn { background: #fff !important; border-color: #ccc !important; }
         body.light-mode #mic-icon { fill: #000 !important; }
         body.light-mode .dnd-card .hist-name { color: #fff !important; }
+        body.light-mode .hist-driver { border-color: rgba(0,0,0,0.4) !important; }
 
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
         header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
@@ -81,9 +82,15 @@
         .archive-column:last-child { border-right: none; padding-right: 0; }
         .archive-title { font-size: 13px; font-weight: 800; color: #666; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; letter-spacing: 1px; }
 
+        .cat-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border); padding: 12px; cursor: pointer; font-weight: 800; border-radius: 6px; margin-bottom: 10px; text-transform: uppercase; font-size: 13px; }
+        .cat-badge { background: var(--bg); color: var(--text); padding: 2px 8px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border); }
+        @keyframes pulse-new { 0% { box-shadow: 0 0 0 0 rgba(204, 163, 0, 0.7); } 70% { box-shadow: 0 0 10px 10px rgba(204, 163, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(204, 163, 0, 0); } }
+        .new-card { animation: pulse-new 2s infinite; }
+        .new-btn { animation: pulse-new 2s infinite; border-color: var(--accent); }
+
         .history-item { background: var(--card); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 6px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .history-item:hover { background: var(--input-bg); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-        .hist-driver { font-weight: 700; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hist-driver { font-weight: 500; padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.4); }
         .hist-time { font-size: 11px; color: #777; margin-top: 8px; font-family: monospace; font-weight: bold; }
         .hist-name { font-size: 14px; color: var(--text); text-transform: uppercase; font-weight: 700; margin-top: 5px; }
         .urgent-pickup { border: 1px solid #b71c1c !important; box-shadow: inset 0 0 10px rgba(183, 28, 28, 0.2); }
@@ -357,26 +364,27 @@
                 <button onclick="clearDriverFilter()" class="back-to-all-btn">Back to All</button>
             </div>
         </div>
+        <input type="text" id="active-search" class="glow-field w-100 mb-15" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
+        
         <div class="archive-column">
-            <div class="archive-title" style="color:var(--archive-orange);">Pickups</div>
+            <button id="btn-pickups" class="cat-btn" style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id="badge-pickups" class="cat-badge">0</span></button>
             <div id="list-pickups"></div>
         </div>
         <div class="archive-column">
-            <div class="archive-title" style="color:#0099cc;">In Transit</div>
+            <button id="btn-transit" class="cat-btn" style="color:#0099cc;" onclick="toggleCat('transit')"><span>In Transit</span><span id="badge-transit" class="cat-badge">0</span></button>
             <div id="list-transit"></div>
         </div>
         <div class="archive-column">
-             <div class="archive-title" style="color:#00BFFF; display:flex; justify-content:space-between; align-items:center;">
-                <span>At Depot</span>
-                <button onclick="autoAssignDepotJobs()" style="background:transparent; border:1px solid #00BFFF; color:#00BFFF; padding:2px 6px; font-size:10px; border-radius:4px; cursor:pointer; text-transform:uppercase; font-weight:800;">Auto Assign</button>
-             </div>
+             <button id="btn-depot" class="cat-btn" style="color:#00BFFF;" onclick="toggleCat('depot')">
+                <div class="flex ac gap-10"><span>At Depot</span><span onclick="event.stopPropagation(); autoAssignDepotJobs()" style="background:transparent; border:1px solid #00BFFF; color:#00BFFF; padding:2px 6px; font-size:10px; border-radius:4px; cursor:pointer; text-transform:uppercase; font-weight:800;">Auto Assign</span></div>
+                <span id="badge-depot" class="cat-badge">0</span>
+             </button>
              <div id="list-depot"></div>
         </div>
         <div class="archive-column">
-            <div class="archive-title" style="color:var(--active-green);">Deliveries</div>
+            <button id="btn-deliveries" class="cat-btn" style="color:var(--active-green);" onclick="toggleCat('deliveries')"><span>Deliveries</span><span id="badge-deliveries" class="cat-badge">0</span></button>
             <div id="list-deliveries"></div>
         </div>
-        <input type="text" id="active-search" class="glow-field w-100 mt-15" placeholder="Search Active Pickups/Deliveries..." style="text-align:center; box-sizing:border-box;" onkeyup="filterActiveCards(this.value)">
         <button onclick="toggleActiveList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:12px; border-radius:6px;">Minimize Pickups/Deliveries List</button>
     </div>
 
@@ -464,7 +472,19 @@
     const db = firebase.database(), messaging = firebase.messaging();
     let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
     let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
+    let seenJobs = {}, catState = { pickups: true, transit: true, depot: true, deliveries: true }, isFirstLoad = true;
     const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+
+    function toggleCat(cat) {
+        catState[cat] = !catState[cat];
+        const list = document.getElementById('list-' + cat);
+        const btn = document.getElementById('btn-' + cat);
+        list.style.display = catState[cat] ? 'block' : 'none';
+        if (catState[cat]) {
+            btn.classList.remove('new-btn');
+            Array.from(list.querySelectorAll('.new-card')).forEach(el => el.classList.remove('new-card'));
+        }
+    }
 
     function initCommandNotifications(email) {
         if ("Notification" in window) {
@@ -953,6 +973,14 @@
             if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
             const info = (p.other_info||"").toLowerCase(), isFailed = info.includes("dnd") || info.includes("dnp");
             const searchCity = (p.pickup_city || "") + " " + (p.delivery_city || "") + " " + (p.city || "");
+            
+            let jobKey = id + '_' + p.status;
+            let isNew = false;
+            if (!seenJobs[jobKey]) {
+                seenJobs[jobKey] = true;
+                if (!isFirstLoad) isNew = true;
+            }
+
             if(p.status === 'completed') {
                 if (new Date(p.completed_at||p.timestamp).toDateString() !== new Date().toDateString()) return;
                 if (afD && p.assigned_to !== afD) return;
@@ -961,31 +989,31 @@
                 if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
                 const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
                 Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", background:"var(--card)", opacity:"0.7"});
-                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:12px; color:#ffcc00; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:12px; color:#00ff00; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:4px;">📦 ${p.package_details}</div>`:''}</div>`;
+                c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:800; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:900; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
                 arcList.appendChild(c); return;
             }
             
             const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
             if(p.status === 'in_transit') {
                 assignedCount++; if(driverStats[asgn]) driverStats[asgn].d++;
-                const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
+                const c = document.createElement("div"); c.className = "history-item" + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
                 c.style.cursor = "pointer"; c.style.borderLeft = "4px solid #0099cc";
                 const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
                 let dH = `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>`;
                 const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:#0099cc; color:#fff; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
-                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:12px; color:#ffcc00; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:12px; color:#00ff00; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:4px;">📦 ${p.package_details}</div>`:''}</div>`;
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
                 tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
             }
             const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
             const isDepot = type === 'delivery' && isU;
 
             if (isFailed) {
-                dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card";
+                dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
                 Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id);
                 const bg = dColors[asgn] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
-                const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span style="color:#ff4444; font-weight:800; font-size:11px;">FAILED</span>`;
+                const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span class="hist-driver" style="color:#ff4444; background:transparent; border-color:#ff4444;">FAILED</span>`;
                 const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
-                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:12px; color:#ffcc00; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:12px; color:#00ff00; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:4px;">📦 ${p.package_details}</div>`:''}</div>`;
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
                 dndList.appendChild(c);
                 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
                 if(p.driver_edited_note) noteCount++; return;
@@ -993,17 +1021,17 @@
             if(isU && !isDepot) pending++; else { if(!isDepot) assignedCount++; if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++; }
             if(p.driver_edited_note) noteCount++;
             
-            const c = document.createElement("div"); c.className = "history-item " + (type==='pickup'&&isU ? 'urgent-pickup' : ''); c.onclick = () => viewDetails(id);
+            const c = document.createElement("div"); c.className = "history-item" + (type==='pickup'&&isU ? ' urgent-pickup' : '') + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
             c.style.cursor = "pointer"; c.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
             if(isFailed&&isU) Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444"});
             if(isDepot) Object.assign(c.style, {borderLeft:"4px solid #00BFFF", background:"#001a33"});
             
             const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
-            let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; font-weight:800; font-size:11px;">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
-            if(isDepot) dH = `<span style="color:#00BFFF; font-weight:900; font-size:11px; letter-spacing:1px;">AT DEPOT</span>`;
+            let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span class="hist-driver" style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; background:transparent; border-color:${isFailed&&isU?'#ff4444':'#cc5200'};">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
+            if(isDepot) dH = `<span class="hist-driver" style="color:#00BFFF; background:transparent; border-color:#00BFFF;">AT DEPOT</span>`;
 
             const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
-            c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+            c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
             
             if(isDepot) {
                 depotList.appendChild(c);
@@ -1033,6 +1061,17 @@
         document.getElementById("stat-pending").innerText = pending; document.getElementById("stat-assigned").innerText = assignedCount; document.getElementById("stat-note").innerText = noteCount;
         document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
         document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
+
+        ['pickups', 'transit', 'depot', 'deliveries'].forEach(cat => {
+            const list = document.getElementById('list-' + cat);
+            if(list) {
+                document.getElementById('badge-' + cat).innerText = list.children.length;
+                list.style.display = catState[cat] ? 'block' : 'none';
+                if (list.querySelector('.new-card') && !catState[cat]) document.getElementById('btn-' + cat).classList.add('new-btn');
+                else document.getElementById('btn-' + cat).classList.remove('new-btn');
+            }
+        });
+        isFirstLoad = false;
     }
 
     function openZoneManager() {
