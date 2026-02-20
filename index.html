@@ -110,7 +110,11 @@
         .mode-btn.active-mode.delivery-mode { background: var(--active-green); color: #000; }
 
         #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; border-radius: 6px; }
-        .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 15px; background: var(--stat-bg); border-radius: 6px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 50px; }
+        .driver-stat-row::after { content: ""; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(204, 163, 0, 0.2), rgba(255, 255, 255, 0.4), rgba(204, 163, 0, 0.2), transparent); transform: skewX(-25deg); animation: pro-shimmer 6s infinite; pointer-events: none; }
+@keyframes pro-shimmer { 
+    0% { left: -100%; } 
+    100% { left: 100%; } 
+
         .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
         .ds-name { color: var(--text); font-weight: 700; font-size: 12px; width: auto; padding-right: 10px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
