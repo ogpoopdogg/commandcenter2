@@ -122,7 +122,10 @@
         #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow-soft); margin-bottom: 20px; }
         .driver-stat-row { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: var(--stat-bg); border-radius: 6px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 50px; animation: pulse-glow 4s infinite ease-in-out; }
 .driver-stat-row::after { content: ""; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(204, 163, 0, 0.2), rgba(255, 255, 255, 0.4), rgba(204, 163, 0, 0.2), transparent); transform: skewX(-25deg); animation: pro-shimmer 6s infinite; pointer-events: none; }
-@keyframes pro-shimmer { 0% { left: -100%; } 25% { left: 200%; } 100% { left: 200%; } }
+@keyframes pro-shimmer { 
+    0% { left: -100%; } 
+    100% { left: 100%; } 
+}
         .driver-stat-row:hover { transform: translateX(2px); border-color: var(--border-focus); }
         .ds-name { color: var(--text-strong); font-weight: 700; font-size: 13px; width: auto; padding-right: 10px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
