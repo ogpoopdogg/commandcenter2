@@ -148,6 +148,9 @@
         .btn-pressed { box-shadow: inset 0 0 10px rgba(0,0,0,0.8) !important; background: #111 !important; color: #888 !important; border-bottom: 1px solid var(--border) !important; transform: translateY(2px) !important; }
         body.light-mode .btn-pressed { background: #ddd !important; color: #555 !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important; border-bottom: 1px solid #bbb !important; }
 
+        @keyframes badge-pulse { 0% { box-shadow: 0 0 2px var(--accent); } 50% { box-shadow: 0 0 8px var(--accent); } 100% { box-shadow: 0 0 2px var(--accent); } }
+        .badge-active { color: var(--accent) !important; border-color: var(--accent) !important; animation: badge-pulse 2s infinite; }
+
         /* UTIL CLASSES */
         .w-100{width:100%}.m-0{margin:0}.mb-0{margin-bottom:0}.mb-6{margin-bottom:6px}.mb-12{margin-bottom:12px}.mb-15{margin-bottom:15px}.mb-20{margin-bottom:20px}.mt-0{margin-top:0}.mt-15{margin-top:15px}.mt-30{margin-top:30px}
         .flex{display:flex}.col{flex-direction:column}.ac{align-items:center}.jc{justify-content:center}.jb{justify-content:space-between}.gap-10{gap:10px}.gap-12{gap:12px}.wrap{flex-wrap:wrap}
@@ -358,10 +361,10 @@
 <div id="board-panel">
     <div class="history-box" id="active-list-container">
         <div id="filter-reset-ui" class="w-100 text-center none mb-15">
-            <div id="selected-driver-label" class="none bold uppercase" style="margin: 0 auto 25px auto; width:fit-content; font-size:20px; padding:8px 24px; border-radius:4px; background:#111; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
-            <div class="flex jc gap-15">
-                <button id="view-route-btn" class="route-btn none">View Current Route</button>
-                <button onclick="clearDriverFilter()" class="back-to-all-btn">Back to All</button>
+            <div id="selected-driver-label" class="none bold uppercase" style="margin: 0 auto 15px auto; width:100%; max-width:350px; font-size:18px; padding:12px; border-radius:4px; background:#111; box-shadow: 0 0 15px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 10px;"></div>
+            <div class="flex jc" style="gap:15px; margin:0 auto; width:100%; max-width:350px;">
+                <button id="view-route-btn" class="route-btn none" style="flex:1;">View Current Route</button>
+                <button onclick="clearDriverFilter()" class="back-to-all-btn" style="flex:1;">Back to All</button>
             </div>
         </div>
         <input type="text" id="active-search" class="glow-field w-100 mb-15" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
@@ -472,7 +475,7 @@
     const db = firebase.database(), messaging = firebase.messaging();
     let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
     let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
-    let seenJobs = {}, catState = { pickups: true, transit: true, depot: true, deliveries: true }, isFirstLoad = true;
+    let seenJobs = {}, catState = { pickups: false, transit: false, depot: false, deliveries: false }, isFirstLoad = true;
     const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 
     function toggleCat(cat) {
@@ -556,7 +559,20 @@
         val = val.toLowerCase();
         ['list-pickups', 'list-transit', 'list-depot', 'list-deliveries'].forEach(id => {
             const list = document.getElementById(id);
-            if(list) Array.from(list.children).forEach(c => c.style.display = c.innerText.toLowerCase().includes(val) ? '' : 'none');
+            if(list) {
+                let hasMatch = false;
+                Array.from(list.children).forEach(c => {
+                    const match = c.innerText.toLowerCase().includes(val);
+                    c.style.display = match ? '' : 'none';
+                    if (match) hasMatch = true;
+                });
+                if (val) {
+                    list.style.display = hasMatch ? 'block' : 'none';
+                } else {
+                    const cat = id.split('-')[1];
+                    list.style.display = catState[cat] ? 'block' : 'none';
+                }
+            }
         });
     }
 
@@ -918,8 +934,8 @@
             const d = driverLocationsData[currentDriverFilter], l = document.getElementById("selected-driver-label");
             if(l) { 
                 const c = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'}[currentDriverFilter] || '#fff';
-                Object.assign(l.style, {display:"block", borderColor:c, color:c, boxShadow:`0 0 15px ${c}`});
-                l.innerHTML = currentDriverFilter + (d?.total_duration ? `<br><span style="font-size:14px; color:#fff;">ETA: ${d.total_duration}</span>` : "");
+                Object.assign(l.style, {display:"flex", borderColor:c, color:c, boxShadow:`0 0 15px ${c}`});
+                l.innerHTML = currentDriverFilter + (d?.total_duration ? `<span style="font-size:14px; color:#fff;">ETA: ${d.total_duration}</span>` : "");
             }
             const mh = document.getElementById("map-driver-head");
             if(mh) { mh.style.display = "block"; mh.innerText = currentDriverFilter; mh.style.color = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'}[currentDriverFilter] || '#fff'; }
@@ -1000,8 +1016,8 @@
                 c.style.cursor = "pointer"; c.style.borderLeft = "4px solid #0099cc";
                 const bg = dColors[p.assigned_to] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
                 let dH = `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>`;
-                const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:#0099cc; color:#fff; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
-                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+                const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:#0099cc; color:#fff; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
                 tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
             }
             const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
@@ -1012,8 +1028,8 @@
                 Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id);
                 const bg = dColors[asgn] || '#00b32d', dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
                 const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span class="hist-driver" style="color:#ff4444; background:transparent; border-color:#ff4444;">FAILED</span>`;
-                const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
-                c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+                const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
                 dndList.appendChild(c);
                 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
                 if(p.driver_edited_note) noteCount++; return;
@@ -1030,8 +1046,8 @@
             let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span class="hist-driver" style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; background:transparent; border-color:${isFailed&&isU?'#ff4444':'#cc5200'};">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
             if(isDepot) dH = `<span class="hist-driver" style="color:#00BFFF; background:transparent; border-color:#00BFFF;">AT DEPOT</span>`;
 
-            const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:24px; height:24px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px; font-size:12px;">${s}</div>` : '';
-            c.innerHTML = `<div class="flex col w-100"><div class="flex jb ac mb-5">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+            const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
+            c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:bold; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
             
             if(isDepot) {
                 depotList.appendChild(c);
@@ -1065,7 +1081,10 @@
         ['pickups', 'transit', 'depot', 'deliveries'].forEach(cat => {
             const list = document.getElementById('list-' + cat);
             if(list) {
-                document.getElementById('badge-' + cat).innerText = list.children.length;
+                const count = list.children.length;
+                const badge = document.getElementById('badge-' + cat);
+                badge.innerText = count;
+                if(count > 0) badge.classList.add('badge-active'); else badge.classList.remove('badge-active');
                 list.style.display = catState[cat] ? 'block' : 'none';
                 if (list.querySelector('.new-card') && !catState[cat]) document.getElementById('btn-' + cat).classList.add('new-btn');
                 else document.getElementById('btn-' + cat).classList.remove('new-btn');
