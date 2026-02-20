@@ -255,6 +255,12 @@
         <select id="f-driver" class="driver-select" style="margin-bottom: 0; border: 1px solid var(--accent); flex: 1;">
             <option value="Unassigned" selected disabled hidden>Assign Driver</option>
             <option value="Unassigned">UNASSIGNED</option>
+            <option value="Matt">Matt</option>
+            <option value="Touch">Touch</option>
+            <option value="Julian">Julian</option>
+            <option value="Jess">Jess</option>
+            <option value="Alysha">Alysha</option>
+            <option value="Kayla">Kayla</option>
         </select>
         <button onclick="openDriverManager()" style="background:transparent; border:none; cursor:pointer; font-size:24px; padding:0 10px; color: var(--text);">⚙️</button>
     </div>
@@ -391,6 +397,12 @@
              <select id="af-driver" class="driver-select mb-0 f-1" onchange="renderData()">
                 <option value="">All</option>
                 <option value="Unassigned">Unassigned</option>
+                <option value="Matt">Matt</option>
+                <option value="Touch">Touch</option>
+                <option value="Julian">Julian</option>
+                <option value="Jess">Jess</option>
+                <option value="Alysha">Alysha</option>
+                <option value="Kayla">Kayla</option>
             </select>
             <input id="af-name" placeholder="Name" class="glow-field f-1" onkeyup="renderData()">
             <input id="af-city" placeholder="City" class="glow-field f-1" onkeyup="renderData()">
@@ -471,7 +483,7 @@
     let seenJobs = {}, catState = { pickups: false, transit: false, depot: false, deliveries: false }, isFirstLoad = true;
     const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
     
-    let customDrivers = [];
+    let customDrivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
     const baseColors = ['#FF8C00', '#00BFFF', '#3F51B5', '#FF69B4', '#9C27B0', '#E91E63', '#4CAF50', '#FF5722', '#00BCD4'];
     const getDriverColor = (name) => {
         let index = customDrivers.indexOf(name);
@@ -675,7 +687,12 @@
             document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
             
             db.ref('settings/drivers').on('value', snap => {
-                customDrivers = snap.val() || ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+                if(snap.exists()) {
+                    customDrivers = snap.val() || [];
+                } else {
+                    customDrivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+                    db.ref('settings/drivers').set(customDrivers);
+                }
                 updateAllDriverDropdowns();
                 if(document.getElementById('zone-modal').style.display==='block') {
                     if(document.getElementById('zone-schedule-view').style.display!=='none') renderZoneRoster();
@@ -736,6 +753,7 @@
             db.ref('settings/drivers').set(customDrivers);
             document.getElementById('new-driver-name').value = '';
             renderDriverManagerList();
+            updateAllDriverDropdowns();
         }
     }
 
@@ -745,6 +763,7 @@
             customDrivers[i] = n;
             db.ref('settings/drivers').set(customDrivers);
             renderDriverManagerList();
+            updateAllDriverDropdowns();
         }
     }
 
@@ -753,6 +772,7 @@
             customDrivers.splice(i, 1);
             db.ref('settings/drivers').set(customDrivers);
             renderDriverManagerList();
+            updateAllDriverDropdowns();
         }
     }
 
