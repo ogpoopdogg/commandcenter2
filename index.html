@@ -9,122 +9,124 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --accent: #cca300; --bg: #222; --card: #141414; --text: #e0e0e0; --text-muted: #777;
+            --accent: #cca300; --bg: #222; --card: #141414; --text: #e0e0e0; --card-text: #e0e0e0;
             --active-green: #00b32d; --archive-orange: #cc5200; --note-blue: #0099cc; --pro-blue: #0056b3;
             --header-bg: #000; --input-bg: #141414; --border: #333; --stat-bg: #161616; --modal-bg: #181818; --btn-bg: #1c1c1c;
-            --shadow: 0 4px 12px rgba(0,0,0,0.1); --input-border-rgb: rgba(255,255,255,0.4);
+            --shadow-soft: 0 4px 12px rgba(0,0,0,0.1);
+            --route-text: #fff; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: var(--active-green);
         }
         body.light-mode {
-            --bg: #f0f2f5; --card: #fff; --text: #111; --text-muted: #333; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
-            --shadow: 0 4px 12px rgba(0,0,0,0.1); --input-border-rgb: rgba(0,0,0,0.4);
+            --bg: #f0f2f5; --card: #fff; --text: #333; --card-text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
+            --route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a;
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; font-weight: 400; }
-        header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow); }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
+        header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
         .header-logo { height: 28px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
         
         @keyframes dot-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
         .pulsing-dot { animation: dot-pulse 2s infinite ease-in-out; }
 
         #locate-btn, .route-btn { background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover; color: #002244; border: 1px solid #444; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
-        #locate-btn { padding: 0; width: 100%; height: 50px; font-size: 12px; box-shadow: var(--shadow); transition: transform 0.2s; }
+        #locate-btn { padding: 0; width: 100%; height: 50px; font-size: 12px; box-shadow: var(--shadow-soft); transition: transform 0.2s; }
         #locate-btn:active { transform: scale(0.98); }
-        .route-btn { border: 1px solid var(--accent); padding: 14px 24px; font-size: 13px; white-space: nowrap; }
+        .route-btn { border: 1px solid var(--accent); padding: 10px 24px; font-size: 13px; white-space: nowrap; }
 
         #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
         #map { width: 100%; height: 100%; }
-        .close-map { position: fixed; top: 20px; right: 20px; z-index: 3001; background: #b71c1c; color: white; border: none; width: 140px; height: 40px; font-weight: 700; border-radius: 6px; cursor: pointer; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; }
-        .zoom-out-map { position: fixed; top: 70px; right: 20px; z-index: 3001; background: #448800; color: white; border: none; width: 140px; height: 40px; font-weight: 700; border-radius: 6px; cursor: pointer; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; }
+        .close-map { position: fixed; top: 20px; right: 20px; z-index: 3005; background: #b71c1c; color: white; border: none; width: 140px; height: 40px; font-weight: 700; border-radius: 6px; cursor: pointer; box-shadow: var(--shadow-soft); display: flex; align-items: center; justify-content: center; }
         .driver-map-label { color: #00ff00 !important; font-weight: 700; text-shadow: 0 0 2px #000; }
-        #route-list { position: absolute; top: 130px; left: 20px; width: 280px; max-height: calc(100% - 150px); overflow-y: auto; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 6px; padding: 15px; z-index: 3001; display: none; box-shadow: var(--shadow); }
+        #route-list { position: absolute; top: 130px; left: 20px; width: 280px; max-height: calc(100% - 150px); overflow-y: auto; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 6px; padding: 15px; z-index: 3001; display: none; box-shadow: var(--shadow-soft); }
         #install-btn { display: none; background: var(--pro-blue); color: #fff; border: none; padding: 14px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase; position: absolute; right: 15px; bottom: 15px; z-index: 1002; }
 
         .glow-field { border: 1px solid var(--border); transition: border-color 0.3s; }
         .glow-field:focus { border-color: var(--accent); outline: none; }
 
         .stats-bar { display: flex; background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 10px; }
-        #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 15px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 15px; box-shadow: var(--shadow-soft); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
         #board-panel { padding: 20px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         
-        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0; padding: 14px; background: var(--stat-bg); border: 1px solid var(--border); }
-        .stat-label { display: block; font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
+        .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0; padding: 14px 8px; background: var(--stat-bg); border: 1px solid var(--border); }
+        .stat-label { display: block; font-size: 10px; color: var(--stat-label-color, #777); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
         .stat-number { font-family: 'Inter', sans-serif; font-weight: 700; line-height: 1; }
         #stat-pending { font-size: 22px; color: var(--accent); }
         #stat-assigned { font-size: 22px; color: var(--active-green); }
         #stat-note { font-size: 22px; color: var(--note-blue); }
         .high-alert { background: #1a1a00 !important; border: 1px solid var(--active-green); }
-        .unassigned-glow { border: 1px solid var(--accent); z-index: 10; }
+        .unassigned-glow { border: 1px solid var(--accent) !important; z-index: 10; box-shadow: var(--shadow-soft); }
 
-        input, select, textarea { width: 100%; padding: 14px; padding-right: 35px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 15px; margin-bottom: 6px; box-sizing: border-box; transition: border 0.2s; font-family: 'Inter', sans-serif; }
+        .shiny-text { background: linear-gradient(to right, var(--accent) 20%, #ccc 50%, var(--accent) 80%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: text-shine 3s linear infinite; }
+        @keyframes text-shine { to { background-position: 200% center; } }
+
+        input, select, textarea { width: 100%; padding: 14px; padding-right: 35px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 15px; margin-bottom: 6px; box-sizing: border-box; transition: border 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; background: var(--input-bg); }
         
         .flex-row { display: flex; gap: 6px; }
         .driver-select { width: 100%; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); font-weight: 600; padding: 14px; border-radius: 6px; margin-bottom: 12px; }
-        
-        button.primary { width: 100%; padding: 16px; background: var(--btn-bg); color: var(--text); font-weight: 700; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 6px; text-transform: uppercase; font-size: 15px; letter-spacing: 1.5px; transition: all 0.2s ease; box-shadow: var(--shadow); overflow: hidden; }
-        button.primary:hover { border-color: var(--accent); transform: translateY(-2px); }
-        button.primary:active { transform: translateY(1px); }
-        button.primary.super-dispatch { background: rgba(0, 179, 45, 0.1); color: var(--active-green); border: 1px solid var(--active-green); box-shadow: 0 4px 12px rgba(0, 179, 45, 0.1); letter-spacing: 2px; }
-        button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2); border-color: #4dff88; }
 
-        .history-box { display: none; margin-top: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); padding: 20px; gap: 20px; flex-wrap: wrap; background: var(--card); border-radius: 6px;}
+        button.primary { width: 100%; padding: 16px; background: var(--btn-bg); color: var(--text); font-weight: 700; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 6px; text-transform: uppercase; font-size: 15px; letter-spacing: 1.5px; transition: all 0.2s ease; box-shadow: var(--shadow-soft); overflow: hidden; }
+        button.primary:hover { background: #252525; border-color: var(--accent); transform: translateY(-2px); }
+        button.primary:active { transform: translateY(1px); }
+        button.primary.super-dispatch { background: var(--dispatch-bg) !important; color: var(--dispatch-text) !important; border: 1px solid var(--dispatch-text) !important; box-shadow: var(--shadow-soft) !important; text-shadow: none; letter-spacing: 2px; }
+        button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !important; }
+
+        .history-box { display: none; margin-top: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); padding: 20px; gap: 20px; flex-wrap: wrap; }
         .archive-column { flex: 1 1 0; min-width: 0; border-right: 1px solid var(--border); padding-right: 20px; }
         .archive-column:last-child { border-right: none; padding-right: 0; }
-        .archive-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; letter-spacing: 1px; }
+        .archive-title { font-size: 13px; font-weight: 700; color: var(--archive-title-color, #666); text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; letter-spacing: 1px; }
 
-        .cat-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border); padding: 14px; cursor: pointer; font-weight: 700; border-radius: 6px; margin-bottom: 10px; text-transform: uppercase; font-size: 13px; color: var(--text); }
+        .cat-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border); padding: 14px; cursor: pointer; font-weight: 700; border-radius: 6px; margin-bottom: 10px; text-transform: uppercase; font-size: 13px; }
         .cat-badge { background: var(--bg); color: var(--text); padding: 4px 10px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border); }
-        .new-card { border: 2px solid var(--accent); position: relative; }
-        .new-card::after { content: 'NEW'; position: absolute; top: -8px; right: -8px; background: var(--accent); color: #000; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .new-card { border: 2px solid var(--accent) !important; position: relative; }
         .new-btn { border-color: var(--accent); }
 
-        .history-item { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 6px; transition: all 0.2s; box-shadow: var(--shadow); }
-        .history-item:hover { background: var(--input-bg); transform: translateY(-2px); }
+        .history-item { color: var(--card-text); background: var(--card); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 6px; transition: all 0.2s; box-shadow: var(--shadow-soft); }
+        .history-item:hover { background: var(--input-bg); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
         .history-item h3 { font-weight: 400; }
-        .hist-driver { font-weight: 400; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--input-border-rgb); }
-        .hist-time { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-family: monospace; font-weight: 600; }
-        .hist-name { font-size: 14px; color: var(--text); text-transform: uppercase; font-weight: 400; margin-top: 5px; }
-        .urgent-pickup { border: 1px solid #b71c1c; }
+        .hist-driver { font-weight: 600; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.4); }
+        .hist-time { font-size: 11px; color: var(--hist-time-color, #777); margin-top: 8px; font-family: monospace; font-weight: 700; }
+        .hist-name { font-size: 14px; color: var(--card-text); text-transform: uppercase; font-weight: 400; margin-top: 5px; }
+        .urgent-pickup { border: 1px solid #b71c1c !important; box-shadow: var(--shadow-soft); }
 
         #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--header-bg); border-top: 1px solid var(--border); padding: 15px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
         #archive-search { width: 100%; padding: 14px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-weight: 600; border-radius: 6px; font-size: 15px; }
         #archive-search:focus { border-color: var(--accent); }
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(2px); }
-        .modal-content { background: var(--modal-bg); margin: 5% auto; padding: 30px; width: 90%; max-width: 550px; border: 1px solid var(--accent); color: var(--text); border-radius: 8px; box-shadow: var(--shadow); box-sizing: border-box; }
+        .modal-content { background: var(--modal-bg); margin: 5% auto; padding: 30px; width: 90%; max-width: 550px; border: 1px solid var(--accent); color: var(--text); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; }
         
         #login-overlay { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
-        .login-box { width: 100%; max-width: 350px; background: #111; padding: 40px; border-radius: 12px; border: 1px solid #222; text-align: center; box-shadow: var(--shadow); }
+        .login-box { width: 100%; max-width: 350px; background: #111; padding: 40px; border-radius: 12px; border: 1px solid #222; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .login-input { width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none; }
         .login-submit { width: 100%; padding: 14px; margin-top: 20px; background: var(--accent); border: none; color: #000; font-weight: 700; font-size: 16px; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         #user-display { color: var(--active-green); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
 
-        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--border); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; box-shadow: var(--shadow); }
-        .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text); font-weight: 600; font-size: 14px; }
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--border); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text); font-weight: 500; font-size: 14px; }
         .suggestion-item:hover { background: var(--accent); color: #000; }
         .voice-active { fill: var(--active-green) !important; filter: drop-shadow(0 0 5px var(--active-green)); }
         
         .mode-switch-container { display: flex; margin-bottom: 15px; background: var(--input-bg); border-radius: 6px; padding: 4px; border: 1px solid var(--border); }
-        .mode-btn { flex: 1; padding: 14px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 13px; background: transparent; color: var(--text-muted); border-radius: 4px; transition: 0.2s; }
+        .mode-btn { flex: 1; padding: 14px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 13px; background: transparent; color: #666; border-radius: 4px; transition: 0.2s; }
         .mode-btn.active-mode { background: var(--accent); color: #000; }
-        .mode-btn.active-mode.delivery-mode { background: var(--active-green); color: #000; }
+        .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
 
-        #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; border-radius: 6px; }
+        #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); margin-bottom: 20px; }
         .driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 15px; background: var(--stat-bg); border-radius: 6px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 50px; }
         .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
         .ds-name { color: var(--text); font-weight: 700; font-size: 12px; width: auto; padding-right: 10px; text-transform: uppercase; }
         .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-        .stat-item { font-size: 9px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border); }
+        .stat-item { font-size: 9px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
         .stat-val-p { color: var(--accent); font-size: 12px; font-weight: 700; }
         .stat-val-d { color: var(--active-green); font-size: 12px; font-weight: 700; }
         
         .input-wrap { position: relative; width: 100%; display: flex; align-items: center; }
-        .input-wrap input, .input-wrap select, .input-wrap textarea { margin-bottom: 0; width: 100%; padding-right: 40px; }
-        .copy-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
+        .input-wrap input, .input-wrap select, .input-wrap textarea { margin-bottom: 0; width: 100%; }
+        .copy-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
         .copy-btn:hover { color: var(--accent); }
-        .copy-btn svg { width: 16px; height: 16px; fill: currentColor; }
+        .copy-btn svg { width: 14px; height: 14px; fill: currentColor; }
 
-        .route-time-display { font-size:12px; color:var(--text); margin-left:8px; font-weight:700; border:1px solid var(--accent); padding:4px 8px; border-radius:6px; }
+        .route-time-display { font-size:12px; color:var(--route-text); margin-left:8px; font-weight:700; border:1px solid var(--accent); padding:4px 8px; border-radius:6px; box-shadow:var(--shadow-soft); }
         .back-to-all-btn { background:var(--bg); border:1px solid var(--accent); color:var(--accent); padding:14px 24px; font-weight:700; border-radius:6px; text-transform:uppercase; cursor:pointer; }
         
         @keyframes crt-turn-on { 0% { transform: scaleY(0.005) scaleX(0); opacity: 0; filter: brightness(0); } 50% { transform: scaleY(0.005) scaleX(1); opacity: 1; } 100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); } }
@@ -135,8 +137,8 @@
         .btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
         .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
 
-        .btn-pressed { box-shadow: inset 0 0 10px rgba(0,0,0,0.8); background: var(--bg); color: var(--text-muted); border-bottom: 1px solid var(--border); transform: translateY(2px); }
-        .badge-active { color: var(--accent); border-color: var(--accent); }
+        .btn-pressed { box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important; background: var(--input-bg) !important; color: var(--text) !important; border-bottom: 1px solid var(--border) !important; transform: translateY(2px) !important; }
+        .badge-active { color: var(--accent) !important; border-color: var(--accent) !important; }
 
         /* UTIL CLASSES */
         .w-100{width:100%}.m-0{margin:0}.mb-0{margin-bottom:0}.mb-6{margin-bottom:6px}.mb-12{margin-bottom:12px}.mb-15{margin-bottom:15px}.mb-20{margin-bottom:20px}.mt-0{margin-top:0}.mt-15{margin-top:15px}.mt-30{margin-top:30px}
@@ -147,43 +149,43 @@
         .border-b{border-bottom:1px solid var(--border)}
         .header-logo-group{display:flex;flex-direction:column;width:100%}
         .clock{font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
-        .voice-icon{width:60px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-        .suggestion-reset{position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;cursor:pointer;color:var(--text-muted);text-transform:uppercase;z-index:10; padding:10px;}
+        .voice-icon{width:60px;background:#111;border:1px solid #444;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .suggestion-reset{position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;cursor:pointer;color:#666;text-transform:uppercase;z-index:10}
         .modal-h2{color:var(--accent);margin-top:0;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-        .btn-archive{background:var(--accent);color:#000;border:none;padding:10px 16px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px;margin-right:10px}
-        .btn-delete{background:transparent;border:1px solid #b71c1c;color:#ff5555;padding:10px 16px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px}
+        .btn-archive{background:var(--accent);color:#000;border:none;padding:12px 14px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px;margin-right:10px}
+        .btn-delete{background:transparent;border:1px solid #b71c1c;color:#ff5555;padding:12px 14px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px}
         .link-input{color:#4da6ff;text-decoration:underline;cursor:pointer}
-        .btn-cancel{background:var(--bg);color:var(--text);border:1px solid var(--border);padding:16px;font-weight:700;cursor:pointer;font-size:14px;border-radius:6px}
+        .btn-cancel{background:#222;color:#ccc;border:1px solid #333;padding:16px;font-weight:700;cursor:pointer;font-size:14px;border-radius:6px}
         .btn-save{background:var(--active-green);color:#000;border:none;padding:16px;font-weight:700;text-transform:uppercase;cursor:pointer;font-size:14px;border-radius:6px}
 
         /* ZONE MANAGER */
-        .zone-driver-row { background: var(--input-bg); padding: 14px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 6px; }
-        .zone-driver-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
+        .zone-driver-row { background: var(--input-bg); padding: 15px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 4px; }
+        .zone-driver-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px; }
         .zone-driver-name { font-weight: 700; color: var(--accent); text-transform: uppercase; font-size: 14px; }
-        .btn-zone-add { background: var(--active-green); color: #000; border: none; padding: 8px 14px; font-weight: 700; font-size: 11px; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
+        .btn-zone-add { background: var(--active-green); color: #000; border: none; padding: 8px 12px; font-weight: 700; font-size: 10px; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
         
-        .zone-item { background: var(--bg); padding: 14px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border); }
-        .zone-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .btn-zone-del { background: transparent; color: #b71c1c; border: 1px solid #b71c1c; padding: 6px 10px; font-size: 10px; cursor: pointer; text-transform: uppercase; border-radius: 4px; font-weight: 700; }
+        .zone-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .zone-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .btn-zone-del { background: transparent; color: #b71c1c; border: 1px solid #b71c1c; padding: 6px 10px; font-size: 9px; cursor: pointer; text-transform: uppercase; border-radius: 3px; font-weight: 700; }
         
-        .btn-zone { padding: 10px 14px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 11px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
-        .btn-zone:hover { background: var(--bg); border-color: var(--accent); }
+        .btn-zone { padding: 10px 14px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .btn-zone:hover { background: #333; border-color: var(--accent); }
         .btn-zone.active-draw { background: var(--accent); color: #000; }
         
-        .day-row { display: flex; gap: 6px; margin-bottom: 12px; }
-        .day-toggle { flex: 1; padding: 10px 0; background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); font-size: 11px; font-weight: 700; cursor: pointer; border-radius: 4px; text-align: center; }
+        .day-row { display: flex; gap: 4px; margin-bottom: 8px; }
+        .day-toggle { flex: 1; padding: 10px 0; background: var(--bg); border: 1px solid var(--border); color: #666; font-size: 10px; font-weight: 700; cursor: pointer; border-radius: 4px; text-align: center; }
         .day-toggle.day-active { background: var(--accent); color: #000; border-color: var(--accent); }
         
         #zone-schedule-view { display: block; }
         #zone-map-view { display: none; height: 500px; display: flex; flex-direction: column; }
         
         .zone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; background: var(--header-bg); border-top: 1px solid var(--border); }
-        .zone-driver-btn { padding: 14px; background: var(--btn-bg); border: 1px solid var(--border); color: var(--text); font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; box-shadow: var(--shadow); }
+        .zone-driver-btn { padding: 14px; background: var(--btn-bg); border: 1px solid var(--border); color: var(--text); font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; box-shadow: var(--shadow-soft); }
         .zone-driver-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
         
-        #active-driver-zone-panel { display: none; padding: 14px; background: var(--card); border-top: 1px solid var(--accent); max-height: 200px; overflow-y: auto; }
-        .active-zone-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border); }
-        .active-zone-label { font-size: 13px; font-weight: 700; color: var(--text); }
+        #active-driver-zone-panel { display: none; padding: 10px; background: var(--card); border-top: 1px solid var(--accent); max-height: 150px; overflow-y: auto; }
+        .active-zone-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); }
+        .active-zone-label { font-size: 12px; font-weight: 700; color: #ccc; }
 
         @media (max-width: 768px) {
             #active-list-container { flex-direction: column; height: auto; }
@@ -194,6 +196,7 @@
             .header-logo-group { width: auto; }
             .modal-content { padding: 15px; width: 98%; margin: 2% auto; }
             #zone-map-view { height: 85vh !important; }
+            .close-map { top: 10px; right: 10px; width: 100px; font-size: 12px; }
         }
     </style>
 </head>
@@ -214,7 +217,7 @@
         <div class="flex ac pointer" onclick="toggleTheme()">
             <div class="crt-animate flex ac">
                 <img src="icon2.png" class="header-logo" alt="E&C Logo">
-                <span style="font-size: 18px; font-weight: 700; white-space: nowrap; letter-spacing: 1px; color: var(--accent);">E&C COMMAND</span>
+                <span class="shiny-text" style="font-size: 18px; font-weight: 700; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
             </div>
             <div class="flex col jc" style="margin-left:15px;">
                 <div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:700; animation:dot-pulse 1s infinite; font-size:11px; margin-bottom:2px;"></div>
@@ -248,15 +251,16 @@
 
     <div id="bottom-input-section" style="margin-top: 5px;"></div>
 
-    <div class="flex gap-10 mb-15">
-        <select id="f-driver" class="driver-select f-1" style="margin-bottom: 0; border: 1px solid var(--accent);">
-            </select>
-        <button onclick="openDriverMgr()" style="background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; padding: 0 15px; cursor: pointer; color: var(--text);">⚙️</button>
+    <div class="flex ac gap-10" style="margin-bottom: 15px; width: 100%;">
+        <select id="f-driver" class="driver-select" style="margin-bottom: 0; border: 1px solid var(--accent); flex: 1;">
+            <option value="Unassigned" selected disabled hidden>Assign Driver</option>
+            <option value="Unassigned">UNASSIGNED</option>
+        </select>
+        <button onclick="openDriverManager()" style="background:transparent; border:none; cursor:pointer; font-size:24px; padding:0 10px; color: var(--text);">⚙️</button>
     </div>
-
     <div class="flex gap-12">
         <button class="primary super-dispatch f-1" onclick="createJob()">Dispatch</button>
-        <button id="voice-btn" onclick="startVoiceEntry()" class="voice-icon"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: var(--text-muted); transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+        <button id="voice-btn" onclick="startVoiceEntry()" class="voice-icon"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
     </div>
     
     <div class="stats-bar mt-15" style="background:transparent; border:none;">
@@ -344,7 +348,7 @@
 <div id="board-panel">
     <div class="history-box" id="active-list-container">
         <div id="filter-reset-ui" class="w-100 text-center none mb-15">
-            <div id="selected-driver-label" class="none bold u-case" style="margin: 0 auto 15px auto; width:100%; max-width:350px; font-size:18px; padding:14px; border-radius:6px; background:var(--bg); box-shadow: var(--shadow); display: flex; justify-content: center; align-items: center; gap: 10px;"></div>
+            <div id="selected-driver-label" class="none bold uppercase" style="margin: 0 auto 15px auto; width:100%; max-width:350px; font-size:18px; padding:12px; border-radius:4px; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px;"></div>
             <div class="flex jc" style="gap:15px; margin:0 auto; width:100%; max-width:350px;">
                 <button id="view-route-btn" class="route-btn none" style="flex:1;">View Current Route</button>
                 <button onclick="clearDriverFilter()" class="back-to-all-btn" style="flex:1;">Back to All</button>
@@ -362,7 +366,7 @@
         </div>
         <div class="archive-column">
              <button id="btn-depot" class="cat-btn" style="color:#00BFFF;" onclick="toggleCat('depot')">
-                <div class="flex ac gap-10"><span>At Depot</span><span onclick="event.stopPropagation(); autoAssignDepotJobs()" style="background:transparent; border:1px solid #00BFFF; color:#00BFFF; padding:4px 8px; font-size:10px; border-radius:4px; cursor:pointer; text-transform:uppercase; font-weight:700;">Auto Assign</span></div>
+                <div class="flex ac gap-10"><span>At Depot</span><span onclick="event.stopPropagation(); autoAssignDepotJobs()" style="background:transparent; border:1px solid #00BFFF; color:#00BFFF; padding:6px 10px; font-size:10px; border-radius:4px; cursor:pointer; text-transform:uppercase; font-weight:700;">Auto Assign</span></div>
                 <span id="badge-depot" class="cat-badge">0</span>
              </button>
              <div id="list-depot"></div>
@@ -381,11 +385,13 @@
         <button onclick="toggleDNDList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:16px; border-radius:6px;">Minimize Active DND/DNP</button>
     </div>
 
-    <div class="mt-30" style="padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--card); border-radius: 6px;">
-        <div class="archive-title" style="color: var(--text-muted); border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
+    <div class="mt-30" style="padding: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft);">
+        <div class="archive-title" style="color: var(--archive-title-color, #666); border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
         <div class="flex-row mb-15">
              <select id="af-driver" class="driver-select mb-0 f-1" onchange="renderData()">
-                </select>
+                <option value="">All</option>
+                <option value="Unassigned">Unassigned</option>
+            </select>
             <input id="af-name" placeholder="Name" class="glow-field f-1" onkeyup="renderData()">
             <input id="af-city" placeholder="City" class="glow-field f-1" onkeyup="renderData()">
         </div>
@@ -396,9 +402,9 @@
 
 <div id="map-modal">
     <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
-    <button class="zoom-out-map" onclick="zoomToAll()">ZOOM OUT</button>
-    <div id="route-time-badge" class="none abs" style="top:70px; left:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:14px; border-radius:6px; font-weight:700; border:1px solid var(--active-green);"></div>
-    <div id="map-driver-head" class="none abs" style="top:15px; right:180px; z-index:3001; background:#000; color: #fff; border:1px solid #fff; padding:8px 14px; font-weight:700; font-size:16px; box-shadow:var(--shadow); white-space:nowrap;"></div>
+    <button class="close-map" onclick="zoomToAll()" style="top:70px; background:#448800;">ZOOM OUT</button>
+    <div id="route-time-badge" class="none abs" style="top:120px; right:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:700; border:1px solid var(--active-green);"></div>
+    <div id="map-driver-head" class="none abs" style="top:15px; left:20px; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:700; font-size:16px; box-shadow:var(--shadow-soft); white-space:nowrap;"></div>
     <div id="route-list"></div>
     <div id="map"></div>
 </div>
@@ -415,7 +421,7 @@
         <div id="zone-schedule-view">
             <div class="flex jb ac mb-15">
                 <h2 class="modal-h2 m-0">DRIVER SCHEDULES</h2>
-                <button class="btn-zone" style="font-size:12px; padding:12px;" onclick="showZoneMap()">OPEN MAP EDITOR</button>
+                <button class="btn-zone" style="font-size:12px; padding:14px;" onclick="showZoneMap()">OPEN MAP EDITOR</button>
             </div>
             <div class="zone-roster" id="zone-roster" style="max-height:60vh; overflow-y:auto; -webkit-overflow-scrolling:touch;"></div>
         </div>
@@ -423,32 +429,30 @@
         <div id="zone-map-view" class="none col" style="height:70vh;">
             <div class="flex jb ac mb-10">
                 <h2 class="modal-h2 m-0">ZONE MAP EDITOR</h2>
-                <button class="btn-zone" style="font-size:12px; padding:12px;" onclick="showZoneSchedule()">BACK TO SCHEDULES</button>
+                <button class="btn-zone" style="font-size:12px; padding:14px;" onclick="showZoneSchedule()">BACK TO SCHEDULES</button>
             </div>
-            <div class="flex f-1" style="overflow:hidden; position:relative; border:1px solid var(--accent); box-sizing: border-box; border-radius: 6px;">
+            <div class="flex f-1" style="overflow:hidden; position:relative; border:1px solid var(--accent); box-sizing: border-box;">
                 <div id="zone-map" style="width:100%; height:100%;"></div>
             </div>
             <div id="active-driver-zone-panel"></div>
             <div class="zone-grid" id="zone-driver-grid"></div>
         </div>
 
-        <div style="margin-top:20px; text-align:right;">
-            <button onclick="document.getElementById('zone-modal').style.display='none'" class="btn-cancel">CLOSE</button>
+        <div style="margin-top:15px; text-align:right;">
+            <button onclick="document.getElementById('zone-modal').style.display='none'" class="btn-cancel w-100">CLOSE</button>
         </div>
     </div>
 </div>
 
-<div id="driver-mgr-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
+<div id="driver-manager-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
     <div class="modal-content">
-        <h2 class="modal-h2 mb-15">DRIVER MANAGEMENT</h2>
-        <div id="driver-mgr-list" style="max-height: 50vh; overflow-y: auto;"></div>
-        <div class="flex gap-10 mt-20 pt-15" style="border-top: 1px solid var(--border);">
-            <input type="text" id="new-driver-name" class="glow-field f-1" placeholder="New Driver Name" style="margin-bottom:0;">
-            <button class="btn-zone" onclick="addNewDriver()">ADD DRIVER</button>
+        <h2 class="modal-h2">Manage Drivers</h2>
+        <div id="driver-list-container" class="flex col gap-10 mb-15"></div>
+        <div class="flex gap-10">
+            <input id="new-driver-name" class="glow-field" placeholder="New Driver Name">
+            <button class="btn-zone" style="padding:14px; font-size: 12px;" onclick="addDriver()">ADD</button>
         </div>
-        <div style="margin-top:20px; text-align:right;">
-            <button onclick="document.getElementById('driver-mgr-modal').style.display='none'" class="btn-cancel">CLOSE</button>
-        </div>
+        <button class="btn-cancel w-100 mt-15" onclick="document.getElementById('driver-manager-modal').style.display='none'">CLOSE</button>
     </div>
 </div>
 
@@ -465,72 +469,37 @@
     let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
     let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
     let seenJobs = {}, catState = { pickups: false, transit: false, depot: false, deliveries: false }, isFirstLoad = true;
-    let appDrivers = ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
-    const dColors = {'Matt':'#FF8C00','Touch':'#00BFFF','Julian':'#3F51B5','Jess':'#FF69B4','Alysha':'#9C27B0','Kayla':'#E91E63'};
+    const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+    
+    let customDrivers = [];
+    const baseColors = ['#FF8C00', '#00BFFF', '#3F51B5', '#FF69B4', '#9C27B0', '#E91E63', '#4CAF50', '#FF5722', '#00BCD4'];
+    const getDriverColor = (name) => {
+        let index = customDrivers.indexOf(name);
+        return index !== -1 ? baseColors[index % baseColors.length] : '#00b32d';
+    };
 
-    // Apply global enter/esc listeners
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeMap();
-            document.getElementById('detailsModal').style.display = 'none';
-            document.getElementById('zone-modal').style.display = 'none';
-            document.getElementById('driver-mgr-modal').style.display = 'none';
+            ['detailsModal', 'zone-modal', 'driver-manager-modal'].forEach(id => {
+                const m = document.getElementById(id);
+                if(m) { m.style.display = 'none'; }
+            });
             document.body.style.overflow = '';
-        } else if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
-            const id = e.target.id;
-            if(id !== 'active-search' && id !== 'af-manual-search' && id !== 'af-name' && id !== 'af-city' && !id.startsWith('edit-drv-') && id !== 'new-driver-name' && id !== 'login-user' && id !== 'login-pin') {
+        } else if (e.key === 'Enter') {
+            const tag = e.target.tagName.toLowerCase();
+            if (tag === 'textarea' || tag === 'button') return;
+            const dm = document.getElementById('detailsModal');
+            if (dm && dm.style.display === 'block') return;
+            if (document.getElementById('login-overlay').style.display !== 'none') { attemptLogin(); return; }
+            
+            const isFormInput = e.target.closest('#entry-panel') || e.target.closest('#group-pickup') || e.target.closest('#group-drop');
+            if (isFormInput) {
+                e.preventDefault();
                 createJob();
             }
         }
     });
-
-    function getDriverColor(d) { return dColors[d] || '#00b32d'; }
-
-    const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
-
-    function updateDriverDropdowns() {
-        const fDriver = document.getElementById('f-driver');
-        const currentF = fDriver.value;
-        fDriver.innerHTML = `<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>` + appDrivers.map(d => `<option value="${d}">${d}</option>`).join('');
-        if(appDrivers.includes(currentF) || currentF === 'Unassigned') fDriver.value = currentF;
-
-        const afDriver = document.getElementById('af-driver');
-        if(afDriver) afDriver.innerHTML = `<option value="">All</option><option value="Unassigned">Unassigned</option>` + appDrivers.map(d => `<option value="${d}">${d}</option>`).join('');
-        
-        renderZoneRoster();
-        if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface(); 
-    }
-
-    function openDriverMgr() {
-        document.getElementById('driver-mgr-modal').style.display = 'block';
-        renderDriverMgrList();
-    }
-
-    function renderDriverMgrList() {
-        let html = '';
-        appDrivers.forEach((d, i) => {
-            html += `<div class="flex jb ac mb-10"><input type="text" value="${d}" id="edit-drv-${i}" class="glow-field f-1 m-0"><button class="btn-save ml-10" style="padding:12px 16px;" onclick="saveDriverName(${i})">SAVE</button></div>`;
-        });
-        document.getElementById('driver-mgr-list').innerHTML = html;
-    }
-
-    function saveDriverName(i) {
-        const newName = document.getElementById(`edit-drv-${i}`).value.trim();
-        if(newName && newName !== appDrivers[i]) {
-            appDrivers[i] = newName;
-            db.ref("settings/drivers").set(appDrivers);
-        }
-    }
-
-    function addNewDriver() {
-        const newName = document.getElementById('new-driver-name').value.trim();
-        if(newName && !appDrivers.includes(newName)) {
-            appDrivers.push(newName);
-            db.ref("settings/drivers").set(appDrivers);
-            document.getElementById('new-driver-name').value = '';
-            renderDriverMgrList();
-        }
-    }
 
     function toggleCat(cat) {
         catState[cat] = !catState[cat];
@@ -603,12 +572,16 @@
         if(el) {
             el.select(); navigator.clipboard.writeText(el.value);
             const btn = window.event.currentTarget;
-            const p = document.createElement("div");
-            p.innerText = "COPIED!";
-            Object.assign(p.style, {position:"absolute", right:"45px", top:"50%", transform:"translateY(-50%)", background:"var(--active-green)", color:"#000", padding:"4px 8px", fontSize:"10px", fontWeight:"700", borderRadius:"4px", zIndex:"10", opacity:"0", transition:"opacity 0.2s, transform 0.2s"});
-            btn.parentElement.appendChild(p);
-            requestAnimationFrame(() => { p.style.opacity = "1"; p.style.transform = "translateY(-50%) translateX(-5px)"; });
-            setTimeout(() => { p.style.opacity = "0"; p.style.transform = "translateY(-50%) translateX(0)"; setTimeout(() => p.remove(), 200); }, 1500);
+            let t = btn.querySelector('.copy-tip');
+            if(!t) {
+                t = document.createElement('span');
+                t.className = 'copy-tip';
+                t.innerText = 'COPIED';
+                Object.assign(t.style, { position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: '8px', background: 'var(--active-green)', color: '#000', padding: '4px 8px', fontSize: '10px', fontWeight: '700', borderRadius: '4px', opacity: '0', transition: 'opacity 0.2s', pointerEvents: 'none', whiteSpace: 'nowrap' });
+                btn.appendChild(t);
+            }
+            requestAnimationFrame(() => t.style.opacity = '1');
+            setTimeout(() => t.style.opacity = '0', 1500);
         }
     }
 
@@ -700,13 +673,18 @@
             if (!["desirae@ec.com", "celeste@ec.com"].includes(user.email)) { alert("ACCESS DENIED"); firebase.auth().signOut(); document.getElementById('login-overlay').style.display = 'flex'; return; }
             currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
             document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
-            db.ref("address_lookup").on("value", s => addressData = s.val() || {});
             
-            db.ref("settings/drivers").on("value", s => {
-                if(s.val()) { appDrivers = s.val(); updateDriverDropdowns(); renderData(); }
-                else { db.ref("settings/drivers").set(appDrivers); updateDriverDropdowns(); }
+            db.ref('settings/drivers').on('value', snap => {
+                customDrivers = snap.val() || ['Matt', 'Touch', 'Julian', 'Jess', 'Alysha', 'Kayla'];
+                updateAllDriverDropdowns();
+                if(document.getElementById('zone-modal').style.display==='block') {
+                    if(document.getElementById('zone-schedule-view').style.display!=='none') renderZoneRoster();
+                    if(document.getElementById('zone-map-view').style.display!=='none') renderZoneMapInterface();
+                }
+                if(!isFirstLoad) renderData();
             });
 
+            db.ref("address_lookup").on("value", s => addressData = s.val() || {});
             const start = Date.now() - (604800000);
             db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() || {}; renderData(); });
             db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() || {}; renderData(); });
@@ -717,6 +695,66 @@
             });
         } else { document.getElementById('login-overlay').style.display = 'flex'; }
     });
+
+    function updateAllDriverDropdowns() {
+        const buildOpts = (includeUnassigned) => {
+            let html = includeUnassigned ? '<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>' : '';
+            customDrivers.forEach(d => html += `<option value="${d}">${d}</option>`);
+            return html;
+        };
+        const valF = document.getElementById('f-driver').value;
+        document.getElementById('f-driver').innerHTML = buildOpts(true);
+        if(customDrivers.includes(valF) || valF === 'Unassigned') document.getElementById('f-driver').value = valF;
+
+        const valAf = document.getElementById('af-driver').value;
+        document.getElementById('af-driver').innerHTML = '<option value="">All</option><option value="Unassigned">Unassigned</option>' + customDrivers.map(d=>`<option value="${d}">${d}</option>`).join('');
+        document.getElementById('af-driver').value = valAf;
+    }
+
+    function openDriverManager() {
+        document.getElementById('driver-manager-modal').style.display = 'block';
+        renderDriverManagerList();
+    }
+
+    function renderDriverManagerList() {
+        const c = document.getElementById('driver-list-container');
+        c.innerHTML = customDrivers.map((d, i) => `
+            <div class="flex jb ac p-10" style="background:var(--input-bg); border:1px solid var(--border); border-radius:4px;">
+                <input value="${d}" id="edit-drv-${i}" class="glow-field" style="margin:0; width:65%; padding:10px;">
+                <div class="flex gap-10">
+                    <button class="btn-save" style="padding:10px 14px;" onclick="saveDriverEdit(${i})">SAVE</button>
+                    <button class="btn-delete" style="padding:10px 14px;" onclick="deleteDriver(${i})">DEL</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function addDriver() {
+        const n = document.getElementById('new-driver-name').value.trim();
+        if(n && !customDrivers.includes(n)) {
+            customDrivers.push(n);
+            db.ref('settings/drivers').set(customDrivers);
+            document.getElementById('new-driver-name').value = '';
+            renderDriverManagerList();
+        }
+    }
+
+    function saveDriverEdit(i) {
+        const n = document.getElementById(`edit-drv-${i}`).value.trim();
+        if(n && n !== customDrivers[i]) {
+            customDrivers[i] = n;
+            db.ref('settings/drivers').set(customDrivers);
+            renderDriverManagerList();
+        }
+    }
+
+    function deleteDriver(i) {
+        if(confirm("Remove driver?")) {
+            customDrivers.splice(i, 1);
+            db.ref('settings/drivers').set(customDrivers);
+            renderDriverManagerList();
+        }
+    }
 
     function resetFormFields() { ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; }); }
 
@@ -730,12 +768,10 @@
             const map = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
             Object.keys(map).forEach(w => s = s.replace(new RegExp(`\\b${w}\\b`, 'g'), map[w]));
             
-            const driverNames = appDrivers.map(d => d.toLowerCase()).join('|');
-            let m = s.match(new RegExp(`\\bfor\\s+(${driverNames})\\b`));
-            if (m) {
-                const matchedDriver = appDrivers.find(d => d.toLowerCase() === m[1]);
-                if(matchedDriver) document.getElementById('f-driver').value = matchedDriver;
-            }
+            customDrivers.forEach(d => {
+                let m = s.match(new RegExp(`\\bfor\\s+(${d.toLowerCase()})\\b`));
+                if (m) document.getElementById('f-driver').value = d;
+            });
         };
         rec.onend = () => document.getElementById('mic-icon').classList.remove('voice-active');
     }
@@ -922,7 +958,8 @@
     function viewDetails(id) {
         const data = rawJobs[id]; if(!data) return;
         const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
-        const opts = `<option value="Unassigned" ${data.assigned_to === 'Unassigned' || !data.assigned_to ? 'selected' : ''}>Unassigned</option>` + appDrivers.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
+        const allOpts = ['Unassigned'].concat(customDrivers);
+        const opts = allOpts.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
         const html = `
             <div class="flex jb ac mb-20">
                 <div style="font-weight:700; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT JOB</div>
@@ -943,7 +980,7 @@
                 </div>
                 <div class="input-wrap mb-12"><input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions"><button class="copy-btn" onclick="copyField('e-pkg')">${copySvg}</button></div>
                 <div class="input-wrap mb-12"><input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref"><button class="copy-btn" onclick="copyField('e-po')">${copySvg}</button></div>
-                <div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:12px; resize:none; overflow:hidden; min-height:60px;">${val(data.other_info)}</textarea><button class="copy-btn" onclick="copyField('e-note')">${copySvg}</button></div>
+                <div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:14px; resize:none; overflow:hidden; min-height:60px;">${val(data.other_info)}</textarea><button class="copy-btn" onclick="copyField('e-note')">${copySvg}</button></div>
                 <div class="input-wrap mb-12"><input id="e-add-note" placeholder="Add New Note (Appends to above)"><button class="copy-btn" onclick="copyField('e-add-note')">${copySvg}</button></div>
                 <div class="input-wrap mb-12"><input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name"><button class="copy-btn" onclick="copyField('e-drop-name')">${copySvg}</button></div>
                 <div class="flex-row">
@@ -1002,7 +1039,7 @@
             if(l) { 
                 const c = getDriverColor(currentDriverFilter);
                 Object.assign(l.style, {display:"flex", borderColor:c, color:c, boxShadow:`0 0 15px ${c}`});
-                l.innerHTML = currentDriverFilter + (d?.total_duration ? `<span style="font-size:14px; color:var(--text);">ETA: ${d.total_duration}</span>` : "");
+                l.innerHTML = currentDriverFilter + (d?.total_duration ? `<span style="font-size:14px; color:#fff;">ETA: ${d.total_duration}</span>` : "");
             }
             const mh = document.getElementById("map-driver-head");
             if(mh) { mh.style.display = "block"; mh.innerText = currentDriverFilter; mh.style.color = getDriverColor(currentDriverFilter); }
@@ -1048,7 +1085,7 @@
         
         const opts = document.getElementById('f-driver').options;
         for(let i=0; i<opts.length; i++) if(!['Unassigned','Assign Driver'].includes(opts[i].value)) driverStats[opts[i].value] = { p: 0, d: 0 };
-        
+
         let ent = Object.entries(rawJobs);
         if(currentDriverFilter) ent.sort((a,b) => (stopLookup[a[0]]||999) - (stopLookup[b[0]]||999)); else ent.reverse();
         ent.forEach(([id, p]) => {
@@ -1070,8 +1107,8 @@
                 if (afC && !searchCity.toLowerCase().includes(afC)) return;
                 if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
                 const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
-                Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid var(--border)", opacity:"0.7"});
-                c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:700; color:var(--text-muted); text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:var(--active-green); font-weight:700; text-align:center;">DONE</span><span style="font-size:10px; color:var(--text-muted); text-align:right; font-weight:700;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:var(--accent); font-weight:600; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:var(--active-green); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
+                Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", opacity:"0.7"});
+                c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:700; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:700; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:700;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
                 arcList.appendChild(c); return;
             }
             
@@ -1079,11 +1116,11 @@
             if(p.status === 'in_transit') {
                 assignedCount++; if(driverStats[asgn]) driverStats[asgn].d++;
                 const c = document.createElement("div"); c.className = "history-item" + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
-                c.style.cursor = "pointer"; c.style.borderLeft = "4px solid var(--note-blue)";
-                const bg = getDriverColor(p.assigned_to), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+                c.style.cursor = "pointer"; c.style.borderLeft = "4px solid #0099cc";
+                const bg = getDriverColor(p.assigned_to), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4', '#4CAF50', '#00BCD4'].includes(bg);
                 let dH = `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>`;
-                const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:var(--note-blue); color:#fff; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
-                c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:var(--accent); font-weight:600; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:var(--active-green); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+                const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:#0099cc; color:#fff; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:600; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
                 tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
             }
             const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
@@ -1091,11 +1128,11 @@
 
             if (isFailed) {
                 dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
-                Object.assign(c.style, {background:"rgba(183, 28, 28, 0.1)", border:"1px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id);
-                const bg = getDriverColor(asgn), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
+                Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id);
+                const bg = getDriverColor(asgn), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4', '#4CAF50', '#00BCD4'].includes(bg);
                 const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span class="hist-driver" style="color:#ff4444; background:transparent; border-color:#ff4444;">FAILED</span>`;
-                const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'var(--accent)':'var(--active-green)'}; color:#000; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
-                c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:var(--accent); font-weight:600; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:var(--active-green); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+                const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
+                c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:600; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
                 dndList.appendChild(c);
                 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
                 if(p.driver_edited_note) noteCount++; return;
@@ -1105,15 +1142,15 @@
             
             const c = document.createElement("div"); c.className = "history-item" + (type==='pickup'&&isU ? ' urgent-pickup' : '') + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
             c.style.cursor = "pointer"; c.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
-            if(isFailed&&isU) Object.assign(c.style, {background:"rgba(183, 28, 28, 0.1)", border:"1px solid #ff4444"});
-            if(isDepot) Object.assign(c.style, {borderLeft:"4px solid var(--pro-blue)", background:"rgba(0, 86, 179, 0.1)"});
+            if(isFailed&&isU) Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444"});
+            if(isDepot) Object.assign(c.style, {borderLeft:"4px solid #00BFFF", background:"#001a33"});
             
-            const bg = getDriverColor(p.assigned_to), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4'].includes(bg);
-            let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span class="hist-driver" style="color:${isFailed&&isU?'#ff4444':'var(--archive-orange)'}; background:transparent; border-color:${isFailed&&isU?'#ff4444':'var(--archive-orange)'};">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
-            if(isDepot) dH = `<span class="hist-driver" style="color:var(--pro-blue); background:transparent; border-color:var(--pro-blue);">AT DEPOT</span>`;
+            const bg = getDriverColor(p.assigned_to), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4', '#4CAF50', '#00BCD4'].includes(bg);
+            let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span class="hist-driver" style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; background:transparent; border-color:${isFailed&&isU?'#ff4444':'#cc5200'};">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
+            if(isDepot) dH = `<span class="hist-driver" style="color:#00BFFF; background:transparent; border-color:#00BFFF;">AT DEPOT</span>`;
 
-            const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'var(--accent)':'var(--active-green)'}; color:#000; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
-            c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:var(--accent); font-weight:600; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:var(--active-green); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+            const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
+            c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:500; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:600; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
             
             if(isDepot) {
                 depotList.appendChild(c);
@@ -1188,33 +1225,31 @@
         google.maps.event.addListener(drawingManager, 'overlaycomplete', function(e) {
             if (e.type === 'polygon' && activeDrawingDriver && activeDrawingZoneId) {
                 const newPoly = e.overlay;
-                let isOverlapping = false;
-                
-                Object.keys(zonePolygons).forEach(d => {
-                    if (d !== activeDrawingDriver) {
-                        zonePolygons[d].forEach(existingPoly => {
-                            newPoly.getPath().forEach(latLng => {
-                                if (google.maps.geometry.poly.containsLocation(latLng, existingPoly)) isOverlapping = true;
-                            });
-                            existingPoly.getPath().forEach(latLng => {
-                                if (google.maps.geometry.poly.containsLocation(latLng, newPoly)) isOverlapping = true;
-                            });
-                        });
-                    }
-                });
+                const newPath = newPoly.getPath();
+                let isOverlap = false;
 
-                if (isOverlapping) {
-                    alert("This boundary overlaps another driver's zone. Please re-draw the boundary without overlapping.");
+                for(let driver in zonePolygons) {
+                    if (driver === activeDrawingDriver) continue;
+                    const polys = zonePolygons[driver];
+                    for(let i=0; i<polys.length; i++) {
+                         const existingPoly = polys[i];
+                         for(let j=0; j<newPath.getLength(); j++) {
+                             if(google.maps.geometry.poly.containsLocation(newPath.getAt(j), existingPoly)) isOverlap = true;
+                         }
+                         const exPath = existingPoly.getPath();
+                         for(let j=0; j<exPath.getLength(); j++) {
+                             if(google.maps.geometry.poly.containsLocation(exPath.getAt(j), newPoly)) isOverlap = true;
+                         }
+                    }
+                }
+
+                if(isOverlap) {
+                    alert("Overlaps another driver's boundary! Please re-draw without overlapping.");
                     e.overlay.setMap(null);
-                    drawingManager.setDrawingMode(null);
-                    activeDrawingDriver = null;
-                    activeDrawingZoneId = null;
-                    document.getElementById('active-driver-zone-panel').style.display = 'none';
                     return;
                 }
 
-                const path = e.overlay.getPath().getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
-                
+                const path = newPath.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
                 let existingPaths = [];
                 const z = driverZones[activeDrawingDriver] && driverZones[activeDrawingDriver][activeDrawingZoneId];
                 if (z && z.paths) existingPaths = z.paths;
@@ -1236,7 +1271,8 @@
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         let html = '';
         
-        appDrivers.forEach(d => {
+        customDrivers.forEach((d) => {
+            const color = getDriverColor(d);
             const driverData = driverZones[d] || {};
             let zonesHtml = '';
             
@@ -1252,20 +1288,20 @@
                 zonesHtml += `
                 <div class="zone-item">
                     <div class="zone-item-header">
-                        <input type="text" value="${z.label || ''}" placeholder="Zone Label" onchange="saveZone('${d}', '${zId}', 'label', this.value)" style="width: 150px; font-size: 11px; padding: 4px; margin:0; background: transparent; color: var(--text); border-bottom: 1px solid var(--border); border-radius: 0; border-top:0; border-left:0; border-right:0;">
+                        <input type="text" value="${z.label || ''}" placeholder="Zone Label" onchange="saveZone('${d}', '${zId}', 'label', this.value)" style="width: 150px; font-size: 11px; padding: 8px; margin:0; background: transparent; color: #fff; border-bottom: 1px solid #555; border-radius: 0; border-top:0; border-left:0; border-right:0;">
                         <button class="btn-zone-del" onclick="deleteZone('${d}', '${zId}')">DELETE</button>
                     </div>
                     ${dayHtml}
                     <div class="flex gap-10">
-                        <input type="time" value="${z.start||''}" onchange="saveZone('${d}', '${zId}', 'start', this.value)" style="margin:0; padding:4px;">
-                        <input type="time" value="${z.end||''}" onchange="saveZone('${d}', '${zId}', 'end', this.value)" style="margin:0; padding:4px;">
+                        <input type="time" value="${z.start||''}" onchange="saveZone('${d}', '${zId}', 'start', this.value)" style="margin:0; padding:10px;">
+                        <input type="time" value="${z.end||''}" onchange="saveZone('${d}', '${zId}', 'end', this.value)" style="margin:0; padding:10px;">
                     </div>
                 </div>`;
             });
 
             html += `<div class="zone-driver-row">
                 <div class="zone-driver-header">
-                    <div class="zone-driver-name" style="color:${getDriverColor(d)}">${d}</div>
+                    <div class="zone-driver-name" style="color:${color}">${d}</div>
                     <button class="btn-zone-add" onclick="addZone('${d}')">+ ADD ZONE</button>
                 </div>
                 ${zonesHtml}
@@ -1277,31 +1313,30 @@
     function renderZoneMapInterface() {
         if(!zoneMap) return;
         
-        // Clear polygons
         for(let k in zonePolygons) { 
              if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null));
         }
         zonePolygons = {};
         
-        // Draw all zones
-        appDrivers.forEach(d => {
+        customDrivers.forEach((d) => {
+            const color = getDriverColor(d);
             const driverData = driverZones[d] || {};
             zonePolygons[d] = [];
             
             Object.values(driverData).forEach(z => {
                 if(z.paths) {
                     z.paths.forEach(path => {
-                         const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: getDriverColor(d), fillOpacity: 0.3, strokeColor: getDriverColor(d), strokeWeight: 2 });
+                         const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: color, fillOpacity: 0.3, strokeColor: color, strokeWeight: 2 });
                          zonePolygons[d].push(poly);
                     });
                 }
             });
         });
         
-        // Render Driver Grid
         let html = '';
-        appDrivers.forEach(d => {
-             html += `<button class="zone-driver-btn" onclick="selectDriverForMap('${d}', '${getDriverColor(d)}')" style="color:${getDriverColor(d)}">${d}</button>`;
+        customDrivers.forEach((d) => {
+             const color = getDriverColor(d);
+             html += `<button class="zone-driver-btn" onclick="selectDriverForMap('${d}', '${color}')" style="color:${color}">${d}</button>`;
         });
         document.getElementById('zone-driver-grid').innerHTML = html;
     }
@@ -1312,15 +1347,15 @@
         const keys = Object.keys(driverData);
         
         if (keys.length === 0) {
-            panel.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:12px;">No zones created for ${driver}. Go to Schedule view to add one.</div>`;
+            panel.innerHTML = `<div style="text-align:center; color:#777; font-size:12px;">No zones created for ${driver}. Go to Schedule view to add one.</div>`;
         } else {
-            let html = `<div style="font-weight:700; color:${color}; text-transform:uppercase; margin-bottom:12px;">${driver} ZONES</div>`;
+            let html = `<div style="font-weight:700; color:${color}; text-transform:uppercase; margin-bottom:8px;">${driver} ZONES</div>`;
             keys.forEach(zId => {
                 const z = driverData[zId];
                 html += `
                 <div class="active-zone-row">
                     <div class="active-zone-label">${z.label || 'Unnamed Zone'}</div>
-                    <div style="display:flex; gap:10px;">
+                    <div style="display:flex; gap:5px;">
                         <button class="btn-zone" onclick="drawZoneFor('${driver}', '${zId}', '${color}')">DRAW</button>
                         <button class="btn-zone" onclick="clearZoneFor('${driver}', '${zId}')">CLEAR</button>
                     </div>
