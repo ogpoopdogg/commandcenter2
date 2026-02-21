@@ -70,7 +70,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .cat-badge { background: var(--bg); color: var(--text); padding: 4px 10px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border); }
 .new-card { border: 2px solid var(--accent) !important; position: relative; }
 .new-btn { border-color: var(--accent); }
-.history-item { color: var(--card-text); background: transparent; border: none; padding: 10px 12px; margin-bottom: 2px; border-radius: 4px; transition: background 0.2s; box-shadow: none; font-family: 'Inter', sans-serif !important; font-weight: 400 !important; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.history-item { color: var(--card-text); background: transparent; border: none; padding: 6px 10px; margin-bottom: 2px; border-radius: 4px; transition: background 0.2s; box-shadow: none; font-family: 'Inter', sans-serif !important; font-weight: 400 !important; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .history-item div, .history-item span { font-family: 'Inter', sans-serif !important; font-weight: 400 !important; }
 .history-item:hover { background: rgba(255,255,255,0.05); transform: none; box-shadow: none; }
 .history-item h3 { font-weight: 400; }
@@ -348,6 +348,12 @@ input, select, button, .mode-btn { min-height: 38px; }
 </div>
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
+<div id="driver-job-filters" class="flex jc gap-10 mt-15 mb-15 none" style="padding: 0 10px; font-size: 11px;">
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-pickups" checked onchange="renderData()"> Pickups</label>
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-deliveries" checked onchange="renderData()"> Deliveries</label>
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-transit" checked onchange="renderData()"> In Transit</label>
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-depot" checked onchange="renderData()"> At Depot</label>
+</div>
 <div id="unassigned-immediate-list" style="padding: 15px; display:flex; flex-direction:column; gap:10px; width: 100%; box-sizing: border-box;"></div>
 <div class="archive-column">
 <button id="btn-pickups" class="cat-btn" style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id="badge-pickups" class="cat-badge">0</span></button>
@@ -464,12 +470,14 @@ input, select, button, .mode-btn { min-height: 38px; }
 firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
 const db = firebase.database(), messaging = firebase.messaging();
 let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
+let driverColors = {};
 let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
 let seenJobs = {}, catState = { pickups: false, transit: false, depot: false, deliveries: false, dnd: false }, isFirstLoad = true;
 const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 let customDrivers = [];
 const baseColors = ['#FF8C00', '#00BFFF', '#3F51B5', '#FF69B4', '#9C27B0', '#E91E63', '#4CAF50', '#FF5722', '#00BCD4'];
 const getDriverColor = (name) => {
+if(driverColors[name]) return driverColors[name];
 let index = customDrivers.indexOf(name);
 return index !== -1 ? baseColors[index % baseColors.length] : '#00b32d';
 };
@@ -660,6 +668,7 @@ driverZones = s.val() || {};
 renderZoneRoster(); 
 if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface(); 
 });
+db.ref("driver_colors").on("value", s => { driverColors = s.val() || {}; renderData(); });
 } else { document.getElementById('login-overlay').style.display = 'flex'; }
 });
 function updateAllDriverDropdowns() {
@@ -683,7 +692,10 @@ function renderDriverManagerList() {
 const c = document.getElementById('driver-list-container');
 c.innerHTML = customDrivers.map((d, i) => `
 <div class="flex jb ac p-10" style="background:var(--input-bg); border:1px solid var(--border); border-radius:4px;">
-<input value="${d}" id="edit-drv-${i}" class="glow-field" style="margin:0; width:65%; padding:10px;">
+<div class="flex ac gap-10" style="width:65%;">
+<input type="color" id="edit-color-${i}" value="${getDriverColor(d)}" style="width:30px; height:30px; padding:0; border:none; background:transparent; cursor:pointer;" title="Driver Color">
+<input value="${d}" id="edit-drv-${i}" class="glow-field" style="margin:0; width:100%; padding:10px;">
+</div>
 <div class="flex gap-10">
 <button class="btn-save" style="padding:10px 14px;" onclick="saveDriverEdit(${i})">SAVE</button>
 <button class="btn-delete" style="padding:10px 14px;" onclick="deleteDriver(${i})">DEL</button>
@@ -703,11 +715,20 @@ updateAllDriverDropdowns();
 }
 function saveDriverEdit(i) {
 const n = document.getElementById(`edit-drv-${i}`).value.trim();
-if(n && n !== customDrivers[i]) {
+const col = document.getElementById(`edit-color-${i}`).value;
+const oldName = customDrivers[i];
+if(n) {
+if(n !== oldName) {
 customDrivers[i] = n;
 db.ref('drivers').set(customDrivers);
+}
+driverColors[n] = col;
+db.ref('driver_colors').set(driverColors);
 renderDriverManagerList();
 updateAllDriverDropdowns();
+renderData();
+if(document.getElementById('zone-schedule-view').style.display !== 'none') renderZoneRoster();
+if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface();
 }
 }
 function deleteDriver(i) {
@@ -954,8 +975,17 @@ function deleteJob(id) { if(confirm("Delete this dispatch completely?")) { db.re
 function renderData() {
 const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd"), uList = document.getElementById("unassigned-immediate-list");
 pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = ""; uList.innerHTML = "";
-const filterUI = document.getElementById('filter-reset-ui'); if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
+const filterUI = document.getElementById('filter-reset-ui'); 
+const jobFilters = document.getElementById('driver-job-filters');
+if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
+if(jobFilters) jobFilters.style.display = currentDriverFilter ? 'flex' : 'none';
 document.querySelectorAll('.archive-column').forEach(c => c.style.display = currentDriverFilter ? 'none' : '');
+
+const showPickups = document.getElementById('filter-chk-pickups')?.checked !== false;
+const showDeliveries = document.getElementById('filter-chk-deliveries')?.checked !== false;
+const showTransit = document.getElementById('filter-chk-transit')?.checked !== false;
+const showDepot = document.getElementById('filter-chk-depot')?.checked !== false;
+
 const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
 let stopLookup = {}, pending = 0, assignedCount = 0, noteCount = 0, dndCount = 0, driverStats = {};
 if(currentDriverFilter && driverLocationsData[currentDriverFilter]) {
@@ -1044,7 +1074,10 @@ let dH = currentDriverFilter ? `<span style="color:#0099cc; font-weight:700;">IN
 const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<span style="color:#0099cc; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
-if(currentDriverFilter) uList.appendChild(c); else tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
+if(currentDriverFilter) {
+    if(showTransit) uList.appendChild(c);
+} else tList.appendChild(c); 
+if(p.driver_edited_note) noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
 const isDepot = type === 'delivery' && isU;
@@ -1057,7 +1090,10 @@ const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name
 let arrow = type === 'pickup' ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
 let content = type === 'pickup' ? `<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffff00;">${p.name||'-'}</span>`;
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
-if(currentDriverFilter) uList.appendChild(c); else dndList.appendChild(c);
+if(currentDriverFilter) {
+    if(type === 'pickup' && showPickups) uList.appendChild(c);
+    else if(type === 'delivery' && showDeliveries) uList.appendChild(c);
+} else dndList.appendChild(c);
 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
 if(p.driver_edited_note) noteCount++; return;
 }
@@ -1078,7 +1114,12 @@ if (type === 'delivery' || isDepot) {
 }
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
 if(currentDriverFilter) {
-uList.appendChild(c);
+    let shouldShow = false;
+    if (isDepot && showDepot) shouldShow = true;
+    else if (!isDepot && type === 'pickup' && showPickups) shouldShow = true;
+    else if (!isDepot && type === 'delivery' && showDeliveries) shouldShow = true;
+    
+    if (shouldShow) uList.appendChild(c);
 } else if(isDepot) {
 depotList.appendChild(c);
 } else if (isU && !isFailed) {
