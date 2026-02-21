@@ -40,7 +40,7 @@ header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px so
 .glow-field:focus { border-color: var(--accent); outline: none; }
 .stats-bar { display: flex; background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 10px; }
 #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 15px; box-shadow: var(--shadow-soft); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
-#board-panel { padding: 20px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+#board-panel { padding: 0; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 .stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0; padding: 14px 8px; background: var(--stat-bg); border: 1px solid var(--border); }
 .stat-label { display: block; font-size: 10px; color: var(--stat-label-color, #777); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
 .stat-number { font-family: 'Inter', sans-serif; font-weight: 700; line-height: 1; }
@@ -60,11 +60,11 @@ button.primary:hover { background: #252525; border-color: var(--accent); transfo
 button.primary:active { transform: translateY(1px); }
 button.primary.super-dispatch { background: var(--dispatch-bg) !important; color: var(--dispatch-text) !important; border: 1px solid var(--dispatch-text) !important; box-shadow: var(--shadow-soft) !important; text-shadow: none; letter-spacing: 2px; }
 button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !important; }
-.history-box { display: none; margin-top: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); padding: 20px; gap: 20px; flex-wrap: wrap; }
-.archive-column { flex: 1 1 0; min-width: 0; border-right: 1px solid var(--border); padding-right: 20px; }
+.history-box { display: none; margin-top: 0; border: 1px solid rgba(255,255,255,0.1); border-left: none; border-right: none; box-shadow: var(--shadow-soft); padding: 0; gap: 0; flex-wrap: wrap; width: 100%; box-sizing: border-box; border-radius: 0; }
+.archive-column { flex: 1 1 0; min-width: 0; border-right: 1px solid var(--border); padding-right: 0; box-sizing: border-box; }
 .archive-column:last-child { border-right: none; padding-right: 0; }
 .archive-title { font-size: 13px; font-weight: 700; color: var(--archive-title-color, #666); text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; letter-spacing: 1px; }
-.cat-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border); padding: 14px; cursor: pointer; font-weight: 700; border-radius: 6px; margin-bottom: 10px; text-transform: uppercase; font-size: 13px; }
+.cat-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border); border-left: none; border-right: none; padding: 14px; cursor: pointer; font-weight: 700; border-radius: 0; margin-bottom: 0; text-transform: uppercase; font-size: 13px; box-sizing: border-box; }
 .cat-badge { background: var(--bg); color: var(--text); padding: 4px 10px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border); }
 .new-card { border: 2px solid var(--accent) !important; position: relative; }
 .new-btn { border-color: var(--accent); }
@@ -159,7 +159,7 @@ background-color: rgba(204, 163, 0, 0.08) !important;
 }
 @media (max-width: 768px) {
 #active-list-container { flex-direction: column; height: auto; }
-.archive-column { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 20px; margin-bottom: 20px; }
+.archive-column { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 0; margin-bottom: 0; }
 .archive-column:last-child { border-bottom: none; margin-bottom: 0; }
 input, select, button, .mode-btn { min-height: 44px; }
 #map { height: 100%; min-height: 100%; }
@@ -254,7 +254,8 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 <div class="flex-row">
 <div class="input-wrap f-2">
-<input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address">
+<input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="padding-right: 60px;">
+<button class="copy-btn" style="right: 32px; font-size:14px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('pickup')" type="button">📍</button>
 <button class="copy-btn" onclick="copyField('f-pickup')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
@@ -283,7 +284,8 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 <div class="flex-row">
 <div class="input-wrap f-2">
-<input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address">
+<input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="padding-right: 60px;">
+<button class="copy-btn" style="right: 32px; font-size:14px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('drop')" type="button">📍</button>
 <button class="copy-btn" onclick="copyField('f-drop-address')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
@@ -306,14 +308,14 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 <div id="board-panel">
 <div class="history-box" id="active-list-container">
-<div id="filter-reset-ui" class="w-100 text-center none mb-15">
+<div id="filter-reset-ui" class="w-100 text-center none mb-15" style="padding: 15px; box-sizing: border-box;">
 <div id="selected-driver-label" class="none bold uppercase" style="margin: 0 auto 15px auto; width:100%; max-width:350px; font-size:18px; padding:12px; border-radius:4px; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px;"></div>
 <div class="flex jc" style="gap:15px; margin:0 auto; width:100%; max-width:350px;">
 <button id="view-route-btn" class="route-btn none" style="flex:1;">View Current Route</button>
 <button onclick="clearDriverFilter()" class="back-to-all-btn" style="flex:1;">Back to All</button>
 </div>
 </div>
-<input type="text" id="active-search" class="glow-field w-100 mb-15" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
+<input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
 <div class="archive-column">
 <button id="btn-pickups" class="cat-btn" style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id="badge-pickups" class="cat-badge">0</span></button>
 <div id="list-pickups"></div>
@@ -333,10 +335,10 @@ input, select, button, .mode-btn { min-height: 44px; }
 <button id="btn-deliveries" class="cat-btn" style="color:var(--active-green);" onclick="toggleCat('deliveries')"><span>Deliveries</span><span id="badge-deliveries" class="cat-badge">0</span></button>
 <div id="list-deliveries"></div>
 </div>
-<button onclick="toggleActiveList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:16px; border-radius:6px;">Minimize Pickups/Deliveries List</button>
+<button onclick="toggleActiveList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:16px; border-radius:6px; margin-top: 15px;">Minimize Pickups/Deliveries List</button>
 </div>
 <div class="history-box col" id="dnd-list-container">
-<div class="archive-title" style="color:#ff4444;">Active DND/DNP</div>
+<div class="archive-title" style="color:#ff4444; padding: 15px; margin-bottom: 0;">Active DND/DNP</div>
 <button id="archive-all-dnd-btn" onclick="archiveAllDND()" class="none mb-15 bold pointer u-case" style="background:#b71c1c; color:#fff; border:none; padding:14px; border-radius:6px;">Archive All Failed</button>
 <div id="list-dnd"></div>
 <button onclick="toggleDNDList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:16px; border-radius:6px;">Minimize Active DND/DNP</button>
@@ -363,6 +365,24 @@ input, select, button, .mode-btn { min-height: 44px; }
 <div id="route-list"></div>
 <div id="map"></div>
 </div>
+
+<div id="location-picker-modal" class="modal" onclick="if(event.target===this) { this.style.display='none'; document.body.style.overflow=''; }">
+<div class="modal-content" style="padding: 0; max-width: 600px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; position: relative;">
+<div style="padding: 15px; background: var(--header-bg); border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center;">
+<h2 class="modal-h2 m-0" style="font-size:16px;">Pick Location</h2>
+<button class="btn-cancel" style="padding: 8px 12px; font-size: 12px; margin:0;" onclick="document.getElementById('location-picker-modal').style.display='none'; document.body.style.overflow='';">CLOSE</button>
+</div>
+<div style="padding: 10px; background: var(--header-bg); border-bottom: 1px solid var(--border);">
+<input type="text" id="loc-search-bar" class="glow-field" placeholder="Search address or paste GPS (e.g. 49.852, -99.951)" style="margin:0; width:100%;">
+</div>
+<div style="flex: 1; position: relative;">
+<div id="picker-map" style="width:100%; height:100%;"></div>
+<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); pointer-events: none; font-size: 32px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10;">📍</div>
+</div>
+<button class="btn-save" style="width: 100%; border-radius: 0; padding: 16px; font-size: 16px; position: sticky; bottom: 0; z-index: 11;" onclick="setPickerLocation()">SET LOCATION</button>
+</div>
+</div>
+
 <div id="detailsModal" class="modal" onclick="this.style.display='none';document.body.style.overflow=''">
 <div class="modal-content" onclick="event.stopPropagation()">
 <h2 id="m-title" class="modal-h2">Job Details</h2>
@@ -410,7 +430,7 @@ input, select, button, .mode-btn { min-height: 44px; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing,places"></script>
 <script>
 firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
 const db = firebase.database(), messaging = firebase.messaging();
@@ -427,7 +447,7 @@ return index !== -1 ? baseColors[index % baseColors.length] : '#00b32d';
 document.addEventListener('keydown', (e) => {
 if (e.key === 'Escape') {
 closeMap();
-['detailsModal', 'zone-modal', 'driver-manager-modal'].forEach(id => {
+['detailsModal', 'zone-modal', 'driver-manager-modal', 'location-picker-modal'].forEach(id => {
 const m = document.getElementById(id);
 if(m) { m.style.display = 'none'; }
 });
@@ -437,6 +457,7 @@ const tag = e.target.tagName.toLowerCase();
 if (tag === 'textarea' || tag === 'button') return;
 const dm = document.getElementById('detailsModal');
 if (dm && dm.style.display === 'block') return;
+if (document.getElementById('location-picker-modal').style.display === 'flex' || document.getElementById('location-picker-modal').style.display === 'block') { e.preventDefault(); return; }
 if (document.getElementById('login-overlay').style.display !== 'none') { attemptLogin(); return; }
 const isFormInput = e.target.closest('#entry-panel') || e.target.closest('#group-pickup') || e.target.closest('#group-drop');
 if (isFormInput) {
@@ -994,7 +1015,7 @@ if (afC && !searchCity.toLowerCase().includes(afC)) return;
 if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
 const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
 Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", opacity:"0.7"});
-c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffcc00; font-weight:300; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
+c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffcc00; font-weight:300; margin-bottom:10px; white-space:nowrap;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
 arcList.appendChild(c); return;
 }
 const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
@@ -1006,7 +1027,7 @@ const bg = getDriverColor(p.assigned_to);
 let dH = `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>`;
 const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<span style="color:#0099cc; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bH}${dH}<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
 tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
@@ -1019,7 +1040,7 @@ const dH = (!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>`
 const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffcc00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = type === 'pickup' ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
 let content = type === 'pickup' ? `<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffcc00;">${p.name||'-'}</span>`;
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bH}${dH}${content}</div>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
 dndList.appendChild(c);
 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
 if(p.driver_edited_note) noteCount++; return;
@@ -1038,7 +1059,7 @@ if (type === 'delivery' || isDepot) {
     arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
     content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffcc00;">${p.name||'-'}</span>`;
 }
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bH}${dH}${content}</div>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
 if(isDepot) {
 depotList.appendChild(c);
 } else if (isU && !isFailed) {
@@ -1079,6 +1100,7 @@ else document.getElementById('btn-' + cat).classList.remove('new-btn');
 }
 });
 isFirstLoad = false;
+setTimeout(autoScaleText, 50);
 }
 function openZoneManager() {
 document.getElementById('zone-modal').style.display = 'block';
@@ -1282,6 +1304,89 @@ let deferredPrompt; const installBtn = document.getElementById('install-btn');
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'block'; });
 installBtn.addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') installBtn.style.display = 'none'; deferredPrompt = null; } });
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./firebase-messaging-sw.js').then(r => { swReg = r; messaging.useServiceWorker(r); }).catch(e => console.log('SW Error', e)));
+
+function autoScaleText() {
+    const lines = document.querySelectorAll('.history-item div[style*="white-space:nowrap"]');
+    lines.forEach(line => {
+        if (!line.dataset.origSize) {
+            line.dataset.origSize = window.getComputedStyle(line).fontSize;
+        }
+        line.style.fontSize = line.dataset.origSize;
+        let size = parseFloat(line.style.fontSize);
+        while (line.scrollWidth > line.clientWidth && size > 8) {
+            size -= 0.5;
+            line.style.fontSize = size + 'px';
+        }
+    });
+}
+window.addEventListener('resize', () => setTimeout(autoScaleText, 50));
+
+let currentLocationTarget = null;
+let pickerMap = null;
+let pickerAutocomplete = null;
+
+function openLocationPicker(target) {
+    currentLocationTarget = target;
+    document.getElementById('location-picker-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    if (!pickerMap) {
+        pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
+            center: { lat: 49.8425, lng: -99.9497 },
+            zoom: 14,
+            gestureHandling: "greedy",
+            disableDefaultUI: true,
+            zoomControl: true
+        });
+
+        const input = document.getElementById('loc-search-bar');
+        pickerAutocomplete = new google.maps.places.Autocomplete(input);
+        pickerAutocomplete.bindTo('bounds', pickerMap);
+
+        pickerAutocomplete.addListener('place_changed', () => {
+            const place = pickerAutocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) return;
+            pickerMap.setCenter(place.geometry.location);
+            pickerMap.setZoom(17);
+        });
+
+        input.addEventListener('input', function() {
+            const val = this.value.trim();
+            const gpsRegex = /^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/;
+            const match = val.match(gpsRegex);
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[3]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    pickerMap.setCenter({ lat: lat, lng: lng });
+                    pickerMap.setZoom(17);
+                }
+            }
+        });
+    }
+    setTimeout(() => {
+        google.maps.event.trigger(pickerMap, 'resize');
+        pickerMap.setCenter({ lat: 49.8425, lng: -99.9497 });
+        document.getElementById('loc-search-bar').value = '';
+    }, 100);
+}
+
+function setPickerLocation() {
+    if (!pickerMap) return;
+    const center = pickerMap.getCenter();
+    const lat = center.lat().toFixed(5);
+    const lng = center.lng().toFixed(5);
+    const str = `${lat}, ${lng}`;
+
+    if (currentLocationTarget === 'pickup') {
+        document.getElementById('f-pickup').value = str;
+    } else if (currentLocationTarget === 'drop') {
+        document.getElementById('f-drop-address').value = str;
+    }
+
+    document.getElementById('location-picker-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
 </script>
 </body>
 </html>
