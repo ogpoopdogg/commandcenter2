@@ -349,10 +349,10 @@ input, select, button, .mode-btn { min-height: 38px; }
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
 <div id="driver-job-filters" class="flex jc gap-10 mt-15 mb-15 none" style="padding: 0 10px; font-size: 11px;">
-<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-pickups" checked onchange="renderData()"> Pickups</label>
-<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-deliveries" checked onchange="renderData()"> Deliveries</label>
-<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-transit" checked onchange="renderData()"> In Transit</label>
-<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-depot" checked onchange="renderData()"> At Depot</label>
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-pickups" checked onchange="renderData()" style="width: auto; margin: 0; padding: 0;"> Pickups</label>
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-deliveries" checked onchange="renderData()" style="width: auto; margin: 0; padding: 0;"> Deliveries</label>
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-transit" checked onchange="renderData()" style="width: auto; margin: 0; padding: 0;"> In Transit</label>
+<label class="flex ac gap-10 pointer"><input type="checkbox" id="filter-chk-depot" checked onchange="renderData()" style="width: auto; margin: 0; padding: 0;"> At Depot</label>
 </div>
 <div id="unassigned-immediate-list" style="padding: 15px; display:flex; flex-direction:column; gap:10px; width: 100%; box-sizing: border-box;"></div>
 <div class="archive-column">
