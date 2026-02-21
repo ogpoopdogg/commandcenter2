@@ -68,9 +68,9 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .cat-badge { background: var(--bg); color: var(--text); padding: 4px 10px; border-radius: 12px; font-size: 12px; border: 1px solid var(--border); }
 .new-card { border: 2px solid var(--accent) !important; position: relative; }
 .new-btn { border-color: var(--accent); }
-.history-item { color: var(--card-text); background: var(--card); border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; border-radius: 6px; transition: all 0.2s; box-shadow: var(--shadow-soft); font-family: 'Roboto Condensed', sans-serif !important; font-weight: 300 !important; letter-spacing: 0.5px; }
-.history-item div, .history-item span { font-family: 'Roboto Condensed', sans-serif !important; font-weight: 300 !important; }
-.history-item:hover { background: var(--input-bg); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+.history-item { color: var(--card-text); background: transparent; border: none; padding: 10px 12px; margin-bottom: 2px; border-radius: 4px; transition: background 0.2s; box-shadow: none; font-family: 'Inter', sans-serif !important; font-weight: 400 !important; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.history-item div, .history-item span { font-family: 'Inter', sans-serif !important; font-weight: 400 !important; }
+.history-item:hover { background: rgba(255,255,255,0.05); transform: none; box-shadow: none; }
 .history-item h3 { font-weight: 400; }
 .hist-driver { font-weight: 400 !important; font-family: 'Inter', sans-serif !important; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.4); }
 .hist-time { font-size: 11px; color: var(--hist-time-color, #777); margin-top: 8px; font-family: monospace; font-weight: 700; }
@@ -1001,22 +1001,25 @@ const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
 if(p.status === 'in_transit') {
 assignedCount++; if(driverStats[asgn]) driverStats[asgn].d++;
 const c = document.createElement("div"); c.className = "history-item" + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
-c.style.cursor = "pointer"; c.style.borderLeft = "4px solid #0099cc";
-const bg = getDriverColor(p.assigned_to), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4', '#4CAF50', '#00BCD4'].includes(bg);
-let dH = `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>`;
-const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:#0099cc; color:#fff; font-weight:400; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
-c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:300; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:300; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "transparent";
+const bg = getDriverColor(p.assigned_to);
+let dH = `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>`;
+const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<span style="color:#0099cc; font-weight:700; margin-right:6px;">${s}.</span>` : '';
+let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bH}${dH}<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
 tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
 const isDepot = type === 'delivery' && isU;
 if (isFailed) {
 dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
-Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444", cursor:"pointer"}); c.onclick = () => viewDetails(id);
-const bg = getDriverColor(asgn), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4', '#4CAF50', '#00BCD4'].includes(bg);
-const dH = (!isU) ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${asgn}</span>` : `<span class="hist-driver" style="color:#ff4444; background:transparent; border-color:#ff4444;">FAILED</span>`;
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:400; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
-c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:300; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:300; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+Object.assign(c.style, {background:"rgba(255,0,0,0.1)", border:"1px solid #ff4444", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
+const bg = getDriverColor(asgn);
+const dH = (!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>` : `<span style="color:#ff4444; font-weight:700;">FAILED</span>`;
+const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffcc00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
+let arrow = type === 'pickup' ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
+let content = type === 'pickup' ? `<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffcc00;">${p.name||'-'}</span>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bH}${dH}${content}</div>`;
 dndList.appendChild(c);
 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
 if(p.driver_edited_note) noteCount++; return;
@@ -1024,14 +1027,18 @@ if(p.driver_edited_note) noteCount++; return;
 if(isU && !isDepot) pending++; else { if(!isDepot) assignedCount++; if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++; }
 if(p.driver_edited_note) noteCount++;
 const c = document.createElement("div"); c.className = "history-item" + (type==='pickup'&&isU ? ' urgent-pickup' : '') + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
-c.style.cursor = "pointer"; c.style.borderLeft = type === 'pickup' ? '4px solid var(--accent)' : '4px solid var(--active-green)';
-if(isFailed&&isU) Object.assign(c.style, {background:"#2b0000", border:"2px solid #ff4444"});
-if(isDepot) Object.assign(c.style, {borderLeft:"4px solid #00BFFF", background:"#001a33"});
-const bg = getDriverColor(p.assigned_to), dk = ['#00b32d','#FF8C00','#00BFFF','#FF69B4', '#4CAF50', '#00BCD4'].includes(bg);
-let dH = p.assigned_to ? `<span class="hist-driver" style="background:${bg}; color:${dk?'#000':'#fff'}">${p.assigned_to}</span>` : `<span class="hist-driver" style="color:${isFailed&&isU?'#ff4444':'#cc5200'}; background:transparent; border-color:${isFailed&&isU?'#ff4444':'#cc5200'};">${isFailed&&isU?'FAILED':'UNASSIGNED'}</span>`;
-if(isDepot) dH = `<span class="hist-driver" style="color:#00BFFF; background:transparent; border-color:#00BFFF;">AT DEPOT</span>`;
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<div style="flex-shrink:0; width:18px; height:18px; background:${type==='pickup'?'#ffcc00':'#00b32d'}; color:#000; font-weight:400; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:10px; align-self:flex-start; margin-top:2px;">${s}</div>` : '';
-c.innerHTML = `<div class="flex col w-100"><div class="flex jb mb-5" style="align-items:flex-start;">${bH||'<div></div>'}${dH}</div><div style="font-size:11px; color:#ffcc00; font-weight:300; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>${p.package_details?`<div style="font-size:11px; color:#aaa; font-weight:300; margin-top:2px;">📦 ${p.package_details}</div>`:''}</div>`;
+c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "transparent";
+const bg = getDriverColor(p.assigned_to);
+let dH = p.assigned_to ? `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>` : `<span style="color:#cc5200; font-weight:700;">UNASSIGNED</span>`;
+if(isDepot) dH = `<span style="color:#00BFFF; font-weight:700;">AT DEPOT</span>`;
+const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffcc00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
+let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
+let content = `<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>`;
+if (type === 'delivery' || isDepot) {
+    arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
+    content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffcc00;">${p.name||'-'}</span>`;
+}
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bH}${dH}${content}</div>`;
 if(isDepot) {
 depotList.appendChild(c);
 } else if (isU && !isFailed) {
