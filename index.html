@@ -709,14 +709,65 @@ c.innerHTML = customDrivers.map((d, i) => `
 `).join('');
 }
 function addDriver() {
-const n = document.getElementById('new-driver-name').value.trim();
-if(n && !customDrivers.includes(n)) {
-customDrivers.push(n);
-db.ref('drivers').set(customDrivers.map(d => ({name: d, color: driverColors[d] || getDriverColor(d)})));
-document.getElementById('new-driver-name').value = '';
-renderDriverManagerList();
-updateAllDriverDropdowns();
+    const n = document.getElementById('new-driver-name').value.trim();
+    if(n && !customDrivers.includes(n)) {
+        customDrivers.push(n);
+        driverColors[n] = baseColors[customDrivers.length % baseColors.length];
+        
+        const driverData = customDrivers.map(d => ({
+            name: d, 
+            color: driverColors[d] || getDriverColor(d)
+        }));
+        
+        db.ref('drivers').set(driverData);
+        document.getElementById('new-driver-name').value = '';
+        renderDriverManagerList();
+        updateAllDriverDropdowns();
+    }
 }
+
+function saveDriverEdit(i) {
+    const n = document.getElementById(`edit-drv-${i}`).value.trim();
+    const col = document.getElementById(`edit-color-${i}`).value;
+    const oldName = customDrivers[i];
+
+    if(n) {
+        customDrivers[i] = n;
+        if (n !== oldName) { delete driverColors[oldName]; }
+        driverColors[n] = col;
+
+        const driverData = customDrivers.map(d => ({
+            name: d,
+            color: driverColors[d] || getDriverColor(d)
+        }));
+
+        db.ref('drivers').set(driverData).then(() => {
+            renderDriverManagerList();
+            updateAllDriverDropdowns();
+            renderData();
+            if(document.getElementById('zone-modal').style.display === 'block') {
+                renderZoneRoster();
+            }
+        });
+    }
+}
+
+function deleteDriver(i) {
+    if(confirm("Remove driver?")) {
+        const deletedName = customDrivers[i];
+        customDrivers.splice(i, 1);
+        delete driverColors[deletedName];
+        
+        const driverData = customDrivers.map(d => ({
+            name: d,
+            color: driverColors[d] || getDriverColor(d)
+        }));
+        
+        db.ref('drivers').set(driverData).then(() => {
+            renderDriverManagerList();
+            updateAllDriverDropdowns();
+        });
+    }
 }
 function saveDriverEdit(i) {
 const n = document.getElementById(`edit-drv-${i}`).value.trim();
