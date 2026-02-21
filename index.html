@@ -694,31 +694,29 @@ document.getElementById('driver-manager-modal').style.display = 'block';
 renderDriverManagerList();
 }
 function renderDriverManagerList() {
-const c = document.getElementById('driver-list-container');
-c.innerHTML = customDrivers.map((d, i) => `
-<div class="flex jb ac p-10" style="background:var(--input-bg); border:1px solid var(--border); border-radius:4px;">
-<div class="flex ac gap-10" style="width:65%;">
-<input type="color" id="edit-color-${i}" value="${getDriverColor(d)}" style="width:30px; height:30px; padding:0; border:none; background:transparent; cursor:pointer;" title="Driver Color">
-<input value="${d}" id="edit-drv-${i}" class="glow-field" style="margin:0; width:100%; padding:10px;">
-</div>
-<div class="flex gap-10">
-<button class="btn-save" style="padding:10px 14px;" onclick="saveDriverEdit(${i})">SAVE</button>
-<button class="btn-delete" style="padding:10px 14px;" onclick="deleteDriver(${i})">DEL</button>
-</div>
-</div>
-`).join('');
+    const c = document.getElementById('driver-list-container');
+    c.innerHTML = customDrivers.map((d, i) => {
+        const currentColor = driverColors[d] || getDriverColor(d);
+        return `
+        <div class="flex jb ac p-10" style="background:var(--input-bg); border:1px solid var(--border); border-radius:4px;">
+            <div class="flex ac gap-10" style="width:65%;">
+                <input type="color" id="edit-color-${i}" value="${currentColor}" style="width:30px; height:30px; padding:0; border:none; background:transparent; cursor:pointer;" title="Driver Color">
+                <input value="${d}" id="edit-drv-${i}" class="glow-field" style="margin:0; width:100%; padding:10px;">
+            </div>
+            <div class="flex gap-10">
+                <button class="btn-save" style="padding:10px 14px;" onclick="saveDriverEdit(${i})">SAVE</button>
+                <button class="btn-delete" style="padding:10px 14px;" onclick="deleteDriver(${i})">DEL</button>
+            </div>
+        </div>`;
+    }).join('');
 }
+
 function addDriver() {
     const n = document.getElementById('new-driver-name').value.trim();
     if(n && !customDrivers.includes(n)) {
         customDrivers.push(n);
         driverColors[n] = baseColors[customDrivers.length % baseColors.length];
-        
-        const driverData = customDrivers.map(d => ({
-            name: d, 
-            color: driverColors[d] || getDriverColor(d)
-        }));
-        
+        const driverData = customDrivers.map(d => ({ name: d, color: driverColors[d] || getDriverColor(d) }));
         db.ref('drivers').set(driverData);
         document.getElementById('new-driver-name').value = '';
         renderDriverManagerList();
@@ -730,39 +728,24 @@ function saveDriverEdit(i) {
     const n = document.getElementById(`edit-drv-${i}`).value.trim();
     const col = document.getElementById(`edit-color-${i}`).value;
     const oldName = customDrivers[i];
-
     if(n) {
-        customDrivers[i] = n;
-        if (n !== oldName) { delete driverColors[oldName]; }
+        if(n !== oldName) { delete driverColors[oldName]; customDrivers[i] = n; }
         driverColors[n] = col;
-
-        const driverData = customDrivers.map(d => ({
-            name: d,
-            color: driverColors[d] || getDriverColor(d)
-        }));
-
+        const driverData = customDrivers.map(d => ({ name: d, color: driverColors[d] || getDriverColor(d) }));
         db.ref('drivers').set(driverData).then(() => {
             renderDriverManagerList();
             updateAllDriverDropdowns();
             renderData();
-            if(document.getElementById('zone-modal').style.display === 'block') {
-                renderZoneRoster();
-            }
         });
     }
 }
 
 function deleteDriver(i) {
     if(confirm("Remove driver?")) {
-        const deletedName = customDrivers[i];
+        const oldName = customDrivers[i];
         customDrivers.splice(i, 1);
-        delete driverColors[deletedName];
-        
-        const driverData = customDrivers.map(d => ({
-            name: d,
-            color: driverColors[d] || getDriverColor(d)
-        }));
-        
+        delete driverColors[oldName];
+        const driverData = customDrivers.map(d => ({ name: d, color: driverColors[d] || getDriverColor(d) }));
         db.ref('drivers').set(driverData).then(() => {
             renderDriverManagerList();
             updateAllDriverDropdowns();
