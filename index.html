@@ -53,7 +53,7 @@ header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px so
 @keyframes text-shine { to { background-position: 200% center; } }
 input, select, textarea { width: 100%; padding: 14px; padding-right: 35px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 15px; margin-bottom: 6px; box-sizing: border-box; transition: border 0.2s; }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; background: var(--input-bg); }
-.flex-row { display: flex; gap: 6px; }
+.flex-row { display: flex; gap: 6px; margin-bottom: 6px; }
 .driver-select { width: 100%; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); font-weight: 600; padding: 14px; border-radius: 6px; margin-bottom: 12px; }
 button.primary { width: 100%; padding: 16px; background: var(--btn-bg); color: var(--text); font-weight: 700; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 6px; text-transform: uppercase; font-size: 15px; letter-spacing: 1.5px; transition: all 0.2s ease; box-shadow: var(--shadow-soft); overflow: hidden; }
 button.primary:hover { background: #252525; border-color: var(--accent); transform: translateY(-2px); }
@@ -81,6 +81,35 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 #archive-search:focus { border-color: var(--accent); }
 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(2px); }
 .modal-content { background: var(--modal-bg); margin: 5% auto; padding: 30px; width: 90%; max-width: 550px; border: 1px solid var(--accent); color: var(--text); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; max-height: 85vh; overflow-y: auto; padding-bottom: 40px; }
+#detailsModal .modal-content {
+    margin: 0 !important;
+    padding: 10px 15px !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden !important;
+}
+#detailsModal .flex.col.gap-0 {
+    flex: 1;
+    justify-content: space-evenly;
+    margin-bottom: 5px;
+}
+#detailsModal .input-wrap.mb-12 { margin-bottom: 0 !important; }
+#detailsModal input, #detailsModal textarea, #detailsModal select {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+}
+#detailsModal textarea { min-height: 40px !important; }
+#detailsModal .mb-20 { margin-bottom: 5px !important; }
+#detailsModal .modal-h2 { font-size: 16px !important; margin: 0 !important; }
+#detailsModal .edit-btn-group { display: flex; gap: 10px; margin-top: auto; }
+#detailsModal .edit-btn-group button { padding: 12px !important; flex: 1; margin: 0; }
 #login-overlay { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
 .login-box { width: 100%; max-width: 350px; background: #111; padding: 40px; border-radius: 12px; border: 1px solid #222; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 .login-input { width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none; }
@@ -95,7 +124,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .mode-btn.active-mode { background: var(--accent); color: #000; }
 .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
 #driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); margin-bottom: 20px; }
-.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 15px; background: var(--stat-bg); border-radius: 6px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 50px; }
+.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 15px; background: var(--stat-bg); border-radius: 6px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 50px; box-sizing: border-box; width: 100%; }
 .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
 .ds-name { color: var(--text); font-weight: 700; font-size: 12px; width: auto; padding-right: 10px; text-transform: uppercase; }
 .stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
@@ -216,8 +245,8 @@ input, select, button, .mode-btn { min-height: 44px; }
 <input type="text" id="f-info" placeholder="Driver Notes...">
 <button class="copy-btn" onclick="copyField('f-info')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
-<div id="bottom-input-section" style="margin-top: 5px;"></div>
-<div class="flex ac gap-10" style="margin-bottom: 15px; width: 100%;">
+<div id="bottom-input-section" style="margin-top: 0;"></div>
+<div class="flex ac gap-10" style="margin-bottom: 6px; width: 100%; margin-top: 6px;">
 <select id="f-driver" class="driver-select" style="margin-bottom: 0; border: 1px solid var(--accent); flex: 1;">
 <option value="Unassigned" selected disabled hidden>Assign Driver</option>
 <option value="Unassigned">UNASSIGNED</option>
@@ -246,7 +275,7 @@ input, select, button, .mode-btn { min-height: 44px; }
 <div id="driver-stats-panel"></div>
 <div class="none">
 <div id="group-pickup">
-<div class="rel">
+<div class="rel" style="margin-bottom: 6px;">
 <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
 <button class="copy-btn" onclick="copyField('f-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="suggestions" class="suggestions-box"></div>
@@ -276,7 +305,7 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 </div>
 <div id="group-drop">
-<div class="rel">
+<div class="rel" style="margin-bottom: 6px;">
 <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
 <button class="copy-btn" onclick="copyField('f-drop-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="drop-suggestions" class="suggestions-box"></div>
@@ -310,9 +339,8 @@ input, select, button, .mode-btn { min-height: 44px; }
 <div class="history-box" id="active-list-container">
 <div id="filter-reset-ui" class="w-100 text-center none mb-15" style="padding: 15px; box-sizing: border-box;">
 <div id="selected-driver-label" class="none bold uppercase" style="margin: 0 auto 15px auto; width:100%; max-width:350px; font-size:18px; padding:12px; border-radius:4px; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px;"></div>
-<div class="flex jc" style="gap:15px; margin:0 auto; width:100%; max-width:350px;">
-<button id="view-route-btn" class="route-btn none" style="flex:1;">View Current Route</button>
-<button onclick="clearDriverFilter()" class="back-to-all-btn" style="flex:1;">Back to All</button>
+<div class="flex jc" style="margin:0 auto; width:100%; max-width:350px;">
+<button id="view-route-btn" class="route-btn none" style="width: 100%;">View Current Route</button>
 </div>
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
@@ -384,8 +412,6 @@ input, select, button, .mode-btn { min-height: 44px; }
 
 <div id="detailsModal" class="modal" onclick="this.style.display='none';document.body.style.overflow=''">
 <div class="modal-content" onclick="event.stopPropagation()">
-<h2 id="m-title" class="modal-h2">Job Details</h2>
-<div id="m-body"></div>
 </div>
 </div>
 <div id="zone-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
@@ -868,7 +894,7 @@ const allOpts = ['Unassigned'].concat(customDrivers);
 const opts = allOpts.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
 const html = `
 <div class="flex jb ac mb-20">
-<div style="font-weight:700; font-size:16px; color:var(--accent); text-transform:uppercase;">EDIT JOB</div>
+<h2 id="m-title" class="modal-h2">EDIT JOB</h2>
 <div class="flex">
 <button onclick="archiveAsFailed('${id}')" class="btn-archive">ARCHIVE</button>
 <button onclick="deleteJob('${id}')" class="btn-delete">DELETE</button>
@@ -902,7 +928,7 @@ const html = `
 <div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>`;
 document.querySelector('#detailsModal .modal-content').innerHTML = html;
 const ta = document.getElementById('e-note'); if(ta) ta.style.height = ta.scrollHeight + 'px';
-document.getElementById('detailsModal').style.display = 'block'; document.body.style.overflow = 'hidden';
+document.getElementById('detailsModal').style.display = 'flex'; document.body.style.overflow = 'hidden';
 }
 function archiveAsFailed(id) {
 if(confirm("Archive this job as Failed (Unassigned)?")) {
@@ -925,6 +951,7 @@ function renderData() {
 const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd"), uList = document.getElementById("unassigned-immediate-list");
 pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = ""; uList.innerHTML = "";
 const filterUI = document.getElementById('filter-reset-ui'); if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
+document.querySelectorAll('.archive-column').forEach(c => c.style.display = currentDriverFilter ? 'none' : '');
 const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
 let stopLookup = {}, pending = 0, assignedCount = 0, noteCount = 0, dndCount = 0, driverStats = {};
 if(currentDriverFilter && driverLocationsData[currentDriverFilter]) {
@@ -1009,11 +1036,11 @@ assignedCount++; if(driverStats[asgn]) driverStats[asgn].d++;
 const c = document.createElement("div"); c.className = "history-item" + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
 c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "transparent";
 const bg = getDriverColor(p.assigned_to);
-let dH = `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>`;
+let dH = currentDriverFilter ? `<span style="color:#0099cc; font-weight:700;">IN TRANSIT</span>` : `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>`;
 const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<span style="color:#0099cc; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
-tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
+if(currentDriverFilter) uList.appendChild(c); else tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
 const isDepot = type === 'delivery' && isU;
@@ -1021,12 +1048,12 @@ if (isFailed) {
 dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
 Object.assign(c.style, {background:"rgba(255,0,0,0.1)", border:"1px solid #ff4444", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
 const bg = getDriverColor(asgn);
-const dH = (!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>` : `<span style="color:#ff4444; font-weight:700;">FAILED</span>`;
+const dH = currentDriverFilter ? `<span style="color:#ff4444; font-weight:700;">FAILED</span>` : ((!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>` : `<span style="color:#ff4444; font-weight:700;">FAILED</span>`);
 const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffff00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = type === 'pickup' ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
 let content = type === 'pickup' ? `<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffff00;">${p.name||'-'}</span>`;
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
-dndList.appendChild(c);
+if(currentDriverFilter) uList.appendChild(c); else dndList.appendChild(c);
 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
 if(p.driver_edited_note) noteCount++; return;
 }
@@ -1037,6 +1064,7 @@ c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "t
 const bg = getDriverColor(p.assigned_to);
 let dH = p.assigned_to ? `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>` : `<span style="color:#cc5200; font-weight:700;">UNASSIGNED</span>`;
 if(isDepot) dH = `<span style="color:#00BFFF; font-weight:700;">AT DEPOT</span>`;
+else if(currentDriverFilter) dH = `<span style="color:${bg}; font-weight:700;">${type === 'pickup' ? 'PICKUP' : 'DELIVERY'}</span>`;
 const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffff00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
 let content = `<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>`;
@@ -1045,7 +1073,9 @@ if (type === 'delivery' || isDepot) {
     content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffff00;">${p.name||'-'}</span>`;
 }
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
-if(isDepot) {
+if(currentDriverFilter) {
+uList.appendChild(c);
+} else if(isDepot) {
 depotList.appendChild(c);
 } else if (isU && !isFailed) {
 c.classList.add("unassigned-job-card");
@@ -1061,7 +1091,7 @@ ud.style.display = pending > 0 ? 'block' : 'none'; ud.innerText = pending + " UN
 Object.keys(driverStats).forEach(d => {
 const p = driverStats[d].p, del = driverStats[d].d;
 if(p > 0 || del > 0) {
-const r = document.createElement("div"); r.className = "driver-stat-row pointer"; r.onclick = () => filterByDriver(d);
+const r = document.createElement("div"); r.className = "driver-stat-row pointer"; r.onclick = () => { if (currentDriverFilter === d) clearDriverFilter(); else filterByDriver(d); };
 const dur = (driverLocationsData[d]?.total_duration) || "";
 r.innerHTML = `<div class="flex ac"><div class="ds-name" style="color:${getDriverColor(d)};">${d}</div>${dur ? `<span class="route-time-display">${dur}</span>` : ''}</div><div class="stat-info">${p>0?`<div class="stat-item">Pickups <span class="stat-val-p">${p}</span></div>`:''}${del>0?`<div class="stat-item">Deliveries <span class="stat-val-d">${del}</span></div>`:''}</div>`;
 sPanel.appendChild(r);
