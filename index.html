@@ -17,19 +17,21 @@
 --route-text: #fff; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: var(--active-green);
 }
 body.light-mode {
---bg: #f0f2f5; --card: #fff; --text: #333; --card-text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
---route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a;
+--bg: #f0f2f5; --card: #fff; --text: #000; --card-text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
+--route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a; --accent: #000; --active-green: #000; --archive-orange: #000; --note-blue: #000; --pro-blue: #000;
 }
+body.light-mode * { color: #000 !important; border-color: #ccc !important; }
 body.light-mode .history-item div[style*="color:#ffff00"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
+body.light-mode .btn-save, body.light-mode .btn-zone-add { background: #000 !important; color: #fff !important; }
 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
-header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
-.header-logo { height: 28px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
+header { padding: 10px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
+.header-logo { height: 24px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
 @keyframes dot-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 .pulsing-dot { animation: dot-pulse 2s infinite ease-in-out; }
 #locate-btn, .route-btn { background: url('https://mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover; color: #002244; border: 1px solid #444; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
-#locate-btn { padding: 0; width: 100%; height: 50px; font-size: 12px; box-shadow: var(--shadow-soft); transition: transform 0.2s; }
+#locate-btn { padding: 0; width: 100%; height: 40px; font-size: 11px; box-shadow: var(--shadow-soft); transition: transform 0.2s; }
 #locate-btn:active { transform: scale(0.98); }
-.route-btn { border: 1px solid var(--accent); padding: 10px 24px; font-size: 13px; white-space: nowrap; }
+.route-btn { border: 1px solid var(--accent); padding: 8px 16px; font-size: 12px; white-space: nowrap; width: auto !important; margin: 0 auto; display: inline-block; }
 #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
 #map { width: 100%; height: 100%; }
 .close-map { position: fixed; top: 20px; right: 20px; z-index: 3005; background: #b71c1c; color: white; border: none; width: 140px; height: 40px; font-weight: 700; border-radius: 6px; cursor: pointer; box-shadow: var(--shadow-soft); display: flex; align-items: center; justify-content: center; }
@@ -38,24 +40,24 @@ header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px so
 #install-btn { display: none; background: var(--pro-blue); color: #fff; border: none; padding: 14px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase; position: absolute; right: 15px; bottom: 15px; z-index: 1002; }
 .glow-field { border: 1px solid var(--border); transition: border-color 0.3s; }
 .glow-field:focus { border-color: var(--accent); outline: none; }
-.stats-bar { display: flex; background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 10px; }
-#entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 10px 15px; box-shadow: var(--shadow-soft); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+.stats-bar { display: flex; background: var(--header-bg); padding: 8px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 8px; }
+#entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 8px 12px; box-shadow: var(--shadow-soft); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
 #board-panel { padding: 0; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-.stat-box { text-align: center; flex: 1; position: relative; border-radius: 8px; margin: 0; padding: 14px 8px; background: var(--stat-bg); border: 1px solid var(--border); }
-.stat-label { display: block; font-size: 10px; color: var(--stat-label-color, #777); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
+.stat-box { text-align: center; flex: 1; position: relative; border-radius: 6px; margin: 0; padding: 10px 6px; background: var(--stat-bg); border: 1px solid var(--border); }
+.stat-label { display: block; font-size: 9px; color: var(--stat-label-color, #777); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
 .stat-number { font-family: 'Inter', sans-serif; font-weight: 700; line-height: 1; }
-#stat-pending { font-size: 22px; color: var(--accent); }
-#stat-assigned { font-size: 22px; color: var(--active-green); }
-#stat-note { font-size: 22px; color: var(--note-blue); }
+#stat-pending { font-size: 18px; color: var(--accent); }
+#stat-assigned { font-size: 18px; color: var(--active-green); }
+#stat-note { font-size: 18px; color: var(--note-blue); }
 .high-alert { background: #1a1a00 !important; border: 1px solid var(--active-green); }
 .unassigned-glow { border: 1px solid var(--accent) !important; z-index: 10; box-shadow: var(--shadow-soft); }
 .shiny-text { background: linear-gradient(to right, var(--accent) 20%, #ccc 50%, var(--accent) 80%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: text-shine 3s linear infinite; }
 @keyframes text-shine { to { background-position: 200% center; } }
-input, select, textarea { width: 100%; padding: 14px; padding-right: 35px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 15px; margin-bottom: 6px; box-sizing: border-box; transition: border 0.2s; }
+input, select, textarea { width: 100%; padding: 10px; padding-right: 30px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-size: 13px; margin-bottom: 4px; box-sizing: border-box; transition: border 0.2s; }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; background: var(--input-bg); }
-.flex-row { display: flex; gap: 6px; margin-bottom: 6px; }
-.driver-select { width: 100%; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); font-weight: 600; padding: 14px; border-radius: 6px; margin-bottom: 12px; }
-button.primary { width: 100%; padding: 16px; background: var(--btn-bg); color: var(--text); font-weight: 700; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 6px; text-transform: uppercase; font-size: 15px; letter-spacing: 1.5px; transition: all 0.2s ease; box-shadow: var(--shadow-soft); overflow: hidden; }
+.flex-row { display: flex; gap: 4px; margin-bottom: 4px; }
+.driver-select { width: 100%; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); font-weight: 600; padding: 10px; border-radius: 4px; margin-bottom: 8px; }
+button.primary { width: 100%; padding: 12px; background: var(--btn-bg); color: var(--text); font-weight: 700; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 4px; text-transform: uppercase; font-size: 14px; letter-spacing: 1.5px; transition: all 0.2s ease; box-shadow: var(--shadow-soft); overflow: hidden; }
 button.primary:hover { background: #252525; border-color: var(--accent); transform: translateY(-2px); }
 button.primary:active { transform: translateY(1px); }
 button.primary.super-dispatch { background: var(--dispatch-bg) !important; color: var(--dispatch-text) !important; border: 1px solid var(--dispatch-text) !important; box-shadow: var(--shadow-soft) !important; text-shadow: none; letter-spacing: 2px; }
@@ -83,7 +85,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .modal-content { background: var(--modal-bg); margin: 5% auto; padding: 30px; width: 90%; max-width: 550px; border: 1px solid var(--accent); color: var(--text); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; max-height: 85vh; overflow-y: auto; padding-bottom: 40px; }
 #detailsModal .modal-content {
     margin: 0 !important;
-    padding: 10px 15px !important;
+    padding: 8px 12px !important;
     width: 100vw !important;
     height: 100vh !important;
     max-width: none !important;
@@ -97,19 +99,21 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 }
 #detailsModal .flex.col.gap-0 {
     flex: 1;
-    justify-content: space-evenly;
-    margin-bottom: 5px;
+    justify-content: flex-start;
+    margin-bottom: 4px;
+    gap: 2px;
 }
-#detailsModal .input-wrap.mb-12 { margin-bottom: 0 !important; }
+#detailsModal .input-wrap { margin-bottom: 2px !important; }
 #detailsModal input, #detailsModal textarea, #detailsModal select {
-    padding: 8px 10px !important;
-    font-size: 13px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    margin-bottom: 2px !important;
 }
-#detailsModal textarea { min-height: 40px !important; }
-#detailsModal .mb-20 { margin-bottom: 5px !important; }
-#detailsModal .modal-h2 { font-size: 16px !important; margin: 0 !important; }
-#detailsModal .edit-btn-group { display: flex; gap: 10px; margin-top: auto; }
-#detailsModal .edit-btn-group button { padding: 12px !important; flex: 1; margin: 0; }
+#detailsModal textarea { min-height: 30px !important; height: 30px !important; }
+#detailsModal .mb-20 { margin-bottom: 4px !important; }
+#detailsModal .modal-h2 { font-size: 14px !important; margin: 0 !important; }
+#detailsModal .edit-btn-group { display: flex; gap: 8px; margin-top: auto; padding-top: 4px; }
+#detailsModal .edit-btn-group button { padding: 8px !important; flex: 1; margin: 0; font-size: 12px !important; }
 #login-overlay { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
 .login-box { width: 100%; max-width: 350px; background: #111; padding: 40px; border-radius: 12px; border: 1px solid #222; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 .login-input { width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none; }
@@ -119,24 +123,24 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text); font-weight: 500; font-size: 14px; }
 .suggestion-item:hover { background: var(--accent); color: #000; }
 .voice-active { fill: var(--active-green) !important; filter: drop-shadow(0 0 5px var(--active-green)); }
-.mode-switch-container { display: flex; margin-bottom: 15px; background: var(--input-bg); border-radius: 6px; padding: 4px; border: 1px solid var(--border); }
-.mode-btn { flex: 1; padding: 14px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 13px; background: transparent; color: #666; border-radius: 4px; transition: 0.2s; }
+.mode-switch-container { display: flex; margin-bottom: 8px; background: var(--input-bg); border-radius: 4px; padding: 2px; border: 1px solid var(--border); }
+.mode-btn { flex: 1; padding: 10px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 12px; background: transparent; color: #666; border-radius: 3px; transition: 0.2s; }
 .mode-btn.active-mode { background: var(--accent); color: #000; }
 .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
-#driver-stats-panel { background: var(--header-bg); padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); margin-bottom: 20px; }
-.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 15px; background: var(--stat-bg); border-radius: 6px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 50px; box-sizing: border-box; width: 100%; }
+#driver-stats-panel { background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); margin-bottom: 15px; }
+.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--stat-bg); border-radius: 4px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 40px; box-sizing: border-box; width: 100%; }
 .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
-.ds-name { color: var(--text); font-weight: 700; font-size: 12px; width: auto; padding-right: 10px; text-transform: uppercase; }
-.stat-info { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-.stat-item { font-size: 9px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border); }
-.stat-val-p { color: var(--accent); font-size: 12px; font-weight: 700; }
-.stat-val-d { color: var(--active-green); font-size: 12px; font-weight: 700; }
+.ds-name { color: var(--text); font-weight: 700; font-size: 11px; width: auto; padding-right: 8px; text-transform: uppercase; }
+.stat-info { display: flex; gap: 10px; margin-left: auto; align-items: center; }
+.stat-item { font-size: 8px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 4px; background: var(--bg); padding: 4px 8px; border-radius: 3px; border: 1px solid var(--border); }
+.stat-val-p { color: var(--accent); font-size: 11px; font-weight: 700; }
+.stat-val-d { color: var(--active-green); font-size: 11px; font-weight: 700; }
 .input-wrap { position: relative; width: 100%; display: flex; align-items: center; }
 .input-wrap input, .input-wrap select, .input-wrap textarea { margin-bottom: 0; width: 100%; }
-.copy-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
+.copy-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
 .copy-btn:hover { color: var(--accent); }
-.copy-btn svg { width: 14px; height: 14px; fill: currentColor; }
-.route-time-display { font-size:12px; color:var(--route-text); margin-left:8px; font-weight:700; border:1px solid var(--accent); padding:4px 8px; border-radius:6px; box-shadow:var(--shadow-soft); }
+.copy-btn svg { width: 12px; height: 12px; fill: currentColor; }
+.route-time-display { font-size:11px; color:var(--route-text); margin-left:6px; font-weight:700; border:1px solid var(--accent); padding:2px 6px; border-radius:4px; box-shadow:var(--shadow-soft); }
 .back-to-all-btn { background:var(--bg); border:1px solid var(--accent); color:var(--accent); padding:14px 24px; font-weight:700; border-radius:6px; text-transform:uppercase; cursor:pointer; }
 @keyframes crt-turn-on { 0% { transform: scaleY(0.005) scaleX(0); opacity: 0; filter: brightness(0); } 50% { transform: scaleY(0.005) scaleX(1); opacity: 1; } 100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); } }
 .crt-animate { animation: crt-turn-on 3s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
@@ -149,22 +153,22 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
 .btn-pressed { box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important; background: var(--input-bg) !important; color: var(--text) !important; border-bottom: 1px solid var(--border) !important; transform: translateY(2px) !important; }
 .badge-active { color: var(--accent) !important; border-color: var(--accent) !important; }
-.w-100{width:100%}.m-0{margin:0}.mb-0{margin-bottom:0}.mb-6{margin-bottom:6px}.mb-12{margin-bottom:12px}.mb-15{margin-bottom:15px}.mb-20{margin-bottom:20px}.mt-0{margin-top:0}.mt-15{margin-top:15px}.mt-30{margin-top:30px}
-.flex{display:flex}.col{flex-direction:column}.ac{align-items:center}.jc{justify-content:center}.jb{justify-content:space-between}.gap-10{gap:10px}.gap-12{gap:12px}.wrap{flex-wrap:wrap}
+.w-100{width:100%}.m-0{margin:0}.mb-0{margin-bottom:0}.mb-6{margin-bottom:4px}.mb-12{margin-bottom:8px}.mb-15{margin-bottom:10px}.mb-20{margin-bottom:15px}.mt-0{margin-top:0}.mt-15{margin-top:10px}.mt-30{margin-top:20px}
+.flex{display:flex}.col{flex-direction:column}.ac{align-items:center}.jc{justify-content:center}.jb{justify-content:space-between}.gap-10{gap:8px}.gap-12{gap:10px}.wrap{flex-wrap:wrap}
 .f-1{flex:1}.f-1-5{flex:1.5}.f-2{flex:2}
 .rel{position:relative}.abs{position:absolute}.fix{position:fixed}
 .bold{font-weight:700}.u-case{text-transform:uppercase}.pointer{cursor:pointer}.none{display:none}
 .border-b{border-bottom:1px solid var(--border)}
 .header-logo-group{display:flex;flex-direction:column;width:100%}
 .clock{font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
-.voice-icon{width:60px;background:#111;border:1px solid #444;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.suggestion-reset{position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;cursor:pointer;color:#666;text-transform:uppercase;z-index:10}
-.modal-h2{color:var(--accent);margin-top:0;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-.btn-archive{background:var(--accent);color:#000;border:none;padding:12px 14px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px;margin-right:10px}
-.btn-delete{background:transparent;border:1px solid #b71c1c;color:#ff5555;padding:12px 14px;font-weight:700;cursor:pointer;font-size:12px;border-radius:4px}
+.voice-icon{width:50px;background:#111;border:1px solid #444;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.suggestion-reset{position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:700;cursor:pointer;color:#666;text-transform:uppercase;z-index:10}
+.modal-h2{color:var(--accent);margin-top:0;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.btn-archive{background:var(--accent);color:#000;border:none;padding:10px 12px;font-weight:700;cursor:pointer;font-size:11px;border-radius:3px;margin-right:8px}
+.btn-delete{background:transparent;border:1px solid #b71c1c;color:#ff5555;padding:10px 12px;font-weight:700;cursor:pointer;font-size:11px;border-radius:3px}
 .link-input{color:#4da6ff;text-decoration:underline;cursor:pointer}
-.btn-cancel{background:#222;color:#ccc;border:1px solid #333;padding:16px;font-weight:700;cursor:pointer;font-size:14px;border-radius:6px}
-.btn-save{background:var(--active-green);color:#000;border:none;padding:16px;font-weight:700;text-transform:uppercase;cursor:pointer;font-size:14px;border-radius:6px}
+.btn-cancel{background:#222;color:#ccc;border:1px solid #333;padding:12px;font-weight:700;cursor:pointer;font-size:13px;border-radius:4px}
+.btn-save{background:var(--active-green);color:#000;border:none;padding:12px;font-weight:700;text-transform:uppercase;cursor:pointer;font-size:13px;border-radius:4px}
 .zone-driver-row { background: var(--input-bg); padding: 15px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 4px; }
 .zone-driver-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px; }
 .zone-driver-name { font-weight: 700; color: var(--accent); text-transform: uppercase; font-size: 14px; }
@@ -193,7 +197,7 @@ background-color: rgba(255, 255, 0, 0.08) !important;
 #active-list-container { flex-direction: column; height: auto; }
 .archive-column { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 0; margin-bottom: 0; }
 .archive-column:last-child { border-bottom: none; margin-bottom: 0; }
-input, select, button, .mode-btn { min-height: 44px; }
+input, select, button, .mode-btn { min-height: 38px; }
 #map { height: 100%; min-height: 100%; }
 .header-logo-group { width: auto; }
 .modal-content { padding: 15px; width: 98%; margin: 2% auto; }
@@ -217,15 +221,15 @@ input, select, button, .mode-btn { min-height: 44px; }
 <div class="flex ac pointer" onclick="toggleTheme()">
 <div class="crt-animate flex ac">
 <img src="icon2.png" class="header-logo" alt="E&C Logo">
-<span class="shiny-text" style="font-size: 18px; font-weight: 700; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
+<span class="shiny-text" style="font-size: 16px; font-weight: 700; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
 </div>
 <div class="flex col jc" style="margin-left:15px;">
-<div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:700; animation:dot-pulse 1s infinite; font-size:11px; margin-bottom:2px;"></div>
-<div id="header-alert" style="display:none; color:red; font-weight:700; animation:dot-pulse 1s infinite; font-size:11px;"></div>
+<div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:700; animation:dot-pulse 1s infinite; font-size:10px; margin-bottom:2px;"></div>
+<div id="header-alert" style="display:none; color:red; font-weight:700; animation:dot-pulse 1s infinite; font-size:10px;"></div>
 </div>
 </div>
 </div>
-<button id="locate-btn" onclick="openMap()" style="width: 120px; height: 34px; font-size: 11px; margin-left: 10px;">Driver Map</button>
+<button id="locate-btn" onclick="openMap()" style="width: 100px; height: 30px; font-size: 10px; margin-left: 10px;">Driver Map</button>
 </header>
 <div id="entry-panel">
 <div class="mode-switch-container">
@@ -246,16 +250,16 @@ input, select, button, .mode-btn { min-height: 44px; }
 <button class="copy-btn" onclick="copyField('f-info')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div id="bottom-input-section" style="margin-top: 0;"></div>
-<div class="flex ac gap-10" style="margin-bottom: 6px; width: 100%; margin-top: 6px;">
+<div class="flex ac gap-10" style="margin-bottom: 4px; width: 100%; margin-top: 4px;">
 <select id="f-driver" class="driver-select" style="margin-bottom: 0; border: 1px solid var(--accent); flex: 1;">
 <option value="Unassigned" selected disabled hidden>Assign Driver</option>
 <option value="Unassigned">UNASSIGNED</option>
 </select>
-<button onclick="openDriverManager()" style="background:transparent; border:none; cursor:pointer; font-size:24px; padding:0 10px; color: var(--text);">⚙️</button>
+<button onclick="openDriverManager()" style="background:transparent; border:none; cursor:pointer; font-size:20px; padding:0 8px; color: var(--text);">⚙️</button>
 </div>
 <div class="flex gap-12">
 <button class="primary super-dispatch f-1" onclick="createJob()">Dispatch</button>
-<button id="voice-btn" onclick="startVoiceEntry()" class="voice-icon"><svg id="mic-icon" viewBox="0 0 24 24" width="24" height="24" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+<button id="voice-btn" onclick="startVoiceEntry()" class="voice-icon"><svg id="mic-icon" viewBox="0 0 24 24" width="20" height="20" style="fill: #888; transition: 0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
 </div>
 <div class="stats-bar mt-15" style="background:transparent; border:none;">
 <div id="pending-box" class="stat-box pointer" onclick="requestNotifyPermission(); document.getElementById('unassigned-immediate-list').scrollIntoView({behavior:'smooth', block:'start'});">
@@ -275,7 +279,7 @@ input, select, button, .mode-btn { min-height: 44px; }
 <div id="driver-stats-panel"></div>
 <div class="none">
 <div id="group-pickup">
-<div class="rel" style="margin-bottom: 6px;">
+<div class="rel" style="margin-bottom: 4px;">
 <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
 <button class="copy-btn" onclick="copyField('f-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="suggestions" class="suggestions-box"></div>
@@ -283,8 +287,8 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 <div class="flex-row">
 <div class="input-wrap f-2">
-<input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="padding-right: 60px;">
-<button class="copy-btn" style="right: 32px; font-size:14px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('pickup')" type="button">📍</button>
+<input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="padding-right: 50px;">
+<button class="copy-btn" style="right: 28px; font-size:12px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('pickup')" type="button">📍</button>
 <button class="copy-btn" onclick="copyField('f-pickup')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
@@ -305,7 +309,7 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 </div>
 <div id="group-drop">
-<div class="rel" style="margin-bottom: 6px;">
+<div class="rel" style="margin-bottom: 4px;">
 <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
 <button class="copy-btn" onclick="copyField('f-drop-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="drop-suggestions" class="suggestions-box"></div>
@@ -313,8 +317,8 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 <div class="flex-row">
 <div class="input-wrap f-2">
-<input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="padding-right: 60px;">
-<button class="copy-btn" style="right: 32px; font-size:14px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('drop')" type="button">📍</button>
+<input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="padding-right: 50px;">
+<button class="copy-btn" style="right: 28px; font-size:12px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('drop')" type="button">📍</button>
 <button class="copy-btn" onclick="copyField('f-drop-address')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
@@ -337,10 +341,10 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 <div id="board-panel">
 <div class="history-box" id="active-list-container">
-<div id="filter-reset-ui" class="w-100 text-center none mb-15" style="padding: 15px; box-sizing: border-box;">
-<div id="selected-driver-label" class="none bold uppercase" style="margin: 0 auto 15px auto; width:100%; max-width:350px; font-size:18px; padding:12px; border-radius:4px; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px;"></div>
-<div class="flex jc" style="margin:0 auto; width:100%; max-width:350px;">
-<button id="view-route-btn" class="route-btn none" style="width: 100%;">View Current Route</button>
+<div id="filter-reset-ui" class="w-100 text-center none mb-15" style="padding: 10px; box-sizing: border-box;">
+<div id="selected-driver-label" class="none bold uppercase" style="margin: 0; width:100%; font-size:16px; padding:10px; border-radius:0; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px; box-sizing: border-box;"></div>
+<div class="flex jc" style="margin:10px auto 0 auto; width:100%;">
+<button id="view-route-btn" class="route-btn none">View Current Route</button>
 </div>
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
@@ -912,7 +916,7 @@ const html = `
 </div>
 <div class="input-wrap mb-12"><input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions"><button class="copy-btn" onclick="copyField('e-pkg')">${copySvg}</button></div>
 <div class="input-wrap mb-12"><input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref"><button class="copy-btn" onclick="copyField('e-po')">${copySvg}</button></div>
-<div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:14px; resize:none; overflow:hidden; min-height:60px;">${val(data.other_info)}</textarea><button class="copy-btn" onclick="copyField('e-note')">${copySvg}</button></div>
+<div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:30px;">${val(data.other_info)}</textarea><button class="copy-btn" onclick="copyField('e-note')">${copySvg}</button></div>
 <div class="input-wrap mb-12"><input id="e-add-note" placeholder="Add New Note (Appends to above)"><button class="copy-btn" onclick="copyField('e-add-note')">${copySvg}</button></div>
 <div class="input-wrap mb-12"><input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name"><button class="copy-btn" onclick="copyField('e-drop-name')">${copySvg}</button></div>
 <div class="flex-row">
