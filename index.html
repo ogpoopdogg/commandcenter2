@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>E&C COMMAND CENTER</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#cca300">
+<meta name="theme-color" content="#ffff00">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300&display=swap" rel="stylesheet">
 <style>
 :root { 
---accent: #cca300; --bg: #222; --card: #141414; --text: #e0e0e0; --card-text: #e0e0e0;
+--accent: #ffff00; --bg: #222; --card: #141414; --text: #e0e0e0; --card-text: #e0e0e0;
 --active-green: #00b32d; --archive-orange: #cc5200; --note-blue: #0099cc; --pro-blue: #0056b3;
 --header-bg: #000; --input-bg: #141414; --border: #333; --stat-bg: #161616; --modal-bg: #181818; --btn-bg: #1c1c1c;
 --shadow-soft: 0 4px 12px rgba(0,0,0,0.1);
@@ -20,7 +20,7 @@ body.light-mode {
 --bg: #f0f2f5; --card: #fff; --text: #333; --card-text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
 --route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a;
 }
-body.light-mode .history-item div[style*="color:#ffcc00"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
+body.light-mode .history-item div[style*="color:#ffff00"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
 header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
 .header-logo { height: 28px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
@@ -60,7 +60,7 @@ button.primary:hover { background: #252525; border-color: var(--accent); transfo
 button.primary:active { transform: translateY(1px); }
 button.primary.super-dispatch { background: var(--dispatch-bg) !important; color: var(--dispatch-text) !important; border: 1px solid var(--dispatch-text) !important; box-shadow: var(--shadow-soft) !important; text-shadow: none; letter-spacing: 2px; }
 button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !important; }
-.history-box { display: none; margin-top: 0; border: 1px solid rgba(255,255,255,0.1); border-left: none; border-right: none; box-shadow: var(--shadow-soft); padding: 0; gap: 0; flex-wrap: wrap; width: 100%; box-sizing: border-box; border-radius: 0; }
+.history-box { display: flex; margin-top: 0; border: 1px solid rgba(255,255,255,0.1); border-left: none; border-right: none; box-shadow: var(--shadow-soft); padding: 0; gap: 0; flex-wrap: wrap; width: 100%; box-sizing: border-box; border-radius: 0; }
 .archive-column { flex: 1 1 0; min-width: 0; border-right: 1px solid var(--border); padding-right: 0; box-sizing: border-box; }
 .archive-column:last-child { border-right: none; padding-right: 0; }
 .archive-title { font-size: 13px; font-weight: 700; color: var(--archive-title-color, #666); text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; letter-spacing: 1px; }
@@ -113,6 +113,9 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .crt-animate { animation: crt-turn-on 3s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
 @keyframes pulse-red-btn { 0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } 50% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); border-color: #ff4444; background: rgba(255,0,0,0.1); } 100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } }
 @keyframes pulse-orange-btn { 0% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } 50% { box-shadow: 0 0 15px rgba(255, 140, 0, 0.7); border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); } 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } }
+@keyframes pulse-unassigned { 0% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.4); border-color: #ffff00; } 50% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.8); border-color: #ffff00; } 100% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.4); border-color: #ffff00; } }
+.unassigned-job-card { animation: pulse-unassigned 2s infinite ease-in-out !important; border: 1px solid #ffff00 !important; border-radius: 4px; }
+.dnd-empty-btn { filter: grayscale(100%) opacity(50%); }
 .btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
 .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
 .btn-pressed { box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important; background: var(--input-bg) !important; color: var(--text) !important; border-bottom: 1px solid var(--border) !important; transform: translateY(2px) !important; }
@@ -155,7 +158,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .active-zone-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); }
 .active-zone-label { font-size: 12px; font-weight: 700; color: #ccc; }
 #f-name, #f-pickup, #f-city, #f-drop-name, #f-drop-address, #f-drop-city {
-background-color: rgba(204, 163, 0, 0.08) !important;
+background-color: rgba(255, 255, 0, 0.08) !important;
 }
 @media (max-width: 768px) {
 #active-list-container { flex-direction: column; height: auto; }
@@ -241,9 +244,6 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 </div>
 <div id="driver-stats-panel"></div>
-<div id="unassigned-immediate-list" style="padding: 0 15px 15px 15px; display:flex; flex-direction:column; gap:10px;"></div>
-<button id="toggle-active-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleActiveList()">Active Pickups/Deliveries</button>
-<button id="toggle-dnd-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleDNDList()">Active DND/DNP</button>
 <div class="none">
 <div id="group-pickup">
 <div class="rel">
@@ -316,6 +316,7 @@ input, select, button, .mode-btn { min-height: 44px; }
 </div>
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
+<div id="unassigned-immediate-list" style="padding: 15px; display:flex; flex-direction:column; gap:10px; width: 100%; box-sizing: border-box;"></div>
 <div class="archive-column">
 <button id="btn-pickups" class="cat-btn" style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id="badge-pickups" class="cat-badge">0</span></button>
 <div id="list-pickups"></div>
@@ -335,13 +336,11 @@ input, select, button, .mode-btn { min-height: 44px; }
 <button id="btn-deliveries" class="cat-btn" style="color:var(--active-green);" onclick="toggleCat('deliveries')"><span>Deliveries</span><span id="badge-deliveries" class="cat-badge">0</span></button>
 <div id="list-deliveries"></div>
 </div>
-<button onclick="toggleActiveList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:16px; border-radius:6px; margin-top: 15px;">Minimize Pickups/Deliveries List</button>
-</div>
-<div class="history-box col" id="dnd-list-container">
-<div class="archive-title" style="color:#ff4444; padding: 15px; margin-bottom: 0;">Active DND/DNP</div>
-<button id="archive-all-dnd-btn" onclick="archiveAllDND()" class="none mb-15 bold pointer u-case" style="background:#b71c1c; color:#fff; border:none; padding:14px; border-radius:6px;">Archive All Failed</button>
+<div class="archive-column">
+<button id="btn-dnd" class="cat-btn" style="color:#ff4444;" onclick="toggleCat('dnd')"><span>DND/DNP</span><span id="badge-dnd" class="cat-badge">0</span></button>
+<button id="archive-all-dnd-btn" onclick="archiveAllDND()" class="none bold pointer u-case" style="background:#b71c1c; color:#fff; border:none; padding:10px; font-size:11px; margin: 10px; border-radius:4px; width: calc(100% - 20px);">Archive All Failed</button>
 <div id="list-dnd"></div>
-<button onclick="toggleDNDList()" class="w-100 mt-15 bold pointer u-case" style="background:var(--btn-bg); color:var(--text); border:1px solid var(--border); padding:16px; border-radius:6px;">Minimize Active DND/DNP</button>
+</div>
 </div>
 <div class="mt-30" style="padding: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft);">
 <div class="archive-title" style="color: var(--archive-title-color, #666); border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
@@ -436,7 +435,7 @@ firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", auth
 const db = firebase.database(), messaging = firebase.messaging();
 let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
 let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
-let seenJobs = {}, catState = { pickups: false, transit: false, depot: false, deliveries: false }, isFirstLoad = true;
+let seenJobs = {}, catState = { pickups: false, transit: false, depot: false, deliveries: false, dnd: false }, isFirstLoad = true;
 const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 let customDrivers = [];
 const baseColors = ['#FF8C00', '#00BFFF', '#3F51B5', '#FF69B4', '#9C27B0', '#E91E63', '#4CAF50', '#FF5722', '#00BCD4'];
@@ -495,27 +494,14 @@ setTimeout(() => { if(!document.getElementById('list-dnd').innerHTML) a.style.di
 }
 if (localStorage.getItem('ec_theme') === 'light') document.body.classList.add('light-mode');
 function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
-function toggleActiveList() { toggleList('active-list-container', 'toggle-active-btn', 'dnd-list-container', 'toggle-dnd-btn'); }
-function toggleDNDList() { toggleList('dnd-list-container', 'toggle-dnd-btn', 'active-list-container', 'toggle-active-btn'); }
-function toggleList(openId, openBtnId, closeId, closeBtnId) {
-const list = document.getElementById(openId), btn = document.getElementById(openBtnId);
-if (list.style.display === 'none' || list.style.display === '') { list.style.display = 'flex'; btn.classList.add('btn-pressed'); document.getElementById(closeId).style.display = 'none'; document.getElementById(closeBtnId).classList.remove('btn-pressed'); } 
-else { list.style.display = 'none'; btn.classList.remove('btn-pressed'); btn.style.display = 'block'; }
-}
 function filterByDriver(name) {
 currentDriverFilter = name; renderData();
-document.getElementById('active-list-container').style.display = 'flex';
-document.getElementById('toggle-active-btn').classList.add('btn-pressed');
-document.getElementById('dnd-list-container').style.display = 'none';
-document.getElementById('toggle-dnd-btn').classList.remove('btn-pressed');
-document.getElementById('toggle-active-btn').style.display = 'none';
 const rb = document.getElementById("view-route-btn");
 if(rb) { rb.style.display = "inline-block"; rb.onclick = (e) => viewDriverRoute(name, e); }
 }
 function clearDriverFilter() {
 currentDriverFilter = null;
 if(document.getElementById("view-route-btn")) document.getElementById("view-route-btn").style.display = "none";
-document.getElementById('toggle-active-btn').style.display = 'block';
 if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
 renderData();
 }
@@ -544,7 +530,7 @@ setTimeout(() => t.style.opacity = '0', 1500);
 }
 function filterActiveCards(val) {
 val = val.toLowerCase();
-['list-pickups', 'list-transit', 'list-depot', 'list-deliveries'].forEach(id => {
+['list-pickups', 'list-transit', 'list-depot', 'list-deliveries', 'list-dnd'].forEach(id => {
 const list = document.getElementById(id);
 if(list) {
 let hasMatch = false;
@@ -756,7 +742,6 @@ updates[`/jobs/${id}/last_edit_by`] = currentUser; updates[`/jobs/${id}/other_in
 }
 });
 if(Object.keys(updates).length) db.ref().update(updates);
-toggleDNDList();
 }
 function autoAssignDepotJobs() {
 const jobsToAssign = [];
@@ -1015,7 +1000,7 @@ if (afC && !searchCity.toLowerCase().includes(afC)) return;
 if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
 const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
 Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", opacity:"0.7"});
-c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffcc00; font-weight:300; margin-bottom:10px; white-space:nowrap;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
+c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffff00; font-weight:300; margin-bottom:10px; white-space:nowrap;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
 arcList.appendChild(c); return;
 }
 const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
@@ -1027,7 +1012,7 @@ const bg = getDriverColor(p.assigned_to);
 let dH = `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>`;
 const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<span style="color:#0099cc; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
 tList.appendChild(c); if(p.driver_edited_note) noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
@@ -1037,9 +1022,9 @@ dndCount++; const c = document.createElement("div"); c.className = "history-item
 Object.assign(c.style, {background:"rgba(255,0,0,0.1)", border:"1px solid #ff4444", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
 const bg = getDriverColor(asgn);
 const dH = (!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>` : `<span style="color:#ff4444; font-weight:700;">FAILED</span>`;
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffcc00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
+const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffff00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = type === 'pickup' ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
-let content = type === 'pickup' ? `<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffcc00;">${p.name||'-'}</span>`;
+let content = type === 'pickup' ? `<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffff00;">${p.name||'-'}</span>`;
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
 dndList.appendChild(c);
 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
@@ -1052,17 +1037,18 @@ c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "t
 const bg = getDriverColor(p.assigned_to);
 let dH = p.assigned_to ? `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>` : `<span style="color:#cc5200; font-weight:700;">UNASSIGNED</span>`;
 if(isDepot) dH = `<span style="color:#00BFFF; font-weight:700;">AT DEPOT</span>`;
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffcc00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
+const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffff00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-let content = `<span style="color:#ffcc00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>`;
+let content = `<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>`;
 if (type === 'delivery' || isDepot) {
     arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
-    content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffcc00;">${p.name||'-'}</span>`;
+    content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffff00;">${p.name||'-'}</span>`;
 }
 c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
 if(isDepot) {
 depotList.appendChild(c);
 } else if (isU && !isFailed) {
+c.classList.add("unassigned-job-card");
 uList.appendChild(c);
 } else {
 (type === 'pickup' ? pList : dList).appendChild(c);
@@ -1070,11 +1056,8 @@ uList.appendChild(c);
 });
 const ad = document.getElementById('header-alert'), ud = document.getElementById('header-unassigned');
 if(dndCount > 0) { ad.style.display = 'block'; ad.innerText = dndCount + " DND/DNP"; document.getElementById('archive-all-dnd-btn').style.display = 'block'; }
-else { ad.style.display = 'none'; document.getElementById('archive-all-dnd-btn').style.display = 'none'; if (dndList.parentElement.style.display === 'flex') toggleDNDList(); }
+else { ad.style.display = 'none'; document.getElementById('archive-all-dnd-btn').style.display = 'none'; }
 ud.style.display = pending > 0 ? 'block' : 'none'; ud.innerText = pending + " UNASSIGNED";
-const dbn = document.getElementById('toggle-dnd-btn'), abn = document.getElementById('toggle-active-btn');
-dndCount > 0 ? dbn.classList.add('btn-alert-red') : dbn.classList.remove('btn-alert-red');
-pending > 0 ? abn.classList.add('btn-alert-orange') : abn.classList.remove('btn-alert-orange');
 Object.keys(driverStats).forEach(d => {
 const p = driverStats[d].p, del = driverStats[d].d;
 if(p > 0 || del > 0) {
@@ -1087,16 +1070,26 @@ sPanel.appendChild(r);
 document.getElementById("stat-pending").innerText = pending + dndCount; document.getElementById("stat-assigned").innerText = assignedCount; document.getElementById("stat-note").innerText = noteCount;
 document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
 document.getElementById("pending-box").className = "stat-box" + ((pending + dndCount) > 0 ? " unassigned-glow" : "");
-['pickups', 'transit', 'depot', 'deliveries'].forEach(cat => {
+['pickups', 'transit', 'depot', 'deliveries', 'dnd'].forEach(cat => {
 const list = document.getElementById('list-' + cat);
 if(list) {
 const count = list.children.length;
 const badge = document.getElementById('badge-' + cat);
-badge.innerText = count;
-if(count > 0) badge.classList.add('badge-active'); else badge.classList.remove('badge-active');
+if(badge) {
+    badge.innerText = count;
+    if(count > 0) badge.classList.add('badge-active'); else badge.classList.remove('badge-active');
+}
 list.style.display = catState[cat] ? 'block' : 'none';
-if (list.querySelector('.new-card') && !catState[cat]) document.getElementById('btn-' + cat).classList.add('new-btn');
-else document.getElementById('btn-' + cat).classList.remove('new-btn');
+const btn = document.getElementById('btn-' + cat);
+if(btn) {
+    if (list.querySelector('.new-card') && !catState[cat]) btn.classList.add('new-btn');
+    else btn.classList.remove('new-btn');
+    
+    if (cat === 'dnd') {
+        if (count === 0) btn.classList.add('dnd-empty-btn');
+        else btn.classList.remove('dnd-empty-btn');
+    }
+}
 }
 });
 isFirstLoad = false;
