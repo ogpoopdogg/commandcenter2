@@ -20,6 +20,7 @@
             --bg: #f0f2f5; --card: #fff; --text: #333; --card-text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
             --route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a;
         }
+        body.light-mode .history-item div[style*="color:#ffcc00"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
 
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
         header { padding: 15px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
@@ -270,7 +271,7 @@
     </div>
     
     <div class="stats-bar mt-15" style="background:transparent; border:none;">
-        <div id="pending-box" class="stat-box pointer" onclick="requestNotifyPermission()">
+        <div id="pending-box" class="stat-box pointer" onclick="requestNotifyPermission(); document.getElementById('unassigned-immediate-list').scrollIntoView({behavior:'smooth', block:'start'});">
             <span class="stat-label">Pending</span>
             <div id="stat-pending" class="stat-number">0</div>
         </div>
@@ -286,6 +287,7 @@
 </div>
 
 <div id="driver-stats-panel"></div>
+<div id="unassigned-immediate-list" style="padding: 0 15px 15px 15px; display:flex; flex-direction:column; gap:10px;"></div>
 <button id="toggle-active-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleActiveList()">Active Pickups/Deliveries</button>
 <button id="toggle-dnd-btn" class="primary" style="margin: 0 15px 15px; width: calc(100% - 30px);" onclick="toggleDNDList()">Active DND/DNP</button>
 
@@ -1035,8 +1037,8 @@
     function deleteJob(id) { if(confirm("Delete this dispatch completely?")) { db.ref('jobs').child(id).remove(); document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; } }
 
     function renderData() {
-        const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd");
-        pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = "";
+        const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd"), uList = document.getElementById("unassigned-immediate-list");
+        pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = ""; uList.innerHTML = "";
         
         const filterUI = document.getElementById('filter-reset-ui'); if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
         const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
@@ -1168,6 +1170,8 @@
             
             if(isDepot) {
                 depotList.appendChild(c);
+            } else if (isU && !isFailed) {
+                uList.appendChild(c);
             } else {
                 (type === 'pickup' ? pList : dList).appendChild(c);
             }
@@ -1191,9 +1195,9 @@
                 sPanel.appendChild(r);
             }
         });
-        document.getElementById("stat-pending").innerText = pending; document.getElementById("stat-assigned").innerText = assignedCount; document.getElementById("stat-note").innerText = noteCount;
+        document.getElementById("stat-pending").innerText = pending + dndCount; document.getElementById("stat-assigned").innerText = assignedCount; document.getElementById("stat-note").innerText = noteCount;
         document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
-        document.getElementById("pending-box").className = "stat-box" + (pending > 0 ? " unassigned-glow" : "");
+        document.getElementById("pending-box").className = "stat-box" + ((pending + dndCount) > 0 ? " unassigned-glow" : "");
 
         ['pickups', 'transit', 'depot', 'deliveries'].forEach(cat => {
             const list = document.getElementById('list-' + cat);
