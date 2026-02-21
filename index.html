@@ -1084,7 +1084,8 @@ if(currentDriverFilter) {
 if(p.driver_edited_note) noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
-const isDepot = type === 'delivery' && isU;
+// This allows jobs to stay in 'At Depot' even if assigned to a driver
+const isDepot = type === 'delivery' && (isU || p.status === 'at_depot');
 if (isFailed) {
 dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
 Object.assign(c.style, {background:"rgba(255,0,0,0.1)", border:"1px solid #ff4444", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
