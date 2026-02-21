@@ -87,7 +87,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
     margin: 0 !important;
     padding: 8px 12px !important;
     width: 100vw !important;
-    height: 100vh !important;
+    height: 100% !important;
     max-width: none !important;
     max-height: none !important;
     border: none !important;
@@ -95,7 +95,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    overflow: hidden !important;
+    overflow-y: auto !important;
 }
 #detailsModal .flex.col.gap-0 {
     flex: 1;
@@ -485,7 +485,7 @@ document.body.style.overflow = '';
 const tag = e.target.tagName.toLowerCase();
 if (tag === 'textarea' || tag === 'button') return;
 const dm = document.getElementById('detailsModal');
-if (dm && dm.style.display === 'block') return;
+if (dm && (dm.style.display === 'block' || dm.style.display === 'flex')) { e.preventDefault(); e.target.blur(); return; }
 if (document.getElementById('location-picker-modal').style.display === 'flex' || document.getElementById('location-picker-modal').style.display === 'block') { e.preventDefault(); return; }
 if (document.getElementById('login-overlay').style.display !== 'none') { attemptLogin(); return; }
 const isFormInput = e.target.closest('#entry-panel') || e.target.closest('#group-pickup') || e.target.closest('#group-drop');
@@ -928,8 +928,8 @@ const html = `
 <div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-d')">${copySvg}</button></div>
 </div>
 <select id="e-driver" class="driver-select mb-12">${opts}</select>
-</div>
-<div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>`;
+<div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>
+</div>`;
 document.querySelector('#detailsModal .modal-content').innerHTML = html;
 const ta = document.getElementById('e-note'); if(ta) ta.style.height = ta.scrollHeight + 'px';
 document.getElementById('detailsModal').style.display = 'flex'; document.body.style.overflow = 'hidden';
