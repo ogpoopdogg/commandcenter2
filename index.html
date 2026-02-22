@@ -633,7 +633,7 @@ list.style.display = catState[cat] ? 'block' : 'none';
 });
 }
 let mainMap, mapMarkers = {}, activePolyline = null, listeningRef = null, mapAllListener = null;
-function openMap() {
+function openMap(isEmbedded) {
 if (currentDriverFilter !== null) {
 currentDriverFilter = null;
 document.getElementById('entry-panel').style.opacity = '1'; document.getElementById('entry-panel').style.pointerEvents = 'auto';
@@ -644,7 +644,7 @@ renderData();
 }
 document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; 
 document.getElementById('map-modal').style.display = 'block'; 
-if (window.innerWidth >= 1024) document.getElementById('map-modal').classList.add('fullscreen-map');
+if (window.innerWidth >= 1024 && !isEmbedded) document.getElementById('map-modal').classList.add('fullscreen-map');
 document.getElementById('route-time-badge').style.display = 'none';
 setTimeout(() => { if(mainMap) google.maps.event.trigger(mainMap, "resize"); }, 100);
 if (!mainMap) {
@@ -691,14 +691,15 @@ function closeMap() {
 mapBoundsInitialized = false; 
 if (window.innerWidth >= 1024) {
     document.getElementById('map-modal').classList.remove('fullscreen-map');
+    openMap(true);
 } else {
     document.getElementById('map-modal').style.display = 'none'; 
+    document.getElementById('map-driver-head').style.display = 'none';
+    if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
+    if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
+    for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
+    mapMarkers = {};
 }
-document.getElementById('map-driver-head').style.display = 'none';
-if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
-if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
-for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
-mapMarkers = {};
 }
 function zoomToDensest() {
 const bounds = new google.maps.LatLngBounds(); let found = false;
@@ -725,7 +726,7 @@ if(user) {
 if (!["desirae@ec.com", "celeste@ec.com"].includes(user.email)) { alert("ACCESS DENIED"); firebase.auth().signOut(); document.getElementById('login-overlay').style.display = 'flex'; return; }
 currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
 requestWakeLock();
-if(window.innerWidth >= 1024) openMap();
+if(window.innerWidth >= 1024) openMap(true);
 document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
 db.ref('drivers').on('value', snap => {
 if(snap.exists()) {
