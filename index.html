@@ -43,7 +43,7 @@ header { padding: 10px 20px; background: var(--header-bg); border-bottom: 2px so
 .glow-field:focus { border-color: var(--accent); outline: none; }
 .stats-bar { display: flex; background: var(--header-bg); padding: 8px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 8px; }
 #entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 8px 12px; box-shadow: var(--shadow-soft); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; transition: opacity 0.3s; }
-#board-panel { padding: 0; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+#board-panel { padding: 0; flex: 1; max-width: 100%; margin: 0 auto; width: 100%; box-sizing: border-box; }
 .stat-box { text-align: center; flex: 1; position: relative; border-radius: 6px; margin: 0; padding: 10px 6px; background: var(--stat-bg); border: 1px solid var(--border); }
 .stat-label { display: block; font-size: 9px; color: var(--stat-label-color, #777); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
 .stat-number { font-family: 'Inter', sans-serif; font-weight: 700; line-height: 1; }
@@ -197,10 +197,10 @@ background-color: rgba(0, 153, 255, 0.1) !important;
 }
 @media (min-width: 1024px) {
 #board-panel { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
-#active-list-container { width: calc(60% - 20px) !important; flex: none; }
+#active-list-container { width: 100% !important; flex: none; }
 #archive-section { width: 100%; order: 4; }
 #toggle-archive-btn { order: 3; }
-#map-modal { display: block !important; position: relative !important; width: 40% !important; height: 80vh; z-index: 10; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; order: 2; }
+#map-modal { display: block !important; position: relative !important; width: 100% !important; height: 80vh; z-index: 10; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; order: 2; }
 .close-map { display: none !important; }
 }
 @media (max-width: 768px) {
