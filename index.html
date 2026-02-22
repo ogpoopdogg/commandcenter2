@@ -21,10 +21,11 @@ body.light-mode {
 --route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a; --accent: #000; --active-green: #000; --archive-orange: #000; --note-blue: #000; --pro-blue: #000;
 }
 body.light-mode * { color: #000 !important; }
-body.light-mode .driver-map-label { color: #00ff00 !important; }
 body.light-mode .history-item div[style*="color:#ffd700"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
 body.light-mode .btn-save, body.light-mode .btn-zone-add, body.light-mode .mode-btn.active-mode, body.light-mode .primary, body.light-mode .login-submit { background: #fff !important; color: #000 !important; border: 2px solid #00b32d !important; }
 body.light-mode button { background: #fff !important; color: #000 !important; border: 1px solid #ccc !important; }
+body.light-mode #selected-driver-label, body.light-mode #route-time-badge, body.light-mode #map-driver-head, body.light-mode #route-list { background: #fff !important; color: #000 !important; text-shadow: none !important; border-color: #ccc !important; }
+body.light-mode .driver-map-label { color: #00661a !important; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff !important; }
 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
 header { padding: 10px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
 .header-logo { height: 24px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
@@ -203,6 +204,8 @@ background-color: rgba(0, 153, 255, 0.1) !important;
 #toggle-archive-btn { order: 3; }
 #map-modal { display: block !important; position: relative !important; width: 100% !important; height: 80vh; z-index: 10; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; order: 2; }
 .close-map { display: none !important; }
+#map-modal.fullscreen-map { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; }
+#map-modal.fullscreen-map .close-map { display: flex !important; }
 }
 @media (max-width: 768px) {
 #active-list-container { flex-direction: column; height: auto; }
@@ -213,7 +216,10 @@ input, select, button, .mode-btn { min-height: 38px; }
 .header-logo-group { width: auto; }
 .modal-content { padding: 15px; width: 98%; margin: 2% auto; }
 #zone-map-view { height: 85vh !important; }
-.close-map { top: 10px; right: 10px; width: 100px; font-size: 12px; }
+.close-map { right: 10px; width: 100px; font-size: 12px; }
+#close-map-btn { top: 60px !important; }
+#zoom-out-btn { top: 10px !important; }
+#map-driver-head { top: 60px !important; left: 10px !important; right: auto !important; }
 }
 </style>
 </head>
@@ -344,7 +350,8 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div id="selected-driver-label" class="none bold uppercase" style="margin: 0; width:100%; font-size:16px; padding:10px; border-radius:0; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px; box-sizing: border-box;"></div>
 <div class="flex jc ac gap-10" style="margin:10px auto 0 auto; width:100%;">
 <button id="depot-checkin-btn" class="route-btn" style="background:#0056b3; border-color:#0056b3;" onclick="unloadActiveDriverAtDepot()">DEPOT CHECK-IN</button>
-<button id="back-filter-btn" class="route-btn" style="padding:4px 10px; height:auto;" onclick="clearDriverFilter()">BACK</button>
+<button id="view-route-btn" class="route-btn" style="background:#0099cc; border-color:#0099cc;" onclick="viewDriverRoute(currentDriverFilter)">VIEW ROUTE</button>
+<button id="back-filter-btn" class="route-btn" style="background:#222; border:1px solid #555; color:#ccc; border-radius:20px; padding:6px 16px; font-size:12px; display:flex; align-items:center; gap:6px; box-shadow:var(--shadow-soft);" onclick="clearDriverFilter()">⬅ BACK</button>
 </div>
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
@@ -381,8 +388,8 @@ input, select, button, .mode-btn { min-height: 38px; }
 </div>
 </div>
 <div id="map-modal">
-<button class="close-map" onclick="closeMap()">CLOSE MAP</button>
-<button class="close-map" onclick="zoomToAll()" style="top:70px; background:#448800;">ZOOM OUT</button>
+<button id="close-map-btn" class="close-map" onclick="closeMap()">CLOSE MAP</button>
+<button id="zoom-out-btn" class="close-map" onclick="zoomToAll()" style="top:70px; background:#448800;">ZOOM OUT</button>
 <div id="route-time-badge" class="none abs" style="top:120px; right:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:700; border:1px solid var(--active-green);"></div>
 <div id="map-driver-head" class="none abs" style="top:15px; right:60px; left:auto; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:700; font-size:16px; box-shadow:var(--shadow-soft); white-space:nowrap;"></div>
 <div id="route-list"></div>
@@ -554,10 +561,16 @@ currentDriverFilter = name; renderData();
 document.getElementById('entry-panel').style.opacity = '0.3'; document.getElementById('entry-panel').style.pointerEvents = 'none';
 document.getElementById('driver-stats-panel').style.opacity = '0.3'; document.getElementById('driver-stats-panel').style.pointerEvents = 'none';
 if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '0.3'; document.getElementById('archive-section').style.pointerEvents = 'none'; }
-viewDriverRoute(name);
+if (window.innerWidth >= 1024) { viewDriverRoute(name); }
 }
 function clearDriverFilter() {
-openMap();
+currentDriverFilter = null;
+document.getElementById('entry-panel').style.opacity = '1'; document.getElementById('entry-panel').style.pointerEvents = 'auto';
+document.getElementById('driver-stats-panel').style.opacity = '1'; document.getElementById('driver-stats-panel').style.pointerEvents = 'auto';
+if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '1'; document.getElementById('archive-section').style.pointerEvents = 'auto'; }
+if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
+closeMap();
+renderData();
 }
 function unloadActiveDriverAtDepot() {
     if(!currentDriverFilter) return;
@@ -629,7 +642,10 @@ if(document.getElementById('archive-section')) { document.getElementById('archiv
 if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
 renderData();
 }
-document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; document.getElementById('map-modal').style.display = 'block'; document.getElementById('route-time-badge').style.display = 'none';
+document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; 
+document.getElementById('map-modal').style.display = 'block'; 
+if (window.innerWidth >= 1024) document.getElementById('map-modal').classList.add('fullscreen-map');
+document.getElementById('route-time-badge').style.display = 'none';
 setTimeout(() => { if(mainMap) google.maps.event.trigger(mainMap, "resize"); }, 100);
 if (!mainMap) {
 mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
@@ -659,6 +675,7 @@ function viewDriverRoute(name, e) {
 if(e) e.stopPropagation(); mapBoundsInitialized = false;
 if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
 currentDriverFilter = name; document.getElementById('map-modal').style.display = 'block';
+if (window.innerWidth >= 1024) document.getElementById('map-modal').classList.remove('fullscreen-map');
 if (!mainMap) {
 mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
 mainMap.addListener('click', () => { mainMap.setOptions({ scrollwheel: true }); });
@@ -671,7 +688,13 @@ if (mainMap) mainMap.setOptions({ scrollwheel: false });
 renderData(); setTimeout(() => google.maps.event.trigger(mainMap, "resize"), 100);
 }
 function closeMap() {
-mapBoundsInitialized = false; document.getElementById('map-modal').style.display = 'none'; document.getElementById('map-driver-head').style.display = 'none';
+mapBoundsInitialized = false; 
+if (window.innerWidth >= 1024) {
+    document.getElementById('map-modal').classList.remove('fullscreen-map');
+} else {
+    document.getElementById('map-modal').style.display = 'none'; 
+}
+document.getElementById('map-driver-head').style.display = 'none';
 if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
 if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
 for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
