@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>E&C COMMAND CENTER</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ffff00">
+<meta name="theme-color" content="#ffd700">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300&display=swap" rel="stylesheet">
 <style>
 :root { 
---accent: #ffff00; --bg: #222; --card: #141414; --text: #e0e0e0; --card-text: #e0e0e0;
+--accent: #ffd700; --bg: #222; --card: #141414; --text: #e0e0e0; --card-text: #e0e0e0;
 --active-green: #00b32d; --archive-orange: #cc5200; --note-blue: #0099cc; --pro-blue: #0056b3;
 --header-bg: #000; --input-bg: #141414; --border: #333; --stat-bg: #161616; --modal-bg: #181818; --btn-bg: #1c1c1c;
 --shadow-soft: 0 4px 12px rgba(0,0,0,0.1);
@@ -20,9 +20,10 @@ body.light-mode {
 --bg: #f0f2f5; --card: #fff; --text: #000; --card-text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
 --route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a; --accent: #000; --active-green: #000; --archive-orange: #000; --note-blue: #000; --pro-blue: #000;
 }
-body.light-mode * { color: #000 !important; border-color: #ccc !important; }
-body.light-mode .history-item div[style*="color:#ffff00"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
-body.light-mode .btn-save, body.light-mode .btn-zone-add { background: #000 !important; color: #fff !important; }
+body.light-mode * { color: #000 !important; }
+body.light-mode .history-item div[style*="color:#ffd700"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
+body.light-mode .btn-save, body.light-mode .btn-zone-add, body.light-mode .mode-btn.active-mode, body.light-mode .primary, body.light-mode .login-submit { background: #fff !important; color: #000 !important; border: 2px solid #00b32d !important; }
+body.light-mode button { background: #fff !important; color: #000 !important; border: 1px solid #ccc !important; }
 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 20px; }
 header { padding: 10px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
 .header-logo { height: 24px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
@@ -77,7 +78,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .hist-driver { font-weight: 400 !important; font-family: 'Inter', sans-serif !important; padding: 4px 10px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.4); }
 .hist-time { font-size: 11px; color: var(--hist-time-color, #777); margin-top: 8px; font-family: monospace; font-weight: 700; }
 .hist-name { font-size: 14px; color: var(--card-text); text-transform: uppercase; font-weight: 400; margin-top: 5px; }
-.urgent-pickup { border: 1px solid #b71c1c !important; box-shadow: var(--shadow-soft); }
+.urgent-pickup { border: 2px solid #ff0000 !important; box-shadow: 0 0 10px rgba(255,0,0,0.5) !important; background: rgba(255,0,0,0.15) !important; }
 #search-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--header-bg); border-top: 1px solid var(--border); padding: 15px; box-sizing: border-box; z-index: 1001; display: flex; align-items: center; }
 #archive-search { width: 100%; padding: 14px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-weight: 600; border-radius: 6px; font-size: 15px; }
 #archive-search:focus { border-color: var(--accent); }
@@ -128,13 +129,13 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .mode-btn.active-mode { background: var(--accent); color: #000; }
 .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
 #driver-stats-panel { background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); margin-bottom: 15px; transition: opacity 0.3s; }
-.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--stat-bg); border-radius: 4px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 40px; box-sizing: border-box; width: 100%; animation: subtle-lift-glow 3s infinite; }
+.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 12px; background: var(--stat-bg); border-radius: 4px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 60px; box-sizing: border-box; width: 100%; animation: subtle-lift-glow 3s infinite; }
 .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
-.ds-name { color: var(--text); font-weight: 700; font-size: 11px; width: auto; padding-right: 8px; text-transform: uppercase; }
+.ds-name { color: var(--text); font-weight: 700; font-size: 16px; width: auto; padding-right: 8px; text-transform: uppercase; }
 .stat-info { display: flex; gap: 10px; margin-left: auto; align-items: center; }
-.stat-item { font-size: 8px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 4px; background: var(--bg); padding: 4px 8px; border-radius: 3px; border: 1px solid var(--border); }
-.stat-val-p { color: var(--accent); font-size: 11px; font-weight: 700; }
-.stat-val-d { color: var(--active-green); font-size: 11px; font-weight: 700; }
+.stat-item { font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 4px; background: var(--bg); padding: 4px 8px; border-radius: 3px; border: 1px solid var(--border); }
+.stat-val-p { color: var(--accent); font-size: 14px; font-weight: 700; }
+.stat-val-d { color: var(--active-green); font-size: 14px; font-weight: 700; }
 .input-wrap { position: relative; width: 100%; display: flex; align-items: center; }
 .input-wrap input, .input-wrap select, .input-wrap textarea { margin-bottom: 0; width: 100%; }
 .copy-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; z-index: 5; }
@@ -144,13 +145,13 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .back-to-all-btn { background:var(--bg); border:1px solid var(--accent); color:var(--accent); padding:14px 24px; font-weight:700; border-radius:6px; text-transform:uppercase; cursor:pointer; }
 @keyframes crt-turn-on { 0% { transform: scaleY(0.005) scaleX(0); opacity: 0; filter: brightness(0); } 50% { transform: scaleY(0.005) scaleX(1); opacity: 1; } 100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); } }
 .crt-animate { animation: crt-turn-on 3s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
-@keyframes pulse-red-btn { 0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } 50% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); border-color: #ff4444; background: rgba(255,0,0,0.1); } 100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } }
+@keyframes pulse-red-btn { 0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.4); border-color: #ff0000; } 50% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); border-color: #ff0000; background: rgba(255,0,0,0.1); } 100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.4); border-color: #ff0000; } }
 @keyframes pulse-orange-btn { 0% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } 50% { box-shadow: 0 0 15px rgba(255, 140, 0, 0.7); border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); } 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } }
-@keyframes pulse-unassigned { 0% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.4); border-color: #ffff00; } 50% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.8); border-color: #ffff00; } 100% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.4); border-color: #ffff00; } }
+@keyframes pulse-unassigned { 0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.4); border-color: #ffd700; } 50% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); border-color: #ffd700; } 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.4); border-color: #ffd700; } }
 @keyframes subtle-lift-glow { 0% { transform: translateY(0); box-shadow: var(--shadow-soft); } 50% { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 179, 45, 0.2); border-color: #444; } 100% { transform: translateY(0); box-shadow: var(--shadow-soft); } }
-.unassigned-job-card { animation: pulse-unassigned 2s infinite ease-in-out !important; border: 1px solid #ffff00 !important; border-radius: 4px; }
+.unassigned-job-card { animation: pulse-unassigned 2s infinite ease-in-out !important; border: 1px solid #ffd700 !important; border-radius: 4px; }
 .dnd-empty-btn { filter: grayscale(100%) opacity(50%); }
-.btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
+.btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff0000 !important; }
 .btn-alert-orange { animation: pulse-orange-btn 2s infinite ease-in-out !important; color: #ff8c00 !important; }
 .btn-pressed { box-shadow: inset 0 0 10px rgba(0,0,0,0.2) !important; background: var(--input-bg) !important; color: var(--text) !important; border-bottom: 1px solid var(--border) !important; transform: translateY(2px) !important; }
 .badge-active { color: var(--accent) !important; border-color: var(--accent) !important; }
@@ -192,7 +193,15 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .active-zone-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); }
 .active-zone-label { font-size: 12px; font-weight: 700; color: #ccc; }
 #f-name, #f-pickup, #f-city, #f-drop-name, #f-drop-address, #f-drop-city {
-background-color: rgba(255, 255, 0, 0.08) !important;
+background-color: rgba(0, 153, 255, 0.1) !important;
+}
+@media (min-width: 1024px) {
+#board-panel { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+#active-list-container { width: calc(60% - 20px) !important; flex: none; }
+#archive-section { width: 100%; order: 4; }
+#toggle-archive-btn { order: 3; }
+#map-modal { display: block !important; position: relative !important; width: 40% !important; height: 80vh; z-index: 10; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; order: 2; }
+.close-map { display: none !important; }
 }
 @media (max-width: 768px) {
 #active-list-container { flex-direction: column; height: auto; }
@@ -379,12 +388,21 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div id="list-deliveries"></div>
 </div>
 <div class="archive-column">
-<button id="btn-dnd" class="cat-btn" style="color:#ff4444;" onclick="toggleCat('dnd')"><span>DND/DNP</span><span id="badge-dnd" class="cat-badge">0</span></button>
+<button id="btn-dnd" class="cat-btn" style="color:#ff0000;" onclick="toggleCat('dnd')"><span>DND/DNP</span><span id="badge-dnd" class="cat-badge">0</span></button>
 <button id="archive-all-dnd-btn" onclick="archiveAllDND()" class="none bold pointer u-case" style="background:#b71c1c; color:#fff; border:none; padding:10px; font-size:11px; margin: 10px; border-radius:4px; width: calc(100% - 20px);">Archive All Failed</button>
 <div id="list-dnd"></div>
 </div>
 </div>
-<div id="archive-section" class="mt-30" style="padding: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); transition: opacity 0.3s;">
+<div id="map-modal">
+<button class="close-map" onclick="closeMap()">CLOSE MAP</button>
+<button class="close-map" onclick="zoomToAll()" style="top:70px; background:#448800;">ZOOM OUT</button>
+<div id="route-time-badge" class="none abs" style="top:120px; right:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:700; border:1px solid var(--active-green);"></div>
+<div id="map-driver-head" class="none abs" style="top:15px; left:20px; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:700; font-size:16px; box-shadow:var(--shadow-soft); white-space:nowrap;"></div>
+<div id="route-list"></div>
+<div id="map"></div>
+</div>
+<button id="toggle-archive-btn" class="primary w-100 mt-15" onclick="toggleArchive()" style="border: 1px solid var(--border);">SHOW ARCHIVE</button>
+<div id="archive-section" class="mt-30" style="padding: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); transition: opacity 0.3s; display: none;">
 <div class="archive-title" style="color: var(--archive-title-color, #666); border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
 <div class="flex-row mb-15">
 <select id="af-driver" class="driver-select mb-0 f-1" onchange="renderData()">
@@ -397,14 +415,6 @@ input, select, button, .mode-btn { min-height: 38px; }
 <input id="af-manual-search" placeholder="Manual Search (Today's Archive)..." class="glow-field mb-15" onkeyup="renderData()" onfocus="document.getElementById('board-panel').scrollIntoView({behavior:'smooth'})">
 <div id="list-archive" class="flex col" style="gap: 8px;"></div>
 </div>
-</div>
-<div id="map-modal">
-<button class="close-map" onclick="closeMap()">CLOSE MAP</button>
-<button class="close-map" onclick="zoomToAll()" style="top:70px; background:#448800;">ZOOM OUT</button>
-<div id="route-time-badge" class="none abs" style="top:120px; right:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:700; border:1px solid var(--active-green);"></div>
-<div id="map-driver-head" class="none abs" style="top:15px; left:20px; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:700; font-size:16px; box-shadow:var(--shadow-soft); white-space:nowrap;"></div>
-<div id="route-list"></div>
-<div id="map"></div>
 </div>
 
 <div id="location-picker-modal" class="modal" onclick="if(event.target===this) { this.style.display='none'; document.body.style.overflow=''; }">
@@ -485,6 +495,22 @@ if(driverColors[name]) return driverColors[name];
 let index = customDrivers.indexOf(name);
 return index !== -1 ? baseColors[index % baseColors.length] : '#00b32d';
 };
+window.assignJob = function(id, driver) {
+if(id && driver) {
+db.ref('jobs').child(id).update({ assigned_to: driver, last_edit_by: currentUser });
+}
+};
+function toggleArchive() {
+const el = document.getElementById('archive-section');
+const btn = document.getElementById('toggle-archive-btn');
+if (el.style.display === 'none') {
+el.style.display = 'block';
+btn.innerText = 'HIDE ARCHIVE';
+} else {
+el.style.display = 'none';
+btn.innerText = 'SHOW ARCHIVE';
+}
+}
 document.addEventListener('keydown', (e) => {
 if (e.key === 'Escape') {
 closeMap();
@@ -672,6 +698,7 @@ if(user) {
 if (!["desirae@ec.com", "celeste@ec.com"].includes(user.email)) { alert("ACCESS DENIED"); firebase.auth().signOut(); document.getElementById('login-overlay').style.display = 'flex'; return; }
 currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
 requestWakeLock();
+if(window.innerWidth >= 1024) openMap();
 document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
 db.ref('drivers').on('value', snap => {
 if(snap.exists()) {
@@ -1101,7 +1128,7 @@ if (afC && !searchCity.toLowerCase().includes(afC)) return;
 if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
 const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
 Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", opacity:"0.7"});
-c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffff00; font-weight:300; margin-bottom:10px; white-space:nowrap;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:nowrap;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
+c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffd700; font-weight:300; margin-bottom:10px; white-space:normal; word-wrap:break-word; line-height:1.4;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:normal; word-wrap:break-word; line-height:1.4;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
 arcList.appendChild(c); return;
 }
 const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
@@ -1113,25 +1140,24 @@ const bg = getDriverColor(p.assigned_to);
 let dH = currentDriverFilter ? `<span style="color:#0099cc; font-weight:700;">IN TRANSIT</span>` : `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>`;
 const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<span style="color:#0099cc; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${bH}${dH}<span style="color:#ffd700;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
 if(currentDriverFilter) {
     if(showTransit) uList.appendChild(c);
 } else tList.appendChild(c); 
 if(p.driver_edited_note) noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
-// This allows jobs to stay in 'At Depot' even if assigned to a driver
 const isDepot = type === 'delivery' && (isU || p.status === 'at_depot');
 if(isDepot) totalDepotJobs++;
 if (isFailed) {
 dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
-Object.assign(c.style, {background:"rgba(255,0,0,0.1)", border:"1px solid #ff4444", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
+Object.assign(c.style, {background:"rgba(255,0,0,0.2)", border:"2px solid #ff0000", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
 const bg = getDriverColor(asgn);
-const dH = currentDriverFilter ? `<span style="color:#ff4444; font-weight:700;">FAILED</span>` : ((!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>` : `<span style="color:#ff4444; font-weight:700;">FAILED</span>`);
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffff00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
+const dH = currentDriverFilter ? `<span style="color:#ff0000; font-weight:700;">FAILED</span>` : ((!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>` : `<span style="color:#ff0000; font-weight:700;">FAILED</span>`);
+const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffd700':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = type === 'pickup' ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
-let content = type === 'pickup' ? `<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffff00;">${p.name||'-'}</span>`;
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
+let content = type === 'pickup' ? `<span style="color:#ffd700;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffd700;">${p.name||'-'}</span>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${bH}${dH}${content}</div>`;
 if(currentDriverFilter) {
     if(type === 'pickup' && showPickups) uList.appendChild(c);
     else if(type === 'delivery' && showDeliveries) uList.appendChild(c);
@@ -1143,18 +1169,19 @@ if(isU && !isDepot) pending++; else { if(!isDepot) assignedCount++; if(driverSta
 if(p.driver_edited_note) noteCount++;
 const c = document.createElement("div"); c.className = "history-item" + (type==='pickup'&&isU ? ' urgent-pickup' : '') + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
 c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "transparent";
+if (isU && !isFailed) { c.setAttribute("draggable", "true"); c.ondragstart = (e) => e.dataTransfer.setData("text/plain", id); }
 const bg = getDriverColor(p.assigned_to);
 let dH = p.assigned_to ? `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>` : `<span style="color:#cc5200; font-weight:700;">UNASSIGNED</span>`;
 if(isDepot) dH = `<span style="color:#00BFFF; font-weight:700;">AT DEPOT</span>`;
 else if(currentDriverFilter) dH = `<span style="color:${bg}; font-weight:700;">${type === 'pickup' ? 'PICKUP' : 'DELIVERY'}</span>`;
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffff00':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
+const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffd700':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
 let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-let content = `<span style="color:#ffff00;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>`;
+let content = `<span style="color:#ffd700;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>`;
 if (type === 'delivery' || isDepot) {
     arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
-    content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffff00;">${p.name||'-'}</span>`;
+    content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffd700;">${p.name||'-'}</span>`;
 }
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:nowrap;">${bH}${dH}${content}</div>`;
+c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${bH}${dH}${content}</div>`;
 if(currentDriverFilter) {
     let shouldShow = false;
     if (isDepot && showDepot) shouldShow = true;
@@ -1179,7 +1206,11 @@ hd.style.display = totalDepotJobs > 0 ? 'block' : 'none'; hd.innerText = totalDe
 Object.keys(driverStats).forEach(d => {
 const p = driverStats[d].p, del = driverStats[d].d;
 if(p > 0 || del > 0) {
-const r = document.createElement("div"); r.className = "driver-stat-row pointer"; r.onclick = () => { if (currentDriverFilter === d) clearDriverFilter(); else filterByDriver(d); };
+const r = document.createElement("div"); r.className = "driver-stat-row pointer";
+r.ondragover = (e) => { e.preventDefault(); r.style.borderColor = "var(--accent)"; };
+r.ondragleave = (e) => { r.style.borderColor = "var(--border)"; };
+r.ondrop = (e) => { e.preventDefault(); r.style.borderColor = "var(--border)"; const jobId = e.dataTransfer.getData("text/plain"); if (jobId) assignJob(jobId, d); };
+r.onclick = () => { if (currentDriverFilter === d) clearDriverFilter(); else filterByDriver(d); };
 const dur = (driverLocationsData[d]?.total_duration) || "";
 r.innerHTML = `<div class="flex ac"><div class="ds-name" style="color:${getDriverColor(d)};">${d}</div>${dur ? `<span class="route-time-display">${dur}</span>` : ''}</div><div class="stat-info">${p>0?`<div class="stat-item">Pickups <span class="stat-val-p">${p}</span></div>`:''}${del>0?`<div class="stat-item">Deliveries <span class="stat-val-d">${del}</span></div>`:''}</div>`;
 sPanel.appendChild(r);
@@ -1211,7 +1242,6 @@ if(btn) {
 }
 });
 isFirstLoad = false;
-setTimeout(autoScaleText, 50);
 }
 function openZoneManager() {
 document.getElementById('zone-modal').style.display = 'block';
@@ -1415,22 +1445,6 @@ let deferredPrompt; const installBtn = document.getElementById('install-btn');
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'block'; });
 installBtn.addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') installBtn.style.display = 'none'; deferredPrompt = null; } });
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./firebase-messaging-sw.js').then(r => { swReg = r; messaging.useServiceWorker(r); }).catch(e => console.log('SW Error', e)));
-
-function autoScaleText() {
-    const lines = document.querySelectorAll('.history-item div[style*="white-space:nowrap"]');
-    lines.forEach(line => {
-        if (!line.dataset.origSize) {
-            line.dataset.origSize = window.getComputedStyle(line).fontSize;
-        }
-        line.style.fontSize = line.dataset.origSize;
-        let size = parseFloat(line.style.fontSize);
-        while (line.scrollWidth > line.clientWidth && size > 8) {
-            size -= 0.5;
-            line.style.fontSize = size + 'px';
-        }
-    });
-}
-window.addEventListener('resize', () => setTimeout(autoScaleText, 50));
 
 let currentLocationTarget = null;
 let pickerMap = null;
