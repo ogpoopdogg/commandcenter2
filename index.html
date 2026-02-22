@@ -21,6 +21,7 @@ body.light-mode {
 --route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a; --accent: #000; --active-green: #000; --archive-orange: #000; --note-blue: #000; --pro-blue: #000;
 }
 body.light-mode * { color: #000 !important; }
+body.light-mode .driver-map-label { color: #00ff00 !important; }
 body.light-mode .history-item div[style*="color:#ffd700"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
 body.light-mode .btn-save, body.light-mode .btn-zone-add, body.light-mode .mode-btn.active-mode, body.light-mode .primary, body.light-mode .login-submit { background: #fff !important; color: #000 !important; border: 2px solid #00b32d !important; }
 body.light-mode button { background: #fff !important; color: #000 !important; border: 1px solid #ccc !important; }
@@ -250,15 +251,12 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div id="top-input-section"></div>
 <div class="input-wrap mb-6">
 <input type="text" id="f-pkg-details" class="glow-field" placeholder="Packages/Items/Dimensions">
-<button class="copy-btn" onclick="copyField('f-pkg-details')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap mb-6">
 <input type="text" id="f-po" placeholder="PO / Reference">
-<button class="copy-btn" onclick="copyField('f-po')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap mb-6">
 <input type="text" id="f-info" placeholder="Driver Notes...">
-<button class="copy-btn" onclick="copyField('f-info')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div id="bottom-input-section" style="margin-top: 0;"></div>
 <div class="flex ac gap-10" style="margin-bottom: 4px; width: 100%; margin-top: 4px;">
@@ -292,7 +290,6 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div id="group-pickup">
 <div class="rel" style="margin-bottom: 4px;">
 <input type="text" id="f-name" class="glow-field" placeholder="Pickup Business/Contact Name" autocomplete="off" oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
-<button class="copy-btn" onclick="copyField('f-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="suggestions" class="suggestions-box"></div>
 <div onclick="resetFormFields()" class="suggestion-reset">RESET</div>
 </div>
@@ -300,29 +297,24 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div class="input-wrap f-2">
 <input type="text" id="f-pickup" class="glow-field" placeholder="Pickup Address" style="padding-right: 50px;">
 <button class="copy-btn" style="right: 28px; font-size:12px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('pickup')" type="button">📍</button>
-<button class="copy-btn" onclick="copyField('f-pickup')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
 <input type="text" id="f-city" class="glow-field" placeholder="City" oninput="handleCityInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('city-suggestions-p').style.display='none', 200)">
-<button class="copy-btn" onclick="copyField('f-city')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="city-suggestions-p" class="suggestions-box"></div>
 </div>
 </div>
 <div class="flex-row">
 <div class="input-wrap f-1-5">
 <input type="email" id="f-customer-email-p" class="glow-field" placeholder="Email">
-<button class="copy-btn" onclick="copyField('f-customer-email-p')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
 <input type="tel" id="f-customer-phone-p" class="glow-field" placeholder="Phone #" oninput="formatPhone(this)">
-<button class="copy-btn" onclick="copyField('f-customer-phone-p')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 </div>
 </div>
 <div id="group-drop">
 <div class="rel" style="margin-bottom: 4px;">
 <input type="text" id="f-drop-name" class="glow-field" placeholder="Delivery Contact/Business Name" autocomplete="off" oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
-<button class="copy-btn" onclick="copyField('f-drop-name')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="drop-suggestions" class="suggestions-box"></div>
 <div onclick="resetFormFields()" class="suggestion-reset">RESET</div>
 </div>
@@ -330,22 +322,18 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div class="input-wrap f-2">
 <input type="text" id="f-drop-address" class="glow-field" placeholder="Delivery Address" style="padding-right: 50px;">
 <button class="copy-btn" style="right: 28px; font-size:12px; text-decoration:none; font-style:normal; z-index: 6;" onclick="openLocationPicker('drop')" type="button">📍</button>
-<button class="copy-btn" onclick="copyField('f-drop-address')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
 <input type="text" id="f-drop-city" class="glow-field" placeholder="City" oninput="handleCityInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('city-suggestions-d').style.display='none', 200)">
-<button class="copy-btn" onclick="copyField('f-drop-city')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 <div id="city-suggestions-d" class="suggestions-box"></div>
 </div>
 </div>
 <div class="flex-row">
 <div class="input-wrap f-1-5">
 <input type="email" id="f-customer-email-d" class="glow-field" placeholder="Email">
-<button class="copy-btn" onclick="copyField('f-customer-email-d')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 <div class="input-wrap f-1">
 <input type="tel" id="f-customer-phone-d" class="glow-field" placeholder="Phone #" oninput="formatPhone(this)">
-<button class="copy-btn" onclick="copyField('f-customer-phone-d')"><svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
 </div>
 </div>
 </div>
@@ -354,10 +342,9 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div class="history-box" id="active-list-container">
 <div id="filter-reset-ui" class="w-100 text-center none mb-15" style="padding: 10px; box-sizing: border-box;">
 <div id="selected-driver-label" class="none bold uppercase" style="margin: 0; width:100%; font-size:16px; padding:10px; border-radius:0; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px; box-sizing: border-box;"></div>
-<div class="flex jb ac gap-10" style="margin:10px auto 0 auto; width:100%;">
+<div class="flex jc ac gap-10" style="margin:10px auto 0 auto; width:100%;">
 <button id="depot-checkin-btn" class="route-btn" style="background:#0056b3; border-color:#0056b3;" onclick="unloadActiveDriverAtDepot()">DEPOT CHECK-IN</button>
-<button id="view-route-btn" class="route-btn none">View Current Route</button>
-<button id="back-filter-btn" class="route-btn" style="padding:4px 10px; height:auto; background:#444; border-color:#555;" onclick="clearDriverFilter()">BACK</button>
+<button id="back-filter-btn" class="route-btn" style="padding:4px 10px; height:auto;" onclick="clearDriverFilter()">BACK</button>
 </div>
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
@@ -397,7 +384,7 @@ input, select, button, .mode-btn { min-height: 38px; }
 <button class="close-map" onclick="closeMap()">CLOSE MAP</button>
 <button class="close-map" onclick="zoomToAll()" style="top:70px; background:#448800;">ZOOM OUT</button>
 <div id="route-time-badge" class="none abs" style="top:120px; right:20px; z-index:3001; background:rgba(0,0,0,0.8); color:var(--active-green); padding:12px; border-radius:6px; font-weight:700; border:1px solid var(--active-green);"></div>
-<div id="map-driver-head" class="none abs" style="top:15px; left:20px; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:700; font-size:16px; box-shadow:var(--shadow-soft); white-space:nowrap;"></div>
+<div id="map-driver-head" class="none abs" style="top:15px; right:60px; left:auto; z-index:3001; background:#000; border:1px solid #fff; padding:6px 12px; font-weight:700; font-size:16px; box-shadow:var(--shadow-soft); white-space:nowrap;"></div>
 <div id="route-list"></div>
 <div id="map"></div>
 </div>
@@ -564,20 +551,13 @@ if (localStorage.getItem('ec_theme') === 'light') document.body.classList.add('l
 function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
 function filterByDriver(name) {
 currentDriverFilter = name; renderData();
-const rb = document.getElementById("view-route-btn");
-if(rb) { rb.style.display = "inline-block"; rb.onclick = (e) => viewDriverRoute(name, e); }
 document.getElementById('entry-panel').style.opacity = '0.3'; document.getElementById('entry-panel').style.pointerEvents = 'none';
 document.getElementById('driver-stats-panel').style.opacity = '0.3'; document.getElementById('driver-stats-panel').style.pointerEvents = 'none';
 if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '0.3'; document.getElementById('archive-section').style.pointerEvents = 'none'; }
+viewDriverRoute(name);
 }
 function clearDriverFilter() {
-currentDriverFilter = null;
-if(document.getElementById("view-route-btn")) document.getElementById("view-route-btn").style.display = "none";
-if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
-document.getElementById('entry-panel').style.opacity = '1'; document.getElementById('entry-panel').style.pointerEvents = 'auto';
-document.getElementById('driver-stats-panel').style.opacity = '1'; document.getElementById('driver-stats-panel').style.pointerEvents = 'auto';
-if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '1'; document.getElementById('archive-section').style.pointerEvents = 'auto'; }
-renderData();
+openMap();
 }
 function unloadActiveDriverAtDepot() {
     if(!currentDriverFilter) return;
@@ -641,9 +621,25 @@ list.style.display = catState[cat] ? 'block' : 'none';
 }
 let mainMap, mapMarkers = {}, activePolyline = null, listeningRef = null, mapAllListener = null;
 function openMap() {
-document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; document.getElementById('map-modal').style.display = 'block'; document.getElementById('route-time-badge').style.display = 'none'; currentDriverFilter = null;
+if (currentDriverFilter !== null) {
+currentDriverFilter = null;
+document.getElementById('entry-panel').style.opacity = '1'; document.getElementById('entry-panel').style.pointerEvents = 'auto';
+document.getElementById('driver-stats-panel').style.opacity = '1'; document.getElementById('driver-stats-panel').style.pointerEvents = 'auto';
+if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '1'; document.getElementById('archive-section').style.pointerEvents = 'auto'; }
+if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
+renderData();
+}
+document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; document.getElementById('map-modal').style.display = 'block'; document.getElementById('route-time-badge').style.display = 'none';
 setTimeout(() => { if(mainMap) google.maps.event.trigger(mainMap, "resize"); }, 100);
-if (!mainMap) mainMap = new google.maps.Map(document.getElementById("map"), { gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+if (!mainMap) {
+mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+mainMap.addListener('click', () => { mainMap.setOptions({ scrollwheel: true }); });
+document.addEventListener('click', (e) => {
+if (!e.target.closest('#map-modal') && !e.target.closest('#map') && !e.target.closest('#locate-btn') && !e.target.closest('.driver-stat-row')) {
+if (mainMap) mainMap.setOptions({ scrollwheel: false });
+}
+});
+}
 for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
 mapMarkers = {}; if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
 if(mapAllListener) db.ref('driver_locations').off('value', mapAllListener);
@@ -663,7 +659,15 @@ function viewDriverRoute(name, e) {
 if(e) e.stopPropagation(); mapBoundsInitialized = false;
 if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
 currentDriverFilter = name; document.getElementById('map-modal').style.display = 'block';
-if (!mainMap) mainMap = new google.maps.Map(document.getElementById("map"), { gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+if (!mainMap) {
+mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
+mainMap.addListener('click', () => { mainMap.setOptions({ scrollwheel: true }); });
+document.addEventListener('click', (ev) => {
+if (!ev.target.closest('#map-modal') && !ev.target.closest('#map') && !ev.target.closest('#locate-btn') && !ev.target.closest('.driver-stat-row')) {
+if (mainMap) mainMap.setOptions({ scrollwheel: false });
+}
+});
+}
 renderData(); setTimeout(() => google.maps.event.trigger(mainMap, "resize"), 100);
 }
 function closeMap() {
@@ -993,27 +997,27 @@ const html = `
 </div>
 </div>
 <div class="flex col gap-0">
-<div class="input-wrap mb-12"><input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name"><button class="copy-btn" onclick="copyField('e-name')">${copySvg}</button></div>
+<div class="input-wrap mb-12"><input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name"></div>
 <div class="flex-row">
-<div class="input-wrap f-2"><input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address"><button class="copy-btn" onclick="copyField('e-pickup')">${copySvg}</button></div>
-<div class="input-wrap f-1"><input id="e-city-p" value="${val(data.pickup_city||data.city)}" placeholder="City"><button class="copy-btn" onclick="copyField('e-city-p')">${copySvg}</button></div>
+<div class="input-wrap f-2"><input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address"></div>
+<div class="input-wrap f-1"><input id="e-city-p" value="${val(data.pickup_city||data.city)}" placeholder="City"></div>
 </div>
 <div class="flex-row">
-<div class="input-wrap f-1-5"><input id="e-email-p" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-p')">${copySvg}</button></div>
-<div class="input-wrap f-1"><input id="e-phone-p" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-p')">${copySvg}</button></div>
+<div class="input-wrap f-1-5"><input id="e-email-p" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"></div>
+<div class="input-wrap f-1"><input id="e-phone-p" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"></div>
 </div>
-<div class="input-wrap mb-12"><input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions"><button class="copy-btn" onclick="copyField('e-pkg')">${copySvg}</button></div>
-<div class="input-wrap mb-12"><input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref"><button class="copy-btn" onclick="copyField('e-po')">${copySvg}</button></div>
-<div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:30px;">${val(data.other_info)}</textarea><button class="copy-btn" onclick="copyField('e-note')">${copySvg}</button></div>
-<div class="input-wrap mb-12"><input id="e-add-note" placeholder="Add New Note (Appends to above)"><button class="copy-btn" onclick="copyField('e-add-note')">${copySvg}</button></div>
-<div class="input-wrap mb-12"><input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name"><button class="copy-btn" onclick="copyField('e-drop-name')">${copySvg}</button></div>
+<div class="input-wrap mb-12"><input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions"></div>
+<div class="input-wrap mb-12"><input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref"></div>
+<div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:30px;">${val(data.other_info)}</textarea></div>
+<div class="input-wrap mb-12"><input id="e-add-note" placeholder="Add New Note (Appends to above)"></div>
+<div class="input-wrap mb-12"><input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name"></div>
 <div class="flex-row">
-<div class="input-wrap f-2"><input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address"><button class="copy-btn" onclick="copyField('e-drop')">${copySvg}</button></div>
-<div class="input-wrap f-1"><input id="e-city-d" value="${val(data.delivery_city||data.city)}" placeholder="City"><button class="copy-btn" onclick="copyField('e-city-d')">${copySvg}</button></div>
+<div class="input-wrap f-2"><input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address"></div>
+<div class="input-wrap f-1"><input id="e-city-d" value="${val(data.delivery_city||data.city)}" placeholder="City"></div>
 </div>
 <div class="flex-row">
-<div class="input-wrap f-1-5"><input id="e-email-d" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"><button class="copy-btn" onclick="copyField('e-email-d')">${copySvg}</button></div>
-<div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"><button class="copy-btn" onclick="copyField('e-phone-d')">${copySvg}</button></div>
+<div class="input-wrap f-1-5"><input id="e-email-d" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"></div>
+<div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"></div>
 </div>
 <select id="e-driver" class="driver-select mb-12">${opts}</select>
 <div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>
