@@ -41,7 +41,7 @@ header { padding: 10px 20px; background: var(--header-bg); border-bottom: 2px so
 .glow-field { border: 1px solid var(--border); transition: border-color 0.3s; }
 .glow-field:focus { border-color: var(--accent); outline: none; }
 .stats-bar { display: flex; background: var(--header-bg); padding: 8px; border-bottom: 1px solid var(--border); justify-content: space-around; align-items: center; gap: 8px; }
-#entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 8px 12px; box-shadow: var(--shadow-soft); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+#entry-panel { background: var(--bg); border-bottom: 1px solid var(--border); padding: 8px 12px; box-shadow: var(--shadow-soft); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; transition: opacity 0.3s; }
 #board-panel { padding: 0; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 .stat-box { text-align: center; flex: 1; position: relative; border-radius: 6px; margin: 0; padding: 10px 6px; background: var(--stat-bg); border: 1px solid var(--border); }
 .stat-label { display: block; font-size: 9px; color: var(--stat-label-color, #777); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px; }
@@ -127,8 +127,8 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .mode-btn { flex: 1; padding: 10px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 12px; background: transparent; color: #666; border-radius: 3px; transition: 0.2s; }
 .mode-btn.active-mode { background: var(--accent); color: #000; }
 .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
-#driver-stats-panel { background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); margin-bottom: 15px; }
-.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--stat-bg); border-radius: 4px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 40px; box-sizing: border-box; width: 100%; }
+#driver-stats-panel { background: var(--header-bg); padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); margin-bottom: 15px; transition: opacity 0.3s; }
+.driver-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--stat-bg); border-radius: 4px; border: 1px solid var(--border); transition: transform 0.2s; min-height: 40px; box-sizing: border-box; width: 100%; animation: subtle-lift-glow 3s infinite; }
 .driver-stat-row:hover { transform: translateX(2px); border-color: #444; }
 .ds-name { color: var(--text); font-weight: 700; font-size: 11px; width: auto; padding-right: 8px; text-transform: uppercase; }
 .stat-info { display: flex; gap: 10px; margin-left: auto; align-items: center; }
@@ -147,6 +147,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 @keyframes pulse-red-btn { 0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } 50% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); border-color: #ff4444; background: rgba(255,0,0,0.1); } 100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); border-color: #ff4444; } }
 @keyframes pulse-orange-btn { 0% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } 50% { box-shadow: 0 0 15px rgba(255, 140, 0, 0.7); border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); } 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.4); border-color: #ff8c00; } }
 @keyframes pulse-unassigned { 0% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.4); border-color: #ffff00; } 50% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.8); border-color: #ffff00; } 100% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.4); border-color: #ffff00; } }
+@keyframes subtle-lift-glow { 0% { transform: translateY(0); box-shadow: var(--shadow-soft); } 50% { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 179, 45, 0.2); border-color: #444; } 100% { transform: translateY(0); box-shadow: var(--shadow-soft); } }
 .unassigned-job-card { animation: pulse-unassigned 2s infinite ease-in-out !important; border: 1px solid #ffff00 !important; border-radius: 4px; }
 .dnd-empty-btn { filter: grayscale(100%) opacity(50%); }
 .btn-alert-red { animation: pulse-red-btn 2s infinite ease-in-out !important; color: #ff4444 !important; }
@@ -224,6 +225,7 @@ input, select, button, .mode-btn { min-height: 38px; }
 <span class="shiny-text" style="font-size: 16px; font-weight: 700; white-space: nowrap; letter-spacing: 1px;">E&C COMMAND</span>
 </div>
 <div class="flex col jc" style="margin-left:15px;">
+<div id="header-depot" style="display:none; color:#00BFFF; font-weight:700; animation:dot-pulse 1s infinite; font-size:10px; margin-bottom:2px;"></div>
 <div id="header-unassigned" style="display:none; color:#ff8c00; font-weight:700; animation:dot-pulse 1s infinite; font-size:10px; margin-bottom:2px;"></div>
 <div id="header-alert" style="display:none; color:red; font-weight:700; animation:dot-pulse 1s infinite; font-size:10px;"></div>
 </div>
@@ -343,8 +345,10 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div class="history-box" id="active-list-container">
 <div id="filter-reset-ui" class="w-100 text-center none mb-15" style="padding: 10px; box-sizing: border-box;">
 <div id="selected-driver-label" class="none bold uppercase" style="margin: 0; width:100%; font-size:16px; padding:10px; border-radius:0; background:#111; box-shadow: var(--shadow-soft); display: flex; justify-content: center; align-items: center; gap: 10px; box-sizing: border-box;"></div>
-<div class="flex jc" style="margin:10px auto 0 auto; width:100%;">
+<div class="flex jb ac gap-10" style="margin:10px auto 0 auto; width:100%;">
+<button id="depot-checkin-btn" class="route-btn" style="background:#0056b3; border-color:#0056b3;" onclick="unloadActiveDriverAtDepot()">DEPOT CHECK-IN</button>
 <button id="view-route-btn" class="route-btn none">View Current Route</button>
+<button id="back-filter-btn" class="route-btn" style="padding:4px 10px; height:auto; background:#444; border-color:#555;" onclick="clearDriverFilter()">BACK</button>
 </div>
 </div>
 <input type="text" id="active-search" class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left; box-sizing:border-box; border-radius: 0; border-left: none; border-right: none; border-top: none; margin-bottom: 0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
@@ -380,7 +384,7 @@ input, select, button, .mode-btn { min-height: 38px; }
 <div id="list-dnd"></div>
 </div>
 </div>
-<div class="mt-30" style="padding: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft);">
+<div id="archive-section" class="mt-30" style="padding: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-soft); transition: opacity 0.3s;">
 <div class="archive-title" style="color: var(--archive-title-color, #666); border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
 <div class="flex-row mb-15">
 <select id="af-driver" class="driver-select mb-0 f-1" onchange="renderData()">
@@ -536,12 +540,35 @@ function filterByDriver(name) {
 currentDriverFilter = name; renderData();
 const rb = document.getElementById("view-route-btn");
 if(rb) { rb.style.display = "inline-block"; rb.onclick = (e) => viewDriverRoute(name, e); }
+document.getElementById('entry-panel').style.opacity = '0.3'; document.getElementById('entry-panel').style.pointerEvents = 'none';
+document.getElementById('driver-stats-panel').style.opacity = '0.3'; document.getElementById('driver-stats-panel').style.pointerEvents = 'none';
+if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '0.3'; document.getElementById('archive-section').style.pointerEvents = 'none'; }
 }
 function clearDriverFilter() {
 currentDriverFilter = null;
 if(document.getElementById("view-route-btn")) document.getElementById("view-route-btn").style.display = "none";
 if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
+document.getElementById('entry-panel').style.opacity = '1'; document.getElementById('entry-panel').style.pointerEvents = 'auto';
+document.getElementById('driver-stats-panel').style.opacity = '1'; document.getElementById('driver-stats-panel').style.pointerEvents = 'auto';
+if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '1'; document.getElementById('archive-section').style.pointerEvents = 'auto'; }
 renderData();
+}
+function unloadActiveDriverAtDepot() {
+    if(!currentDriverFilter) return;
+    if(!confirm("Move all 'In Transit' packages for " + currentDriverFilter + " to Depot?")) return;
+    const updates = {};
+    let count = 0;
+    Object.keys(rawJobs).forEach(key => {
+        const job = rawJobs[key];
+        if (job.status === 'in_transit' && job.assigned_to === currentDriverFilter) {
+            count++;
+            updates[`jobs/${key}/status`] = 'pending_delivery';
+            updates[`jobs/${key}/assigned_to`] = 'Unassigned';
+            updates[`jobs/${key}/other_info`] = (job.other_info ? job.other_info + ' | ' : '') + `Arrived at Depot (Retained by ${currentDriverFilter})`;
+        }
+    });
+    if (count === 0) return alert("No 'In Transit' jobs found for " + currentDriverFilter);
+    db.ref().update(updates).then(() => { alert("Unloaded " + count + " jobs to Depot."); clearDriverFilter(); }).catch(e => alert("Error: " + e.message));
 }
 function attemptLogin() {
 const e = document.getElementById('login-user').value.trim(), p = document.getElementById('login-pin').value.trim();
@@ -751,31 +778,6 @@ function deleteDriver(i) {
             updateAllDriverDropdowns();
         });
     }
-}
-function saveDriverEdit(i) {
-const n = document.getElementById(`edit-drv-${i}`).value.trim();
-const col = document.getElementById(`edit-color-${i}`).value;
-const oldName = customDrivers[i];
-if(n) {
-if(n !== oldName) {
-customDrivers[i] = n;
-}
-driverColors[n] = col;
-db.ref('drivers').set(customDrivers.map(d => ({name: d, color: driverColors[d] || getDriverColor(d)})));
-renderDriverManagerList();
-updateAllDriverDropdowns();
-renderData();
-if(document.getElementById('zone-schedule-view').style.display !== 'none') renderZoneRoster();
-if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface();
-}
-}
-function deleteDriver(i) {
-if(confirm("Remove driver?")) {
-customDrivers.splice(i, 1);
-db.ref('drivers').set(customDrivers.map(d => ({name: d, color: driverColors[d] || getDriverColor(d)})));
-renderDriverManagerList();
-updateAllDriverDropdowns();
-}
 }
 function resetFormFields() { ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; }); }
 function startVoiceEntry() {
@@ -1025,7 +1027,7 @@ const showTransit = document.getElementById('filter-chk-transit')?.checked !== f
 const showDepot = document.getElementById('filter-chk-depot')?.checked !== false;
 
 const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
-let stopLookup = {}, pending = 0, assignedCount = 0, noteCount = 0, dndCount = 0, driverStats = {};
+let stopLookup = {}, pending = 0, assignedCount = 0, noteCount = 0, dndCount = 0, totalDepotJobs = 0, driverStats = {};
 if(currentDriverFilter && driverLocationsData[currentDriverFilter]) {
 const d = driverLocationsData[currentDriverFilter];
 if(d.route_order && Array.isArray(d.route_order)) d.route_order.forEach((jid, i) => stopLookup[jid] = i + 1);
@@ -1120,6 +1122,7 @@ if(p.driver_edited_note) noteCount++; return;
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
 // This allows jobs to stay in 'At Depot' even if assigned to a driver
 const isDepot = type === 'delivery' && (isU || p.status === 'at_depot');
+if(isDepot) totalDepotJobs++;
 if (isFailed) {
 dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
 Object.assign(c.style, {background:"rgba(255,0,0,0.1)", border:"1px solid #ff4444", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
@@ -1168,10 +1171,11 @@ uList.appendChild(c);
 (type === 'pickup' ? pList : dList).appendChild(c);
 }
 });
-const ad = document.getElementById('header-alert'), ud = document.getElementById('header-unassigned');
+const ad = document.getElementById('header-alert'), ud = document.getElementById('header-unassigned'), hd = document.getElementById('header-depot');
 if(dndCount > 0) { ad.style.display = 'block'; ad.innerText = dndCount + " DND/DNP"; document.getElementById('archive-all-dnd-btn').style.display = 'block'; }
 else { ad.style.display = 'none'; document.getElementById('archive-all-dnd-btn').style.display = 'none'; }
 ud.style.display = pending > 0 ? 'block' : 'none'; ud.innerText = pending + " UNASSIGNED";
+hd.style.display = totalDepotJobs > 0 ? 'block' : 'none'; hd.innerText = totalDepotJobs + " AT DEPOT";
 Object.keys(driverStats).forEach(d => {
 const p = driverStats[d].p, del = driverStats[d].d;
 if(p > 0 || del > 0) {
