@@ -726,7 +726,7 @@ setMode('pickup');
 firebase.auth().onAuthStateChanged((user) => {
 if(user) {
 const username = user.email.split('@')[0].toLowerCase();
-db.ref(`roles/${username}/driver`).once('value').then(roleSnap => {
+db.ref(`roles/${username}/command`).once('value').then(roleSnap => {
 if(roleSnap.val() === true) {
 currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
 requestWakeLock();
