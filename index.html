@@ -732,6 +732,19 @@ currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
 requestWakeLock();
 if(window.innerWidth >= 1024) openMap(true);
 document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
+firebase.database().ref('developer').on('value', snap => {
+  const list = document.getElementById('dev-list');
+  list.innerHTML = '';
+  const notes = snap.val() || {};
+  Object.values(notes).forEach(note => {
+    list.innerHTML += `
+      <div class="dev-item">
+        <div class="dev-hdr">${note.user} • ${note.date}</div>
+        <div>${note.text}</div>
+      </div>`;
+  });
+  list.scrollTop = list.scrollHeight;
+});
 db.ref('drivers').on('value', snap => {
 if(snap.exists()) {
 let raw = snap.val() || [];
@@ -1591,32 +1604,6 @@ function setPickerLocation() {
         [{ 'list': 'ordered'}, { 'list': 'bullet' }], 
         [{ 'align': [] }] 
       ] 
-    }
-  });
-
-  // 2. Reactive Auth Listener: This replaces the timeout and fixes the refresh issue
-  firebase.auth().onAuthStateChanged(user => {
-    const list = document.getElementById('dev-list');
-    
-    if (user) {
-      // User is logged in: Set up the real-time database listener
-      firebase.database().ref('developer').on('value', snap => {
-        list.innerHTML = '';
-        const notes = snap.val() || {};
-        
-        Object.values(notes).forEach(note => {
-          list.innerHTML += `
-            <div class="dev-item">
-              <div class="dev-hdr">${note.user} • ${note.date}</div>
-              <div>${note.text}</div>
-            </div>`;
-        });
-        
-        list.scrollTop = list.scrollHeight; // Auto-scroll to most recent note
-      });
-    } else {
-      // User is logged out: Show access denied message
-      list.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">Access Denied. Please log in to view notes.</p>';
     }
   });
 
