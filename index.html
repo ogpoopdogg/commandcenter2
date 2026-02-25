@@ -725,7 +725,9 @@ else { top.appendChild(grpD); bot.appendChild(grpP); btnP.classList.remove('acti
 setMode('pickup');
 firebase.auth().onAuthStateChanged((user) => {
 if(user) {
-if (!["desirae@ec.com", "celeste@ec.com"].includes(user.email)) { alert("ACCESS DENIED"); firebase.auth().signOut(); document.getElementById('login-overlay').style.display = 'flex'; return; }
+const username = user.email.split('@')[0].toLowerCase();
+db.ref(`roles/${username}/driver`).once('value').then(roleSnap => {
+if(roleSnap.val() === true) {
 currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
 requestWakeLock();
 if(window.innerWidth >= 1024) openMap(true);
@@ -757,6 +759,8 @@ db.ref("driver_zones").on("value", s => {
 driverZones = s.val() || {}; 
 renderZoneRoster(); 
 if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface(); 
+});
+} else { alert("ACCESS DENIED"); firebase.auth().signOut(); document.getElementById('login-overlay').style.display = 'flex'; }
 });
 } else { document.getElementById('login-overlay').style.display = 'flex'; }
 });
