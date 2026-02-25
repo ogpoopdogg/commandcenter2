@@ -477,6 +477,7 @@ input, select, button, .mode-btn { min-height: 38px; }
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing,places"></script>
 <script>
 firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
 const db = firebase.database(), messaging = firebase.messaging();
 let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
 let driverColors = {};
@@ -592,7 +593,7 @@ function unloadActiveDriverAtDepot() {
 }
 function attemptLogin() {
 const e = document.getElementById('login-user').value.trim(), p = document.getElementById('login-pin').value.trim();
-if(e && p) firebase.auth().signInWithEmailAndPassword(e, p).catch(err => alert("Login Failed: " + err.message));
+if(e && p) firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => firebase.auth().signInWithEmailAndPassword(e, p)).catch(err => alert("Login Failed: " + err.message));
 }
 function formatTime12(ts) { if (!ts) return '--:--'; const d = new Date(ts); return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }); }
 function formatPhone(i) { let x = i.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/); i.value = !x[2] ? x[1] : '(' + x[1] + ')-' + x[2] + (x[3] ? '-' + x[3] : ''); }
