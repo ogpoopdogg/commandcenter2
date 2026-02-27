@@ -585,7 +585,7 @@ function unloadActiveDriverAtDepot() {
             count++;
             updates[`jobs/${key}/status`] = 'pending_delivery';
             updates[`jobs/${key}/assigned_to`] = 'Unassigned';
-            updates[`jobs/${key}/other_info`] = (job.other_info ? job.other_info + ' | ' : '') + `Arrived at Depot (Retained by ${currentDriverFilter})`;
+            updates[`jobs/${key}/job_history`] = (job.job_history ? job.job_history + '\n' : '') + `Arrived at Depot (Retained by ${currentDriverFilter})`;
         }
     });
     if (count === 0) return alert("No 'In Transit' jobs found for " + currentDriverFilter);
@@ -903,7 +903,7 @@ Object.keys(rawJobs).forEach(id => {
 const j = rawJobs[id], info = (j.other_info || "").toLowerCase();
 if(j.status !== 'completed' && (info.includes("dnd") || info.includes("dnp"))) {
 updates[`/jobs/${id}/status`] = 'completed'; updates[`/jobs/${id}/completed_at`] = ts;
-updates[`/jobs/${id}/last_edit_by`] = currentUser; updates[`/jobs/${id}/other_info`] = "[ARCHIVED ALL] " + j.other_info;
+updates[`/jobs/${id}/last_edit_by`] = currentUser; updates[`/jobs/${id}/job_history`] = (j.job_history ? j.job_history + '\n' : '') + "[ARCHIVED ALL]";
 }
 });
 if(Object.keys(updates).length) db.ref().update(updates);
@@ -1063,6 +1063,7 @@ const html = `
 <div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"></div>
 </div>
 <select id="e-driver" class="driver-select mb-12">${opts}</select>
+<div class="input-wrap mb-12"><textarea readonly placeholder="Job History" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:40px;">${val(data.job_history)}</textarea></div>
 <div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>
 </div>`;
 document.querySelector('#detailsModal .modal-content').innerHTML = html;
@@ -1071,8 +1072,8 @@ document.getElementById('detailsModal').style.display = 'flex'; document.body.st
 }
 function archiveAsFailed(id) {
 if(confirm("Archive this job as Failed (Unassigned)?")) {
-const note = rawJobs[id]?.other_info || "";
-db.ref('jobs').child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, other_info: "[ARCHIVED DND/DNP] " + note, last_edit_by: currentUser });
+const hist = rawJobs[id]?.job_history ? rawJobs[id].job_history + '\n[ARCHIVED DND/DNP]' : '[ARCHIVED DND/DNP]';
+db.ref('jobs').child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, job_history: hist, last_edit_by: currentUser });
 document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = '';
 }
 }
