@@ -479,14 +479,15 @@ function toggleDispatchForm() {
 </div>
 </div>
 <button id=install-btn>Install App</button>
-<script src="//www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="//www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="//www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="//www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<script src="//maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing,places"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDltbEbiqlyQjyaGth0AzIkfLpOYr96YeQ&libraries=geometry,drawing,places"></script>
 <script>
 firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+let db=firebase.database(),messaging=firebase.messaging(),swReg=null,rawJobs={},driverLocationsData={},addressData={},currentUser=localStorage.getItem('ec_command_user'),currentMode='pickup',currentDriverFilter=null,mapBoundsInitialized=!1,driverColors={},zoneMap,drawingManager,driverZones={},zonePolygons={},activeDrawingDriver=null,activeDrawingZoneId=null,seenJobs={},catState={pickups:!1,transit:!1,depot:!1,deliveries:!1,dnd:!1},isFirstLoad=!0,copySvg='<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>',customDrivers=[],baseColors=['#FF8C00','#00BFFF','#3F51B5','#FF69B4','#9C27B0','#E91E63','#4CAF50','#FF5722','#00BCD4'],getDriverColor=a=>{if(driverColors[a])return driverColors[a];let b=customDrivers.indexOf(a);return b!==-1?baseColors[b%baseColors.length]:'#00b32d'},mainMap,mapMarkers={},activePolyline=null,listeningRef=null,mapAllListener=null,pressTimer,wakeLock=null,deferredPrompt,installBtn=document.getElementById('install-btn'),currentLocationTarget=null,pickerMap=null,pickerAutocomplete=null;
 let db=firebase.database(),messaging=firebase.messaging(),swReg=null,rawJobs={},driverLocationsData={},addressData={},currentUser=localStorage.getItem('ec_command_user'),currentMode='pickup',currentDriverFilter=null,mapBoundsInitialized=!1,driverColors={},zoneMap,drawingManager,driverZones={},zonePolygons={},activeDrawingDriver=null,activeDrawingZoneId=null,seenJobs={},catState={pickups:!1,transit:!1,depot:!1,deliveries:!1,dnd:!1},isFirstLoad=!0,copySvg='<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>',customDrivers=[],baseColors=['#FF8C00','#00BFFF','#3F51B5','#FF69B4','#9C27B0','#E91E63','#4CAF50','#FF5722','#00BCD4'],getDriverColor=a=>{if(driverColors[a])return driverColors[a];let b=customDrivers.indexOf(a);return b!==-1?baseColors[b%baseColors.length]:'#00b32d'},mainMap,mapMarkers={},activePolyline=null,listeningRef=null,mapAllListener=null,pressTimer,wakeLock=null,deferredPrompt,installBtn=document.getElementById('install-btn'),currentLocationTarget=null,pickerMap=null,pickerAutocomplete=null;
 
 window.assignJob=function(a,b){if(a&&b){let j=rawJobs[a],upd={assigned_to:b,last_edit_by:currentUser};if(j){let o=j.other_info||"";if(o.toLowerCase().includes("dnd")||o.toLowerCase().includes("dnp")){upd.other_info=o.replace(/dnd/gi,"").replace(/dnp/gi,"").trim();upd.job_history=(j.job_history?j.job_history+'\n':'')+`[DND/DNP REASSIGNED to ${b} by ${currentUser}]: ${o}`}}db.ref('jobs').child(a).update(upd)}};
