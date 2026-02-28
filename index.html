@@ -606,8 +606,8 @@ function viewDetails(a){window.reviewedDND=window.reviewedDND||{};window.reviewe
 </div>
 <div class="input-wrap mb-12"><input id=e-pkg value="${c(b.package_details)}" placeholder="Packages/Items/Dimensions"></div>
 <div class="input-wrap mb-12"><input id=e-po value="${c(b.po_number)}" placeholder="PO / Ref"></div>
-<div class="input-wrap mb-12"><textarea id=e-note placeholder="Driver Notes" style="width:100%;margin-bottom:0;padding:8px;resize:none;overflow-y:auto;min-height:80px;">${c(b.other_info)}</textarea></div>
-<div class="input-wrap mb-12"><input id=e-add-note placeholder="Add New Note (Appends to above)"></div>
+<div class="input-wrap mb-12"><textarea id=e-note placeholder="Driver Notes" class="${b.driver_edited_note?'field-alert-green':''}" style="width:100%;margin-bottom:0;padding:8px;resize:none;overflow-y:auto;min-height:80px;">${c(b.other_info)}</textarea></div>
+<div class="input-wrap mb-12"><input id=e-add-note placeholder="Add New Note (Appends to above)" class="${b.driver_edited_note?'field-alert-green':''}"></div>
 <div class="input-wrap mb-12"><input id=e-drop-name value="${c(b.delivery_name)}" placeholder="Delivery Contact/Business Name"></div>
 <div class=flex-row>
 <div class="input-wrap f-2"><input id=e-drop value="${c(b.destination)}" placeholder="Delivery Address"></div>
@@ -620,7 +620,7 @@ function viewDetails(a){window.reviewedDND=window.reviewedDND||{};window.reviewe
 <select id=e-driver class="driver-select mb-12">${e}</select>
 <div class="input-wrap mb-12"><textarea id=e-job-history readonly placeholder="Job History" style="width:100%;margin-bottom:0;padding:8px;resize:none;overflow-y:auto;min-height:120px;">${c(b.job_history)}</textarea></div>
 <div class=edit-btn-group><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class=btn-cancel>CANCEL</button><button onclick="saveEdit('${a}')" class=btn-save>SAVE</button></div>
-</div>`;querySelector('#detailsModal .modal-content').innerHTML=f;getElementById('detailsModal').style.display='flex';body.style.overflow='hidden';if(b.driver_edited_note){db.ref('jobs').child(a).update({driver_edited_note:null})}}}
+</div>`;querySelector('#detailsModal .modal-content').innerHTML=f;getElementById('detailsModal').style.display='flex';body.style.overflow='hidden';if(b.driver_edited_note){db.ref('jobs').child(a).update({driver_edited_note:null});setTimeout(()=>{let n=getElementById('e-note'),an=getElementById('e-add-note');if(n)n.classList.remove('field-alert-green');if(an)an.classList.remove('field-alert-green')},2500)}}}
 
 function archiveAsFailed(a){with(document){confirm("Archive this job as Failed (Unassigned)?")&&(db.ref('jobs').child(a).update({status:'completed',assigned_to:'Unassigned',completed_at:firebase.database.ServerValue.TIMESTAMP,job_history:rawJobs[a]?.job_history?rawJobs[a].job_history+'\n[ARCHIVED DND/DNP]':'[ARCHIVED DND/DNP]',last_edit_by:currentUser}),getElementById('detailsModal').style.display='none',body.style.overflow='')}}
 
