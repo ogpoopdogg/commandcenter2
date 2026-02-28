@@ -579,16 +579,17 @@ if (localStorage.getItem('ec_theme') === 'light') document.body.classList.add('l
 function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
 function filterByDriver(name) {
 currentDriverFilter = name; renderData();
-document.getElementById('entry-panel').style.opacity = '0.3'; document.getElementById('entry-panel').style.pointerEvents = 'none';
-document.getElementById('driver-stats-panel').style.opacity = '0.3'; document.getElementById('driver-stats-panel').style.pointerEvents = 'none';
-if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '0.3'; document.getElementById('archive-section').style.pointerEvents = 'none'; }
+document.getElementById('entry-panel').style.display = 'none';
+document.getElementById('driver-stats-panel').style.display = 'none';
+if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.display = 'none'; }
 if (window.innerWidth >= 1024) { viewDriverRoute(name); }
+window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function clearDriverFilter() {
 currentDriverFilter = null;
-document.getElementById('entry-panel').style.opacity = '1'; document.getElementById('entry-panel').style.pointerEvents = 'auto';
-document.getElementById('driver-stats-panel').style.opacity = '1'; document.getElementById('driver-stats-panel').style.pointerEvents = 'auto';
-if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '1'; document.getElementById('archive-section').style.pointerEvents = 'auto'; }
+document.getElementById('entry-panel').style.display = 'block';
+document.getElementById('driver-stats-panel').style.display = 'flex';
+if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none'; }
 if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
 closeMap();
 renderData();
@@ -657,9 +658,9 @@ let mainMap, mapMarkers = {}, activePolyline = null, listeningRef = null, mapAll
 function openMap(isEmbedded) {
 if (currentDriverFilter !== null) {
 currentDriverFilter = null;
-document.getElementById('entry-panel').style.opacity = '1'; document.getElementById('entry-panel').style.pointerEvents = 'auto';
-document.getElementById('driver-stats-panel').style.opacity = '1'; document.getElementById('driver-stats-panel').style.pointerEvents = 'auto';
-if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.opacity = '1'; document.getElementById('archive-section').style.pointerEvents = 'auto'; }
+document.getElementById('entry-panel').style.display = 'block';
+document.getElementById('driver-stats-panel').style.display = 'flex';
+if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none'; }
 if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
 renderData();
 }
