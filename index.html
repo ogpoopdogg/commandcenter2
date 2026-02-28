@@ -768,7 +768,7 @@ firebase.database().ref('developer').on('value', snap => {
   Object.values(notes).forEach(note => {
     list.innerHTML += `
       <div class="dev-item">
-        <div class="dev-hdr">${note.user} • ${note.date}</div>
+        <div class="dev-hdr">${note.user} - <span style="color: orange;">${note.app || 'Database'}</span> - ${note.date}</div>
         <div>${note.text}</div>
       </div>`;
   });
@@ -1648,6 +1648,7 @@ function setPickerLocation() {
       text: devQuill.root.innerHTML,
       user: user,
       date: dateStr,
+      app: "COMMAND CENTER",
       timestamp: firebase.database.ServerValue.TIMESTAMP
     }).then(() => {
       devQuill.setText(''); // Clear editor after saving
