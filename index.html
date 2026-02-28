@@ -297,10 +297,9 @@ header { padding: 8px 4px; }
 <script>
 localStorage.getItem('ec_dispatch_collapsed') === 'false' && (document.getElementById('dispatch-form-content').style.display = 'block');
 function toggleDispatchForm() {
-    const form = document.getElementById('dispatch-form-content');
-    const isHidden = form.style.display === 'none';
-    form.style.display = isHidden ? 'block' : 'none';
-    localStorage.setItem('ec_dispatch_collapsed', isHidden ? 'false' : 'true');
+    let a=document.getElementById('dispatch-form-content'),b=a.style.display==='none';
+    a.style.display=b?'block':'none';
+    localStorage.setItem('ec_dispatch_collapsed',b?'false':'true');
 }
 </script>
 <div class="stats-bar mt-15" style="background:transparent; border:none;">
@@ -504,1054 +503,207 @@ function toggleDispatchForm() {
 <script>
 firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
-const db = firebase.database(), messaging = firebase.messaging();
-let swReg = null, rawJobs = {}, driverLocationsData = {}, addressData = {}, currentUser = localStorage.getItem('ec_command_user'), currentMode = 'pickup', currentDriverFilter = null, mapBoundsInitialized = false;
-let driverColors = {};
-let zoneMap, drawingManager, driverZones = {}, zonePolygons = {}, activeDrawingDriver = null, activeDrawingZoneId = null;
-let seenJobs = {}, catState = { pickups: false, transit: false, depot: false, deliveries: false, dnd: false }, isFirstLoad = true;
-const copySvg = '<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
-let customDrivers = [];
-const baseColors = ['#FF8C00', '#00BFFF', '#3F51B5', '#FF69B4', '#9C27B0', '#E91E63', '#4CAF50', '#FF5722', '#00BCD4'];
-const getDriverColor = (name) => {
-if(driverColors[name]) return driverColors[name];
-let index = customDrivers.indexOf(name);
-return index !== -1 ? baseColors[index % baseColors.length] : '#00b32d';
-};
-window.assignJob = function(id, driver) {
-id && driver && db.ref('jobs').child(id).update({ assigned_to: driver, last_edit_by: currentUser });
-};
-function toggleArchive() {
-const el = document.getElementById('archive-section');
-const btn = document.getElementById('toggle-archive-btn');
-el.style.display === 'none' ? (el.style.display = 'block', btn.innerText = 'HIDE ARCHIVE') : (el.style.display = 'none', btn.innerText = 'SHOW ARCHIVE');
-}
-document.addEventListener('keydown', (e) => {
-if (e.key === 'Escape') {
-closeMap();
-['detailsModal', 'zone-modal', 'driver-manager-modal', 'location-picker-modal'].forEach(id => {
-const m = document.getElementById(id);
-m && (m.style.display = 'none');
-});
-document.body.style.overflow = '';
-} else if (e.key === 'Enter') {
-const tag = e.target.tagName.toLowerCase();
-if (tag === 'textarea' || tag === 'button') return;
-const dm = document.getElementById('detailsModal');
-if (dm && (dm.style.display === 'block' || dm.style.display === 'flex')) { e.preventDefault(); e.target.blur(); return; }
-if (document.getElementById('location-picker-modal').style.display === 'flex' || document.getElementById('location-picker-modal').style.display === 'block') { e.preventDefault(); return; }
-if (document.getElementById('login-overlay').style.display !== 'none') { attemptLogin(); return; }
-const isFormInput = e.target.closest('#entry-panel') || e.target.closest('#group-pickup') || e.target.closest('#group-drop');
-isFormInput && (e.preventDefault(), createJob());
-}
-});
-function toggleCat(cat) {
-catState[cat] = !catState[cat];
-const list = document.getElementById('list-' + cat);
-const btn = document.getElementById('btn-' + cat);
-list.style.display = catState[cat] ? 'block' : 'none';
-catState[cat] && (btn.classList.remove('new-btn'), Array.from(list.querySelectorAll('.new-card')).forEach(el => el.classList.remove('new-card')));
-}
-function initCommandNotifications(email) {
-"Notification" in window && Notification.requestPermission().then(perm => {
-perm === 'granted' && messaging.getToken({ serviceWorkerRegistration: swReg, vapidKey: "BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI" }).then(token => {
-token && db.ref('command_tokens/' + email.replace(/[.#$\[\]]/g, "")).set({ token: token, user: email, updated: firebase.database.ServerValue.TIMESTAMP });
-}).catch(e => console.log('Token Error', e));
-});
-messaging.onMessage(payload => {
-new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
-const a = document.getElementById('header-alert');
-a.style.display = 'block'; a.innerText = "⚠️ " + payload.notification.title;
-setTimeout(() => { !document.getElementById('list-dnd').innerHTML && (a.style.display = 'none'); }, 5000);
-});
-}
-localStorage.getItem('ec_theme') === 'light' && document.body.classList.add('light-mode');
-function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
-function filterByDriver(name) {
-currentDriverFilter = name; renderData();
-document.getElementById('entry-panel').style.display = 'none';
-document.getElementById('driver-stats-panel').style.display = 'none';
-document.getElementById('archive-section') && (document.getElementById('archive-section').style.display = 'none');
-window.innerWidth >= 1024 && viewDriverRoute(name);
-window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-function clearDriverFilter() {
-currentDriverFilter = null;
-document.getElementById('entry-panel').style.display = 'block';
-document.getElementById('driver-stats-panel').style.display = 'flex';
-document.getElementById('archive-section') && (document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none');
-document.getElementById("selected-driver-label") && (document.getElementById("selected-driver-label").style.display = "none");
-closeMap();
-renderData();
-}
-function unloadActiveDriverAtDepot() {
-    if(!currentDriverFilter) return;
-    if(!confirm("Move all 'In Transit' packages for " + currentDriverFilter + " to Depot?")) return;
-    const updates = {};
-    let count = 0;
-    Object.keys(rawJobs).forEach(key => {
-        const job = rawJobs[key];
-        if (job.status === 'in_transit' && job.assigned_to === currentDriverFilter) {
-            count++;
-            updates[`jobs/${key}/status`] = 'pending_delivery';
-            updates[`jobs/${key}/assigned_to`] = 'Unassigned';
-            updates[`jobs/${key}/job_history`] = (job.job_history ? job.job_history + '\n' : '') + `Arrived at Depot (Retained by ${currentDriverFilter})`;
-        }
-    });
-    if (count === 0) return alert("No 'In Transit' jobs found for " + currentDriverFilter);
-    db.ref().update(updates).then(() => { alert("Unloaded " + count + " jobs to Depot."); clearDriverFilter(); }).catch(e => alert("Error: " + e.message));
-}
-function attemptLogin() {
-const e = document.getElementById('login-user').value.trim(), p = document.getElementById('login-pin').value.trim();
-e && p && firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => firebase.auth().signInWithEmailAndPassword(e, p)).catch(err => alert("Login Failed: " + err.message));
-}
-function formatTime12(ts) { if (!ts) return '--:--'; const d = new Date(ts); return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }); }
-function formatPhone(i) { let x = i.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/); i.value = !x[2] ? x[1] : '(' + x[1] + ')-' + x[2] + (x[3] ? '-' + x[3] : ''); }
-function copyField(id) {
-const el = document.getElementById(id);
-if(el) {
-el.select(); navigator.clipboard.writeText(el.value);
-const btn = window.event.currentTarget;
-let t = btn.querySelector('.copy-tip');
-if(!t) {
-t = document.createElement('span');
-t.className = 'copy-tip';
-t.innerText = 'COPIED';
-Object.assign(t.style, { position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: '8px', background: 'var(--active-green)', color: '#000', padding: '4px 8px', fontSize: '10px', fontWeight: '700', borderRadius: '4px', opacity: '0', transition: 'opacity 0.2s', pointerEvents: 'none', whiteSpace: 'nowrap' });
-btn.appendChild(t);
-}
-requestAnimationFrame(() => t.style.opacity = '1');
-setTimeout(() => t.style.opacity = '0', 1500);
-}
-}
-function filterActiveCards(val) {
-val = val.toLowerCase();
-['list-pickups', 'list-transit', 'list-depot', 'list-deliveries', 'list-dnd'].forEach(id => {
-const list = document.getElementById(id);
-if(list) {
-let hasMatch = false;
-Array.from(list.children).forEach(c => {
-const match = c.innerText.toLowerCase().includes(val);
-c.style.display = match ? '' : 'none';
-match && (hasMatch = true);
-});
-val ? (list.style.display = hasMatch ? 'block' : 'none') : (list.style.display = catState[id.split('-')[1]] ? 'block' : 'none');
-}
-});
-}
-let mainMap, mapMarkers = {}, activePolyline = null, listeningRef = null, mapAllListener = null;
-function openMap(isEmbedded) {
-if (currentDriverFilter !== null) {
-currentDriverFilter = null;
-document.getElementById('entry-panel').style.display = 'block';
-document.getElementById('driver-stats-panel').style.display = 'flex';
-document.getElementById('archive-section') && (document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none');
-document.getElementById("selected-driver-label") && (document.getElementById("selected-driver-label").style.display = "none");
-renderData();
-}
-document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; 
-document.getElementById('map-modal').style.display = 'block'; 
-window.innerWidth >= 1024 && !isEmbedded && document.getElementById('map-modal').classList.add('fullscreen-map');
-document.getElementById('route-time-badge').style.display = 'none';
-setTimeout(() => { mainMap && google.maps.event.trigger(mainMap, "resize"); }, 100);
-if (!mainMap) {
-mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
-mainMap.addListener('click', () => { mainMap.setOptions({ scrollwheel: true }); });
-document.addEventListener('click', (e) => {
-if (!e.target.closest('#map-modal') && !e.target.closest('#map') && !e.target.closest('#locate-btn') && !e.target.closest('.driver-stat-row')) {
-mainMap && mainMap.setOptions({ scrollwheel: false });
-}
-});
-}
-for(let k in mapMarkers) mapMarkers[k] && mapMarkers[k].setMap(null);
-mapMarkers = {}; activePolyline && (activePolyline.setMap(null), activePolyline = null);
-mapAllListener && db.ref('driver_locations').off('value', mapAllListener);
-mapAllListener = db.ref('driver_locations').on('value', snap => {
-const drivers = snap.val(), bounds = new google.maps.LatLngBounds(); let hasDrivers = false;
-for (let name in drivers) {
-const d = drivers[name], pos = { lat: d.lat, lng: d.lng };
-const label = `${name}\n${formatTime12(d.gps_timestamp || d.timestamp)} | ${new Date(d.gps_timestamp||d.timestamp).toLocaleDateString()}`;
-bounds.extend(pos); hasDrivers = true;
-mapMarkers[name] ? (mapMarkers[name].setPosition(pos), mapMarkers[name].setLabel({ text: label, className: "pulsing-dot driver-map-label" })) : (mapMarkers[name] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) }, label: { text: label, className: "pulsing-dot driver-map-label" }, title: name }));
-}
-hasDrivers && !mapBoundsInitialized && (mainMap.fitBounds(bounds), mapBoundsInitialized = true, google.maps.event.addListenerOnce(mainMap, 'idle', () => mainMap.getZoom() > 16 && mainMap.setZoom(16)));
-});
-}
-function viewDriverRoute(name, e) {
-e && e.stopPropagation(); mapBoundsInitialized = false;
-mapAllListener && (db.ref('driver_locations').off('value', mapAllListener), mapAllListener = null);
-currentDriverFilter = name; document.getElementById('map-modal').style.display = 'block';
-window.innerWidth >= 1024 && document.getElementById('map-modal').classList.remove('fullscreen-map');
-if (!mainMap) {
-mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
-mainMap.addListener('click', () => { mainMap.setOptions({ scrollwheel: true }); });
-document.addEventListener('click', (ev) => {
-if (!ev.target.closest('#map-modal') && !ev.target.closest('#map') && !ev.target.closest('#locate-btn') && !ev.target.closest('.driver-stat-row')) {
-mainMap && mainMap.setOptions({ scrollwheel: false });
-}
-});
-}
-renderData(); setTimeout(() => google.maps.event.trigger(mainMap, "resize"), 100);
-}
-function closeMap() {
-mapBoundsInitialized = false; 
-if (window.innerWidth >= 1024) {
-    document.getElementById('map-modal').classList.remove('fullscreen-map');
-    openMap(true);
-} else {
-    document.getElementById('map-modal').style.display = 'none'; 
-    document.getElementById('map-driver-head').style.display = 'none';
-    mapAllListener && (db.ref('driver_locations').off('value', mapAllListener), mapAllListener = null);
-    activePolyline && (activePolyline.setMap(null), activePolyline = null);
-    for(let k in mapMarkers) mapMarkers[k] && mapMarkers[k].setMap(null);
-    mapMarkers = {};
-}
-}
-function zoomToDensest() {
-const bounds = new google.maps.LatLngBounds(); let found = false;
-Object.keys(mapMarkers).forEach(k => { mapMarkers[k].getPosition() && (bounds.extend(mapMarkers[k].getPosition()), found = true); });
-activePolyline && (activePolyline.getPath().forEach(p => bounds.extend(p)), found = true);
-found && mainMap.fitBounds(bounds);
-}
-function zoomToAll() {
-const bounds = new google.maps.LatLngBounds(); let found = false;
-Object.keys(mapMarkers).forEach(k => { mapMarkers[k].getPosition() && (bounds.extend(mapMarkers[k].getPosition()), found = true); });
-activePolyline && (activePolyline.getPath().forEach(p => bounds.extend(p)), found = true);
-found && (mainMap.fitBounds(bounds), google.maps.event.addListenerOnce(mainMap, 'idle', () => mainMap.setZoom(mainMap.getZoom() - 1)));
-}
-function requestNotifyPermission() { "Notification" in window && Notification.requestPermission(); }
-function setMode(mode) {
-currentMode = mode;
-const top = document.getElementById('top-input-section'), bot = document.getElementById('bottom-input-section'), grpP = document.getElementById('group-pickup'), grpD = document.getElementById('group-drop'), btnP = document.getElementById('btn-mode-pickup'), btnD = document.getElementById('btn-mode-delivery');
-mode === 'pickup' ? (top.appendChild(grpP), bot.appendChild(grpD), btnP.classList.add('active-mode'), btnD.classList.remove('active-mode', 'delivery-mode')) : (top.appendChild(grpD), bot.appendChild(grpP), btnP.classList.remove('active-mode'), btnD.classList.add('active-mode', 'delivery-mode'));
-}
+let db=firebase.database(),messaging=firebase.messaging(),swReg=null,rawJobs={},driverLocationsData={},addressData={},currentUser=localStorage.getItem('ec_command_user'),currentMode='pickup',currentDriverFilter=null,mapBoundsInitialized=!1,driverColors={},zoneMap,drawingManager,driverZones={},zonePolygons={},activeDrawingDriver=null,activeDrawingZoneId=null,seenJobs={},catState={pickups:!1,transit:!1,depot:!1,deliveries:!1,dnd:!1},isFirstLoad=!0,copySvg='<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>',customDrivers=[],baseColors=['#FF8C00','#00BFFF','#3F51B5','#FF69B4','#9C27B0','#E91E63','#4CAF50','#FF5722','#00BCD4'],getDriverColor=a=>{if(driverColors[a])return driverColors[a];let b=customDrivers.indexOf(a);return b!==-1?baseColors[b%baseColors.length]:'#00b32d'},mainMap,mapMarkers={},activePolyline=null,listeningRef=null,mapAllListener=null,pressTimer,wakeLock=null,deferredPrompt,installBtn=document.getElementById('install-btn'),currentLocationTarget=null,pickerMap=null,pickerAutocomplete=null;
+
+window.assignJob=function(a,b){a&&b&&db.ref('jobs').child(a).update({assigned_to:b,last_edit_by:currentUser})};
+
+function toggleArchive(){let a=document.getElementById('archive-section'),b=document.getElementById('toggle-archive-btn');a.style.display==='none'?(a.style.display='block',b.innerText='HIDE ARCHIVE'):(a.style.display='none',b.innerText='SHOW ARCHIVE')}
+
+document.addEventListener('keydown',a=>{if(a.key==='Escape'){closeMap();['detailsModal','zone-modal','driver-manager-modal','location-picker-modal'].forEach(b=>{let c=document.getElementById(b);c&&(c.style.display='none')});document.body.style.overflow=''}else if(a.key==='Enter'){let b=a.target.tagName.toLowerCase();if(b==='textarea'||b==='button')return;let c=document.getElementById('detailsModal');if(c&&(c.style.display==='block'||c.style.display==='flex')){a.preventDefault();a.target.blur();return}if(document.getElementById('location-picker-modal').style.display==='flex'||document.getElementById('location-picker-modal').style.display==='block'){a.preventDefault();return}if(document.getElementById('login-overlay').style.display!=='none'){attemptLogin();return}let d=a.target.closest('#entry-panel')||a.target.closest('#group-pickup')||a.target.closest('#group-drop');d&&(a.preventDefault(),createJob())}});
+
+function toggleCat(a){catState[a]=!catState[a];let b=document.getElementById('list-'+a),c=document.getElementById('btn-'+a);b.style.display=catState[a]?'block':'none';catState[a]&&(c.classList.remove('new-btn'),Array.from(b.querySelectorAll('.new-card')).forEach(d=>d.classList.remove('new-card')))}
+
+function initCommandNotifications(a){"Notification"in window&&Notification.requestPermission().then(b=>{b==='granted'&&messaging.getToken({serviceWorkerRegistration:swReg,vapidKey:"BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI"}).then(c=>{c&&db.ref('command_tokens/'+a.replace(/[.#$\[\]]/g,"")).set({token:c,user:a,updated:firebase.database.ServerValue.TIMESTAMP})}).catch(c=>console.log('Token Error',c))});messaging.onMessage(b=>{new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();let c=document.getElementById('header-alert');c.style.display='block';c.innerText="⚠️ "+b.notification.title;setTimeout(()=>{!document.getElementById('list-dnd').innerHTML&&(c.style.display='none')},5000)})}
+
+localStorage.getItem('ec_theme')==='light'&&document.body.classList.add('light-mode');
+function toggleTheme(){document.body.classList.toggle('light-mode');localStorage.setItem('ec_theme',document.body.classList.contains('light-mode')?'light':'dark')}
+
+function filterByDriver(a){currentDriverFilter=a;renderData();document.getElementById('entry-panel').style.display='none';document.getElementById('driver-stats-panel').style.display='none';document.getElementById('archive-section')&&(document.getElementById('archive-section').style.display='none');window.innerWidth>=1024&&viewDriverRoute(a);window.scrollTo({top:0,behavior:'smooth'})}
+
+function clearDriverFilter(){currentDriverFilter=null;document.getElementById('entry-panel').style.display='block';document.getElementById('driver-stats-panel').style.display='flex';document.getElementById('archive-section')&&(document.getElementById('archive-section').style.display=document.getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');document.getElementById("selected-driver-label")&&(document.getElementById("selected-driver-label").style.display="none");closeMap();renderData()}
+
+function unloadActiveDriverAtDepot(){if(!currentDriverFilter)return;if(!confirm("Move all 'In Transit' packages for "+currentDriverFilter+" to Depot?"))return;let a={},b=0;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c];if(d.status==='in_transit'&&d.assigned_to===currentDriverFilter){b++;a[`jobs/${c}/status`]='pending_delivery';a[`jobs/${c}/assigned_to`]='Unassigned';a[`jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+`Arrived at Depot (Retained by ${currentDriverFilter})`}});if(b===0)return alert("No 'In Transit' jobs found for "+currentDriverFilter);db.ref().update(a).then(()=>{alert("Unloaded "+b+" jobs to Depot.");clearDriverFilter()}).catch(c=>alert("Error: "+c.message))}
+
+function attemptLogin(){let a=document.getElementById('login-user').value.trim(),b=document.getElementById('login-pin').value.trim();a&&b&&firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(()=>firebase.auth().signInWithEmailAndPassword(a,b)).catch(c=>alert("Login Failed: "+c.message))}
+
+function formatTime12(a){if(!a)return'--:--';let b=new Date(a);return isNaN(b.getTime())?'--:--':b.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:!0})}
+
+function formatPhone(a){let b=a.value.replace(/\D/g,'').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);a.value=!b[2]?b[1]:'('+b[1]+')-'+b[2]+(b[3]?'-'+b[3]:'')}
+
+function copyField(a){let b=document.getElementById(a);if(b){b.select();navigator.clipboard.writeText(b.value);let c=window.event.currentTarget,d=c.querySelector('.copy-tip');if(!d){d=document.createElement('span');d.className='copy-tip';d.innerText='COPIED';Object.assign(d.style,{position:'absolute',right:'100%',top:'50%',transform:'translateY(-50%)',marginRight:'8px',background:'var(--active-green)',color:'#000',padding:'4px 8px',fontSize:'10px',fontWeight:'700',borderRadius:'4px',opacity:'0',transition:'opacity 0.2s',pointerEvents:'none',whiteSpace:'nowrap'});c.appendChild(d)}requestAnimationFrame(()=>d.style.opacity='1');setTimeout(()=>d.style.opacity='0',1500)}}
+
+function filterActiveCards(a){a=''+a.toLowerCase();['list-pickups','list-transit','list-depot','list-deliveries','list-dnd'].forEach(b=>{let c=document.getElementById(b);if(c){let d=!1;Array.from(c.children).forEach(e=>{let f=e.innerText.toLowerCase().includes(a);e.style.display=f?'':'none';f&&(d=!0)});a?(c.style.display=d?'block':'none'):(c.style.display=catState[b.split('-')[1]]?'block':'none')}})}
+
+function openMap(a){if(currentDriverFilter!==null){currentDriverFilter=null;document.getElementById('entry-panel').style.display='block';document.getElementById('driver-stats-panel').style.display='flex';document.getElementById('archive-section')&&(document.getElementById('archive-section').style.display=document.getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');document.getElementById("selected-driver-label")&&(document.getElementById("selected-driver-label").style.display="none");renderData()}document.getElementById('map-driver-head').style.display='none';mapBoundsInitialized=!1;document.getElementById('map-modal').style.display='block';window.innerWidth>=1024&&!a&&document.getElementById('map-modal').classList.add('fullscreen-map');document.getElementById('route-time-badge').style.display='none';setTimeout(()=>{mainMap&&google.maps.event.trigger(mainMap,"resize")},100);if(!mainMap){mainMap=new google.maps.Map(document.getElementById("map"),{scrollwheel:!1,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});mainMap.addListener('click',()=>{mainMap.setOptions({scrollwheel:!0})});document.addEventListener('click',b=>{if(!b.target.closest('#map-modal')&&!b.target.closest('#map')&&!b.target.closest('#locate-btn')&&!b.target.closest('.driver-stat-row')){mainMap&&mainMap.setOptions({scrollwheel:!1})}})}for(let b in mapMarkers)mapMarkers[b]&&mapMarkers[b].setMap(null);mapMarkers={};activePolyline&&(activePolyline.setMap(null),activePolyline=null);mapAllListener&&db.ref('driver_locations').off('value',mapAllListener);mapAllListener=db.ref('driver_locations').on('value',b=>{let c=b.val(),d=new google.maps.LatLngBounds(),e=!1;for(let f in c){let g=c[f],h={lat:g.lat,lng:g.lng},i=`${f}\n${formatTime12(g.gps_timestamp||g.timestamp)} | ${new Date(g.gps_timestamp||g.timestamp).toLocaleDateString()}`;d.extend(h);e=!0;mapMarkers[f]?(mapMarkers[f].setPosition(h),mapMarkers[f].setLabel({text:i,className:"pulsing-dot driver-map-label"})):(mapMarkers[f]=new google.maps.Marker({position:h,map:mainMap,icon:{path:google.maps.SymbolPath.CIRCLE,fillColor:'#00b32d',fillOpacity:1,strokeWeight:2,strokeColor:'#ffffff',scale:7,labelOrigin:new google.maps.Point(0,-2)},label:{text:i,className:"pulsing-dot driver-map-label"},title:f}))}e&&!mapBoundsInitialized&&(mainMap.fitBounds(d),mapBoundsInitialized=!0,google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.getZoom()>16&&mainMap.setZoom(16)))})}
+
+function viewDriverRoute(a,b){b&&b.stopPropagation();mapBoundsInitialized=!1;mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);currentDriverFilter=a;document.getElementById('map-modal').style.display='block';window.innerWidth>=1024&&document.getElementById('map-modal').classList.remove('fullscreen-map');if(!mainMap){mainMap=new google.maps.Map(document.getElementById("map"),{scrollwheel:!1,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});mainMap.addListener('click',()=>{mainMap.setOptions({scrollwheel:!0})});document.addEventListener('click',c=>{if(!c.target.closest('#map-modal')&&!c.target.closest('#map')&&!c.target.closest('#locate-btn')&&!c.target.closest('.driver-stat-row')){mainMap&&mainMap.setOptions({scrollwheel:!1})}})}renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100)}
+
+function closeMap(){mapBoundsInitialized=!1;if(window.innerWidth>=1024){document.getElementById('map-modal').classList.remove('fullscreen-map');openMap(!0)}else{document.getElementById('map-modal').style.display='none';document.getElementById('map-driver-head').style.display='none';mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);activePolyline&&(activePolyline.setMap(null),activePolyline=null);for(let a in mapMarkers)mapMarkers[a]&&mapMarkers[a].setMap(null);mapMarkers={}}}
+
+function zoomToDensest(){let a=new google.maps.LatLngBounds(),b=!1;Object.keys(mapMarkers).forEach(c=>{mapMarkers[c].getPosition()&&(a.extend(mapMarkers[c].getPosition()),b=!0)});activePolyline&&(activePolyline.getPath().forEach(c=>a.extend(c)),b=!0);b&&mainMap.fitBounds(a)}
+
+function zoomToAll(){let a=new google.maps.LatLngBounds(),b=!1;Object.keys(mapMarkers).forEach(c=>{mapMarkers[c].getPosition()&&(a.extend(mapMarkers[c].getPosition()),b=!0)});activePolyline&&(activePolyline.getPath().forEach(c=>a.extend(c)),b=!0);b&&(mainMap.fitBounds(a),google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.setZoom(mainMap.getZoom()-1)))}
+
+function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
+
+function setMode(a){currentMode=a;let b=document.getElementById('top-input-section'),c=document.getElementById('bottom-input-section'),d=document.getElementById('group-pickup'),e=document.getElementById('group-drop'),f=document.getElementById('btn-mode-pickup'),g=document.getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}
 setMode('pickup');
-firebase.auth().onAuthStateChanged((user) => {
-if(user) {
-const username = user.email.split('@')[0].toLowerCase();
-db.ref(`roles/${username}/command`).once('value').then(roleSnap => {
-if(roleSnap.val() === true) {
-currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
-requestWakeLock();
-window.innerWidth >= 1024 && openMap(true);
-document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
-firebase.database().ref('developer').on('value', snap => {
-  const list = document.getElementById('dev-list');
-  list.innerHTML = '';
-  const notes = snap.val() ?? {};
-  Object.values(notes).forEach(note => {
-    list.innerHTML += `
+
+firebase.auth().onAuthStateChanged(a=>{if(a){let b=a.email.split('@')[0].toLowerCase();db.ref(`roles/${b}/command`).once('value').then(c=>{if(c.val()===!0){currentUser=a.email.split('@')[0];initCommandNotifications(a.email);requestWakeLock();window.innerWidth>=1024&&openMap(!0);document.getElementById('login-overlay').style.display='none';document.getElementById('user-display').innerText=`Logged in as: ${currentUser}`;firebase.database().ref('developer').on('value',d=>{let e=document.getElementById('dev-list');e.innerHTML='';let f=d.val()??{};Object.values(f).forEach(g=>{e.innerHTML+=`
       <div class="dev-item">
-        <div class="dev-hdr">${note.user} - <span style="color: orange;">${note.app ?? 'Database'}</span> - ${note.date}</div>
-        <div>${note.text}</div>
-      </div>`;
-  });
-  list.scrollTop = list.scrollHeight;
-});
-db.ref('drivers').on('value', snap => {
-if(snap.exists()) {
-let raw = snap.val() ?? [];
-customDrivers = [];
-driverColors = {};
-raw.forEach(d => {
-if(typeof d === 'string') { customDrivers.push(d); }
-else if(d && d.name) { customDrivers.push(d.name); d.color && (driverColors[d.name] = d.color); }
-});
-} else {
-customDrivers = [];
-}
-updateAllDriverDropdowns();
-if(document.getElementById('zone-modal').style.display==='block') {
-if(document.getElementById('zone-schedule-view').style.display!=='none') renderZoneRoster();
-if(document.getElementById('zone-map-view').style.display!=='none') renderZoneMapInterface();
-}
-!isFirstLoad && renderData();
-});
-db.ref("address_lookup").on("value", s => addressData = s.val() ?? {});
-const start = Date.now() - (604800000);
-db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() ?? {}; renderData(); });
-db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() ?? {}; renderData(); });
-db.ref("driver_zones").on("value", s => { 
-driverZones = s.val() ?? {}; 
-renderZoneRoster(); 
-if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface(); 
-});
-} else { alert("ACCESS DENIED"); firebase.auth().signOut(); document.getElementById('login-overlay').style.display = 'flex'; }
-});
-} else { document.getElementById('login-overlay').style.display = 'flex'; }
-});
-function updateAllDriverDropdowns() {
-const buildOpts = (includeUnassigned) => {
-let html = includeUnassigned ? '<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>' : '';
-customDrivers.forEach(d => html += `<option value="${d}">${d}</option>`);
-return html;
-};
-const valF = document.getElementById('f-driver').value;
-document.getElementById('f-driver').innerHTML = buildOpts(true);
-if(customDrivers.includes(valF) || valF === 'Unassigned') document.getElementById('f-driver').value = valF;
-const valAf = document.getElementById('af-driver').value;
-document.getElementById('af-driver').innerHTML = '<option value="">All</option><option value="Unassigned">Unassigned</option>' + customDrivers.map(d=>`<option value="${d}">${d}</option>`).join('');
-document.getElementById('af-driver').value = valAf;
-}
-function openDriverManager() {
-document.getElementById('driver-manager-modal').style.display = 'block';
-renderDriverManagerList();
-}
-function renderDriverManagerList() {
-    const c = document.getElementById('driver-list-container');
-    c.innerHTML = customDrivers.map((d, i) => {
-        const currentColor = driverColors[d] || getDriverColor(d);
-        return `
+        <div class="dev-hdr">${g.user} - <span style="color: orange;">${g.app??'Database'}</span> - ${g.date}</div>
+        <div>${g.text}</div>
+      </div>`});e.scrollTop=e.scrollHeight});db.ref('drivers').on('value',d=>{if(d.exists()){let e=d.val()??[];customDrivers=[];driverColors={};e.forEach(f=>{if(typeof f==='string'){customDrivers.push(f)}else if(f&&f.name){customDrivers.push(f.name);f.color&&(driverColors[f.name]=f.color)}})}else{customDrivers=[]}updateAllDriverDropdowns();if(document.getElementById('zone-modal').style.display==='block'){if(document.getElementById('zone-schedule-view').style.display!=='none')renderZoneRoster();if(document.getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()}!isFirstLoad&&renderData()});db.ref("address_lookup").on("value",d=>addressData=d.val()??{});let e=Date.now()-(604800000);db.ref("jobs").orderByChild("timestamp").startAt(e).on("value",d=>{rawJobs=d.val()??{};renderData()});db.ref("driver_locations").on("value",d=>{driverLocationsData=d.val()??{};renderData()});db.ref("driver_zones").on("value",d=>{driverZones=d.val()??{};renderZoneRoster();if(document.getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()})}else{alert("ACCESS DENIED");firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex'}})}else{document.getElementById('login-overlay').style.display='flex'}});
+
+function updateAllDriverDropdowns(){let a=b=>{let c=b?'<option value="Unassigned" selected disabled hidden>Assign Driver</option><option value="Unassigned">UNASSIGNED</option>':'';customDrivers.forEach(d=>c+=`<option value="${d}">${d}</option>`);return c},b=document.getElementById('f-driver').value;document.getElementById('f-driver').innerHTML=a(!0);if(customDrivers.includes(b)||b==='Unassigned')document.getElementById('f-driver').value=b;let c=document.getElementById('af-driver').value;document.getElementById('af-driver').innerHTML='<option value="">All</option><option value="Unassigned">Unassigned</option>'+customDrivers.map(d=>`<option value="${d}">${d}</option>`).join('');document.getElementById('af-driver').value=c}
+
+function openDriverManager(){document.getElementById('driver-manager-modal').style.display='block';renderDriverManagerList()}
+
+function renderDriverManagerList(){let a=document.getElementById('driver-list-container');a.innerHTML=customDrivers.map((b,c)=>{let d=driverColors[b]||getDriverColor(b);return`
         <div class="flex jb ac p-10" style="background:var(--input-bg); border:1px solid var(--border); border-radius:4px;">
             <div class="flex ac gap-10" style="width:65%;">
-                <input type="color" id="edit-color-${i}" value="${currentColor}" style="width:30px; height:30px; padding:0; border:none; background:transparent; cursor:pointer;" title="Driver Color">
-                <input value="${d}" id="edit-drv-${i}" class="glow-field" style="margin:0; width:100%; padding:10px;">
+                <input type="color" id="edit-color-${c}" value="${d}" style="width:30px; height:30px; padding:0; border:none; background:transparent; cursor:pointer;" title="Driver Color">
+                <input value="${b}" id="edit-drv-${c}" class="glow-field" style="margin:0; width:100%; padding:10px;">
             </div>
             <div class="flex gap-10">
-                <button class="btn-save" style="padding:10px 14px;" onclick="saveDriverEdit(${i})">SAVE</button>
-                <button class="btn-delete" style="padding:10px 14px;" onclick="deleteDriver(${i})">DEL</button>
+                <button class="btn-save" style="padding:10px 14px;" onclick="saveDriverEdit(${c})">SAVE</button>
+                <button class="btn-delete" style="padding:10px 14px;" onclick="deleteDriver(${c})">DEL</button>
             </div>
-        </div>`;
-    }).join('');
-}
+        </div>`}).join('')}
 
-function addDriver() {
-    const n = document.getElementById('new-driver-name').value.trim();
-    if(n && !customDrivers.includes(n)) {
-        customDrivers.push(n);
-        driverColors[n] = baseColors[customDrivers.length % baseColors.length];
-        const driverData = customDrivers.map(d => ({ name: d, color: driverColors[d] || getDriverColor(d) }));
-        db.ref('drivers').set(driverData);
-        document.getElementById('new-driver-name').value = '';
-        renderDriverManagerList();
-        updateAllDriverDropdowns();
-    }
-}
+function addDriver(){let a=document.getElementById('new-driver-name').value.trim();if(a&&!customDrivers.includes(a)){customDrivers.push(a);driverColors[a]=baseColors[customDrivers.length%baseColors.length];let b=customDrivers.map(c=>({name:c,color:driverColors[c]||getDriverColor(c)}));db.ref('drivers').set(b);document.getElementById('new-driver-name').value='';renderDriverManagerList();updateAllDriverDropdowns()}}
 
-function saveDriverEdit(i) {
-    const n = document.getElementById(`edit-drv-${i}`).value.trim();
-    const col = document.getElementById(`edit-color-${i}`).value;
-    const oldName = customDrivers[i];
-    if(n) {
-        n !== oldName && (delete driverColors[oldName], customDrivers[i] = n);
-        driverColors[n] = col;
-        const driverData = customDrivers.map(d => ({ name: d, color: driverColors[d] || getDriverColor(d) }));
-        db.ref('drivers').set(driverData).then(() => {
-            renderDriverManagerList();
-            updateAllDriverDropdowns();
-            renderData();
-        });
-    }
-}
+function saveDriverEdit(a){let b=document.getElementById(`edit-drv-${a}`).value.trim(),c=document.getElementById(`edit-color-${a}`).value,d=customDrivers[a];if(b){b!==d&&(delete driverColors[d],customDrivers[a]=b);driverColors[b]=c;let e=customDrivers.map(f=>({name:f,color:driverColors[f]||getDriverColor(f)}));db.ref('drivers').set(e).then(()=>{renderDriverManagerList();updateAllDriverDropdowns();renderData()})}}
 
-function deleteDriver(i) {
-    if(confirm("Remove driver?")) {
-        const oldName = customDrivers[i];
-        customDrivers.splice(i, 1);
-        delete driverColors[oldName];
-        const driverData = customDrivers.map(d => ({ name: d, color: driverColors[d] || getDriverColor(d) }));
-        db.ref('drivers').set(driverData).then(() => {
-            renderDriverManagerList();
-            updateAllDriverDropdowns();
-        });
-    }
-}
-function resetFormFields() { ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => { const el = document.getElementById(id); el && (el.value = ""); }); }
-function startVoiceEntry() {
-const S = window.SpeechRecognition || window.webkitSpeechRecognition; if (!S) return alert("Voice API not supported");
-const rec = new S(); rec.lang = 'en-US'; rec.start();
-document.getElementById('mic-icon').classList.add('voice-active');
-rec.onresult = (e) => {
-let s = e.results[0][0].transcript.toLowerCase();
-if (s.trim() === "dispatch") { createJob(); return; }
-const map = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
-Object.keys(map).forEach(w => s = s.replace(new RegExp(`\\b${w}\\b`, 'g'), map[w]));
-customDrivers.forEach(d => {
-let m = s.match(new RegExp(`\\bfor\\s+(${d.toLowerCase()})\\b`));
-m && (document.getElementById('f-driver').value = d);
-});
-};
-rec.onend = () => document.getElementById('mic-icon').classList.remove('voice-active');
-}
-function handleNameInput(val) { showSuggestions(val, 'suggestions', k => `<div class="suggestion-item" onclick="selectClient('${k}')">${k}</div>`); }
-function selectClient(name) { fillForm(name, 'f-name', 'f-pickup', 'f-city', 'f-customer-email-p', 'f-customer-phone-p', 'suggestions', 'city-suggestions-p'); }
-function handleDropNameInput(val) { showSuggestions(val, 'drop-suggestions', k => `<div class="suggestion-item" onclick="selectDropClient('${k}')">${k}</div>`); }
-function selectDropClient(name) { fillForm(name, 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-customer-email-d', 'f-customer-phone-d', 'drop-suggestions', 'city-suggestions-d'); }
-function handleCityInput(val, type) {
-const box = document.getElementById(type === 'pickup' ? 'city-suggestions-p' : 'city-suggestions-d');
-if(val.length < 1) { box.style.display = 'none'; return; }
-const matches = Object.keys(addressData).filter(k => (addressData[k].city || "").toLowerCase().startsWith(val.trim().toLowerCase()));
-if(matches.length === 0) { box.style.display = 'none'; return; }
-const fn = type === 'pickup' ? 'selectClient' : 'selectDropClient';
-box.innerHTML = matches.map(k => `<div class="suggestion-item" onclick="${fn}('${k}')">${k} (${addressData[k].city})</div>`).join('');
-box.style.display = 'block';
-}
-function showSuggestions(val, id, mapFn) {
-const box = document.getElementById(id);
-if(val.length < 1) { box.style.display = 'none'; return; }
-const m = Object.keys(addressData).filter(k => k.toLowerCase().startsWith(val.replace(/[.#$\[\]\/]/g, "").trim().toLowerCase()));
-if(m.length === 0) { box.style.display = 'none'; return; }
-box.innerHTML = m.map(mapFn).join(''); box.style.display = 'block';
-}
-function fillForm(name, nId, aId, cId, eId, pId, sId, csId) {
-const d = addressData[name]; if(!d) return;
-document.getElementById(nId).value = name; document.getElementById(aId).value = d.address||""; document.getElementById(cId).value = d.city||"";
-d.customer_email && (document.getElementById(eId).value = d.customer_email); d.customer_phone && (document.getElementById(pId).value = d.customer_phone);
-document.getElementById(sId).style.display = 'none'; document.getElementById(csId).style.display = 'none';
-}
-function archiveAllDND() {
-if(!confirm("Archive ALL active DND/DNP jobs?")) return;
-const updates = {}, ts = firebase.database.ServerValue.TIMESTAMP;
-Object.keys(rawJobs).forEach(id => {
-const j = rawJobs[id], info = (j.other_info || "").toLowerCase();
-if(j.status !== 'completed' && (info.includes("dnd") || info.includes("dnp"))) {
-updates[`/jobs/${id}/status`] = 'completed'; updates[`/jobs/${id}/completed_at`] = ts;
-updates[`/jobs/${id}/last_edit_by`] = currentUser; updates[`/jobs/${id}/job_history`] = (j.job_history ? j.job_history + '\n' : '') + "[ARCHIVED ALL]";
-}
-});
-Object.keys(updates).length && db.ref().update(updates);
-}
-function autoAssignDepotJobs() {
-const jobsToAssign = [];
-Object.entries(rawJobs).forEach(([id, job]) => {
-if(job.status === 'pending_delivery' && (job.assigned_to === 'Unassigned' || !job.assigned_to)) {
-jobsToAssign.push({id, ...job});
-}
-});
-if(jobsToAssign.length === 0) return alert("No depot jobs to assign.");
-if(!confirm(`Attempt to auto-assign ${jobsToAssign.length} jobs?`)) return;
-const geocoder = new google.maps.Geocoder();
-const processJob = (index) => {
-if(index >= jobsToAssign.length) return alert("Auto-assignment complete.");
-const job = jobsToAssign[index];
-const addr = job.destination + (job.delivery_city ? ", " + job.delivery_city : (job.city ? ", " + job.city : ""));
-geocoder.geocode({ 'address': addr }, (results, status) => {
-if (status === 'OK' && results[0]) {
-const loc = results[0].geometry.location;
-const now = new Date();
-const currentMins = now.getHours() * 60 + now.getMinutes();
-const currentDay = now.toLocaleDateString('en-US', { weekday: 'short' });
-let bestDriver = 'Unassigned';
-for (let d in driverZones) {
-const zoneData = driverZones[d];
-if (zoneData) {
-for (let zId in zoneData) {
-const z = zoneData[zId];
-if (!z) continue;
-if (z.days && !z.days.includes(currentDay)) continue;
-if (z.start && z.end) {
-const [sh, sm] = z.start.split(':').map(Number);
-const [eh, em] = z.end.split(':').map(Number);
-const startMins = sh * 60 + sm;
-const endMins = eh * 60 + em;
-if (currentMins < startMins || currentMins > endMins) continue;
-}
-let match = false;
-if (z.paths) {
-for(let i = 0; i < z.paths.length; i++) {
-const poly = new google.maps.Polygon({ paths: z.paths[i] });
-if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
-}
-}
-if (match) { bestDriver = d; break; }
-}
-}
-if (bestDriver !== 'Unassigned') break;
-}
-bestDriver !== 'Unassigned' && db.ref('jobs').child(job.id).update({ assigned_to: bestDriver });
-}
-setTimeout(() => processJob(index + 1), 600);
-});
-};
-processJob(0);
-}
-function createJob() {
-const p = document.getElementById('f-pickup').value, dAddr = document.getElementById('f-drop-address').value, dCity = document.getElementById('f-drop-city').value, city = document.getElementById('f-city').value, name = document.getElementById('f-name').value, dName = document.getElementById('f-drop-name').value, asgn = document.getElementById('f-driver').value;
-const info = document.getElementById('f-info').value ? `[${currentUser}]: ${document.getElementById('f-info').value}` : "";
-const email = currentMode === 'pickup' ? document.getElementById('f-customer-email-p').value : document.getElementById('f-customer-email-d').value;
-const phone = currentMode === 'pickup' ? document.getElementById('f-customer-phone-p').value : document.getElementById('f-customer-phone-d').value;
-const hasP = name.trim() && p.trim() && city.trim(); const hasD = dName.trim() && dAddr.trim() && dCity.trim();
-if(!hasP && !hasD) return alert("Complete Pickup (Name, Address, City) OR Delivery (Name, Address, City).");
-const finalizeJob = (finalDriver) => {
-const job = { pickup_city: city, delivery_city: dCity, city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: currentMode === 'delivery' ? 'pending_delivery' : 'pending_pickup', assigned_to: finalDriver, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
-db.ref('jobs').push(job);
-const save = (n, a, c) => { n && db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email ?? "", customer_phone: phone ?? "", last_edit_by: currentUser }); };
-save(name, p, city); save(dName, dAddr, dCity);
-resetFormFields();
-};
-if (asgn === 'Unassigned' && currentMode === 'pickup') {
-const geocoder = new google.maps.Geocoder();
-const targetAddr = currentMode === 'pickup' ? p : dAddr;
-const targetCity = currentMode === 'pickup' ? city : dCity;
-geocoder.geocode({ 'address': targetAddr + (targetCity ? ", " + targetCity : "") }, (results, status) => {
-let autoAssign = 'Unassigned';
-if (status === 'OK' && results[0]) {
-const loc = results[0].geometry.location;
-const now = new Date();
-const currentMins = now.getHours() * 60 + now.getMinutes();
-const currentDay = now.toLocaleDateString('en-US', { weekday: 'short' });
-for (let d in driverZones) {
-const zoneData = driverZones[d];
-if (zoneData) {
-for (let zId in zoneData) {
-const z = zoneData[zId];
-if (!z) continue;
-if (z.days && !z.days.includes(currentDay)) continue;
-if (z.start && z.end) {
-const [sh, sm] = z.start.split(':').map(Number);
-const [eh, em] = z.end.split(':').map(Number);
-const startMins = sh * 60 + sm;
-const endMins = eh * 60 + em;
-if (currentMins < startMins || currentMins > endMins) continue;
-}
-let match = false;
-if (z.paths) {
-for(let i = 0; i < z.paths.length; i++) {
-const poly = new google.maps.Polygon({ paths: z.paths[i] });
-if (google.maps.geometry.poly.containsLocation(loc, poly)) { match = true; break; }
-}
-}
-if (match) { autoAssign = d; break; }
-}
-}
-if (autoAssign !== 'Unassigned') break;
-}
-}
-finalizeJob(autoAssign);
-});
-} else {
-finalizeJob(asgn);
-}
-}
-let pressTimer;
-function startPress(el) { pressTimer = setTimeout(() => { el.readOnly = false; el.style.color = 'var(--text)'; el.style.textDecoration = 'none'; el.style.cursor = 'text'; el.focus(); navigator.vibrate && navigator.vibrate(50); }, 1500); }
-function cancelPress() { clearTimeout(pressTimer); }
-function handleLinkClick(el, type) { el.readOnly && el.value && (window.location.href = (type === 'email' ? 'mailto:' : 'tel:') + el.value); }
-function viewDetails(id) {
-const data = rawJobs[id]; if(!data) return;
-const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
-const allOpts = ['Unassigned'].concat(customDrivers);
-const opts = allOpts.map(d => `<option value="${d}" ${data.assigned_to === d ? 'selected' : ''}>${d}</option>`).join('');
-const html = `
+function deleteDriver(a){if(confirm("Remove driver?")){let b=customDrivers[a];customDrivers.splice(a,1);delete driverColors[b];let c=customDrivers.map(d=>({name:d,color:driverColors[d]||getDriverColor(d)}));db.ref('drivers').set(c).then(()=>{renderDriverManagerList();updateAllDriverDropdowns()})}}
+
+function resetFormFields(){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d'].forEach(a=>{let b=document.getElementById(a);b&&(b.value="")})}
+
+function startVoiceEntry(){let a=window.SpeechRecognition||window.webkitSpeechRecognition;if(!a)return alert("Voice API not supported");let b=new a();b.lang='en-US';b.start();document.getElementById('mic-icon').classList.add('voice-active');b.onresult=c=>{let d=c.results[0][0].transcript.toLowerCase();if(d.trim()==="dispatch"){createJob();return}let e={'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10};Object.keys(e).forEach(f=>d=d.replace(new RegExp(`\\b${f}\\b`,'g'),e[f]));customDrivers.forEach(f=>{let g=d.match(new RegExp(`\\bfor\\s+(${f.toLowerCase()})\\b`));g&&(document.getElementById('f-driver').value=f)})};b.onend=()=>document.getElementById('mic-icon').classList.remove('voice-active')}
+
+function handleNameInput(a){showSuggestions(a,'suggestions',b=>`<div class="suggestion-item" onclick="selectClient('${b}')">${b}</div>`)}
+function selectClient(a){fillForm(a,'f-name','f-pickup','f-city','f-customer-email-p','f-customer-phone-p','suggestions','city-suggestions-p')}
+function handleDropNameInput(a){showSuggestions(a,'drop-suggestions',b=>`<div class="suggestion-item" onclick="selectDropClient('${b}')">${b}</div>`)}
+function selectDropClient(a){fillForm(a,'f-drop-name','f-drop-address','f-drop-city','f-customer-email-d','f-customer-phone-d','drop-suggestions','city-suggestions-d')}
+
+function handleCityInput(a,b){let c=document.getElementById(b==='pickup'?'city-suggestions-p':'city-suggestions-d');if(a.length<1){c.style.display='none';return}let d=Object.keys(addressData).filter(e=>(addressData[e].city||"").toLowerCase().startsWith(a.trim().toLowerCase()));if(d.length===0){c.style.display='none';return}let e=b==='pickup'?'selectClient':'selectDropClient';c.innerHTML=d.map(f=>`<div class="suggestion-item" onclick="${e}('${f}')">${f} (${addressData[f].city})</div>`).join('');c.style.display='block'}
+
+function showSuggestions(a,b,c){let d=document.getElementById(b);if(a.length<1){d.style.display='none';return}let e=Object.keys(addressData).filter(f=>f.toLowerCase().startsWith(a.replace(/[.#$\[\]\/]/g,"").trim().toLowerCase()));if(e.length===0){d.style.display='none';return}d.innerHTML=e.map(c).join('');d.style.display='block'}
+
+function fillForm(a,b,c,d,e,f,g,h){let i=addressData[a];if(!i)return;document.getElementById(b).value=a;document.getElementById(c).value=i.address||"";document.getElementById(d).value=i.city||"";i.customer_email&&(document.getElementById(e).value=i.customer_email);i.customer_phone&&(document.getElementById(f).value=i.customer_phone);document.getElementById(g).style.display='none';document.getElementById(h).style.display='none'}
+
+function archiveAllDND(){if(!confirm("Archive ALL active DND/DNP jobs?"))return;let a={},b=firebase.database.ServerValue.TIMESTAMP;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c],e=(d.other_info||"").toLowerCase();if(d.status!=='completed'&&(e.includes("dnd")||e.includes("dnp"))){a[`/jobs/${c}/status`]='completed';a[`/jobs/${c}/completed_at`]=b;a[`/jobs/${c}/last_edit_by`]=currentUser;a[`/jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+"[ARCHIVED ALL]"}});Object.keys(a).length&&db.ref().update(a)}
+
+function autoAssignDepotJobs(){let a=[];Object.entries(rawJobs).forEach(([b,c])=>{if(c.status==='pending_delivery'&&(c.assigned_to==='Unassigned'||!c.assigned_to)){a.push({id:b,...c})}});if(a.length===0)return alert("No depot jobs to assign.");if(!confirm(`Attempt to auto-assign ${a.length} jobs?`))return;let b=new google.maps.Geocoder(),c=d=>{if(d>=a.length)return alert("Auto-assignment complete.");let e=a[d],f=e.destination+(e.delivery_city?", "+e.delivery_city:(e.city?", "+e.city:""));b.geocode({'address':f},(g,h)=>{if(h==='OK'&&g[0]){let i=g[0].geometry.location,j=new Date(),k=j.getHours()*60+j.getMinutes(),l=j.toLocaleDateString('en-US',{weekday:'short'}),m='Unassigned';for(let n in driverZones){let o=driverZones[n];if(o){for(let p in o){let q=o[p];if(!q)continue;if(q.days&&!q.days.includes(l))continue;if(q.start&&q.end){let[r,s]=q.start.split(':').map(t=>+t),[u,v]=q.end.split(':').map(w=>+w),x=r*60+s,y=u*60+v;if(k<x||k>y)continue}let z=!1;if(q.paths){for(let A=0;A<q.paths.length;A++){let B=new google.maps.Polygon({paths:q.paths[A]});if(google.maps.geometry.poly.containsLocation(i,B)){z=!0;break}}}if(z){m=n;break}}}if(m!=='Unassigned')break}m!=='Unassigned'&&db.ref('jobs').child(e.id).update({assigned_to:m})}setTimeout(()=>c(d+1),600)})};c(0)}
+
+function createJob(){let a=document.getElementById('f-pickup').value,b=document.getElementById('f-drop-address').value,c=document.getElementById('f-drop-city').value,d=document.getElementById('f-city').value,e=document.getElementById('f-name').value,f=document.getElementById('f-drop-name').value,g=document.getElementById('f-driver').value,h=document.getElementById('f-info').value?`[${currentUser}]: ${document.getElementById('f-info').value}`:"",i=currentMode==='pickup'?document.getElementById('f-customer-email-p').value:document.getElementById('f-customer-email-d').value,j=currentMode==='pickup'?document.getElementById('f-customer-phone-p').value:document.getElementById('f-customer-phone-d').value,k=e.trim()&&a.trim()&&d.trim(),l=f.trim()&&b.trim()&&c.trim();if(!k&&!l)return alert("Complete Pickup (Name, Address, City) OR Delivery (Name, Address, City).");let m=n=>{let o={pickup_city:d,delivery_city:c,city:d||c,pickup_location:a,destination:b,delivery_name:f,package_details:document.getElementById('f-pkg-details').value,po_number:document.getElementById('f-po').value,name:e,other_info:h,customer_email:i||"",customer_phone:j||"",status:currentMode==='delivery'?'pending_delivery':'pending_pickup',assigned_to:n,timestamp:Date.now(),created_by:currentUser,last_edit_by:currentUser};db.ref('jobs').push(o);let p=(q,r,s)=>{q&&db.ref("address_lookup").child(q.replace(/[.#$\[\]\/]/g,"").trim()).set({address:r,city:s,customer_email:i??"",customer_phone:j??"",last_edit_by:currentUser})};p(e,a,d);p(f,b,c);resetFormFields()};if(g==='Unassigned'&&currentMode==='pickup'){let n=new google.maps.Geocoder(),o=currentMode==='pickup'?a:b,p=currentMode==='pickup'?d:c;n.geocode({'address':o+(p?", "+p:"")},(q,r)=>{let s='Unassigned';if(r==='OK'&&q[0]){let t=q[0].geometry.location,u=new Date(),v=u.getHours()*60+u.getMinutes(),w=u.toLocaleDateString('en-US',{weekday:'short'});for(let x in driverZones){let y=driverZones[x];if(y){for(let z in y){let A=y[z];if(!A)continue;if(A.days&&!A.days.includes(w))continue;if(A.start&&A.end){let[B,C]=A.start.split(':').map(D=>+D),[E,F]=A.end.split(':').map(G=>+G),H=B*60+C,I=E*60+F;if(v<H||v>I)continue}let J=!1;if(A.paths){for(let K=0;K<A.paths.length;K++){let L=new google.maps.Polygon({paths:A.paths[K]});if(google.maps.geometry.poly.containsLocation(t,L)){J=!0;break}}}if(J){s=x;break}}}if(s!=='Unassigned')break}}m(s)})}else{m(g)}}
+
+function startPress(a){pressTimer=setTimeout(()=>{a.readOnly=!1;a.style.color='var(--text)';a.style.textDecoration='none';a.style.cursor='text';a.focus();navigator.vibrate&&navigator.vibrate(50)},1500)}
+function cancelPress(){clearTimeout(pressTimer)}
+function handleLinkClick(a,b){a.readOnly&&a.value&&(window.location.href=(b==='email'?'mailto:':'tel:')+a.value)}
+
+function viewDetails(a){let b=rawJobs[a];if(!b)return;let c=d=>d?(''+d).replace(/"/g,'&quot;'):"",d=['Unassigned'].concat(customDrivers),e=d.map(f=>`<option value="${f}" ${b.assigned_to===f?'selected':''}>${f}</option>`).join(''),f=`
 <div class="flex jb ac mb-20">
 <h2 id="m-title" class="modal-h2">EDIT JOB</h2>
 <div class="flex">
-<button onclick="archiveAsFailed('${id}')" class="btn-archive">ARCHIVE</button>
-<button onclick="deleteJob('${id}')" class="btn-delete">DELETE</button>
+<button onclick="archiveAsFailed('${a}')" class="btn-archive">ARCHIVE</button>
+<button onclick="deleteJob('${a}')" class="btn-delete">DELETE</button>
 </div>
 </div>
 <div class="flex col gap-0">
-<div class="input-wrap mb-12"><input id="e-name" value="${val(data.name)}" placeholder="Pickup Business/Contact Name"></div>
+<div class="input-wrap mb-12"><input id="e-name" value="${c(b.name)}" placeholder="Pickup Business/Contact Name"></div>
 <div class="flex-row">
-<div class="input-wrap f-2"><input id="e-pickup" value="${val(data.pickup_location)}" placeholder="Pickup Address"></div>
-<div class="input-wrap f-1"><input id="e-city-p" value="${val(data.pickup_city||data.city)}" placeholder="City"></div>
+<div class="input-wrap f-2"><input id="e-pickup" value="${c(b.pickup_location)}" placeholder="Pickup Address"></div>
+<div class="input-wrap f-1"><input id="e-city-p" value="${c(b.pickup_city||b.city)}" placeholder="City"></div>
 </div>
 <div class="flex-row">
-<div class="input-wrap f-1-5"><input id="e-email-p" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"></div>
-<div class="input-wrap f-1"><input id="e-phone-p" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"></div>
+<div class="input-wrap f-1-5"><input id="e-email-p" type="email" value="${c(b.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"></div>
+<div class="input-wrap f-1"><input id="e-phone-p" type="tel" value="${c(b.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"></div>
 </div>
-<div class="input-wrap mb-12"><input id="e-pkg" value="${val(data.package_details)}" placeholder="Packages/Items/Dimensions"></div>
-<div class="input-wrap mb-12"><input id="e-po" value="${val(data.po_number)}" placeholder="PO / Ref"></div>
-<div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:30px;">${val(data.other_info)}</textarea></div>
+<div class="input-wrap mb-12"><input id="e-pkg" value="${c(b.package_details)}" placeholder="Packages/Items/Dimensions"></div>
+<div class="input-wrap mb-12"><input id="e-po" value="${c(b.po_number)}" placeholder="PO / Ref"></div>
+<div class="input-wrap mb-12"><textarea id="e-note" placeholder="Driver Notes" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:30px;">${c(b.other_info)}</textarea></div>
 <div class="input-wrap mb-12"><input id="e-add-note" placeholder="Add New Note (Appends to above)"></div>
-<div class="input-wrap mb-12"><input id="e-drop-name" value="${val(data.delivery_name)}" placeholder="Delivery Contact/Business Name"></div>
+<div class="input-wrap mb-12"><input id="e-drop-name" value="${c(b.delivery_name)}" placeholder="Delivery Contact/Business Name"></div>
 <div class="flex-row">
-<div class="input-wrap f-2"><input id="e-drop" value="${val(data.destination)}" placeholder="Delivery Address"></div>
-<div class="input-wrap f-1"><input id="e-city-d" value="${val(data.delivery_city||data.city)}" placeholder="City"></div>
+<div class="input-wrap f-2"><input id="e-drop" value="${c(b.destination)}" placeholder="Delivery Address"></div>
+<div class="input-wrap f-1"><input id="e-city-d" value="${c(b.delivery_city||b.city)}" placeholder="City"></div>
 </div>
 <div class="flex-row">
-<div class="input-wrap f-1-5"><input id="e-email-d" type="email" value="${val(data.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"></div>
-<div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${val(data.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"></div>
+<div class="input-wrap f-1-5"><input id="e-email-d" type="email" value="${c(b.customer_email)}" placeholder="Email" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'email')"></div>
+<div class="input-wrap f-1"><input id="e-phone-d" type="tel" value="${c(b.customer_phone)}" placeholder="Phone Number" oninput="formatPhone(this)" class="link-input" readonly onmousedown="startPress(this)" ontouchstart="startPress(this)" onmouseup="cancelPress()" onmouseleave="cancelPress()" ontouchend="cancelPress()" onclick="handleLinkClick(this, 'phone')"></div>
 </div>
-<select id="e-driver" class="driver-select mb-12">${opts}</select>
-<div class="input-wrap mb-12"><textarea readonly placeholder="Job History" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:40px;">${val(data.job_history)}</textarea></div>
-<div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>
-</div>`;
-document.querySelector('#detailsModal .modal-content').innerHTML = html;
-const ta = document.getElementById('e-note'); ta && (ta.style.height = ta.scrollHeight + 'px');
-document.getElementById('detailsModal').style.display = 'flex'; document.body.style.overflow = 'hidden';
-}
-function archiveAsFailed(id) {
-confirm("Archive this job as Failed (Unassigned)?") && (
-db.ref('jobs').child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, job_history: rawJobs[id]?.job_history ? rawJobs[id].job_history + '\n[ARCHIVED DND/DNP]' : '[ARCHIVED DND/DNP]', last_edit_by: currentUser }),
-document.getElementById('detailsModal').style.display = 'none', document.body.style.overflow = '');
-}
-function saveEdit(id) {
-let n = document.getElementById('e-note').value, add = document.getElementById('e-add-note').value;
-if(add.trim()) n = (n ? n + " " : "") + `[${currentUser}]: ${add.trim()}`;
-const newD = document.getElementById('e-driver').value, old = rawJobs[id].other_info.toLowerCase();
-if ((old.includes("dnd") || old.includes("dnp")) && newD !== 'Unassigned') { n = n.replace(/dnd/gi, "").replace(/dnp/gi, "") + ` [reassigned by ${currentUser}]`; }
-db.ref('jobs').child(id).update({
-assigned_to: newD, package_details: document.getElementById('e-pkg').value, po_number: document.getElementById('e-po').value, name: document.getElementById('e-name').value, pickup_location: document.getElementById('e-pickup').value, pickup_city: document.getElementById('e-city-p').value, delivery_city: document.getElementById('e-city-d').value, city: document.getElementById('e-city-p').value ?? document.getElementById('e-city-d').value, delivery_name: document.getElementById('e-drop-name').value, destination: document.getElementById('e-drop').value, other_info: n, customer_email: document.getElementById('e-email-p').value, customer_phone: document.getElementById('e-phone-p').value, last_edit_by: currentUser
-}).then(() => { document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; });
-}
-function deleteJob(id) { confirm("Delete this dispatch completely?") && (db.ref('jobs').child(id).remove(), document.getElementById('detailsModal').style.display = 'none', document.body.style.overflow = ''); }
-function renderData() {
-const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd"), uList = document.getElementById("unassigned-immediate-list");
-pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = ""; uList.innerHTML = "";
-const filterUI = document.getElementById('filter-reset-ui'); 
-const jobFilters = document.getElementById('driver-job-filters');
-filterUI && (filterUI.style.display = currentDriverFilter ? 'block' : 'none');
-jobFilters && (jobFilters.style.display = currentDriverFilter ? 'flex' : 'none');
-document.querySelectorAll('.archive-column').forEach(c => c.style.display = currentDriverFilter ? 'none' : '');
+<select id="e-driver" class="driver-select mb-12">${e}</select>
+<div class="input-wrap mb-12"><textarea readonly placeholder="Job History" style="width:100%; margin-bottom:0; padding:8px; resize:none; overflow:hidden; min-height:40px;">${c(b.job_history)}</textarea></div>
+<div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${a}')" class="btn-save">SAVE</button></div>
+</div>`;document.querySelector('#detailsModal .modal-content').innerHTML=f;let g=document.getElementById('e-note');g&&(g.style.height=g.scrollHeight+'px');document.getElementById('detailsModal').style.display='flex';document.body.style.overflow='hidden'}
 
-const showPickups = document.getElementById('filter-chk-pickups')?.checked !== false;
-const showDeliveries = document.getElementById('filter-chk-deliveries')?.checked !== false;
-const showTransit = document.getElementById('filter-chk-transit')?.checked !== false;
-const showDepot = document.getElementById('filter-chk-depot')?.checked !== false;
+function archiveAsFailed(a){confirm("Archive this job as Failed (Unassigned)?")&&(db.ref('jobs').child(a).update({status:'completed',assigned_to:'Unassigned',completed_at:firebase.database.ServerValue.TIMESTAMP,job_history:rawJobs[a]?.job_history?rawJobs[a].job_history+'\n[ARCHIVED DND/DNP]':'[ARCHIVED DND/DNP]',last_edit_by:currentUser}),document.getElementById('detailsModal').style.display='none',document.body.style.overflow='')}
 
-const afD = document.getElementById('af-driver')?.value, afN = document.getElementById('af-name')?.value.toLowerCase(), afC = document.getElementById('af-city')?.value.toLowerCase(), afM = document.getElementById('af-manual-search')?.value.toLowerCase();
-let stopLookup = {}, pending = 0, assignedCount = 0, noteCount = 0, dndCount = 0, totalDepotJobs = 0, driverStats = {};
-if(currentDriverFilter && driverLocationsData[currentDriverFilter]) {
-const d = driverLocationsData[currentDriverFilter];
-if(d.route_order && Array.isArray(d.route_order)) d.route_order.forEach((jid, i) => stopLookup[jid] = i + 1);
-else if (d.route_string) d.route_string.split(' | ').forEach(p => { const i = p.indexOf('. '); if(i > -1) stopLookup[p.substring(i+2).trim()] = parseInt(p.substring(0, i)); });
-}
-if(currentDriverFilter) {
-const d = driverLocationsData[currentDriverFilter], l = document.getElementById("selected-driver-label");
-if(l) { 
-const c = getDriverColor(currentDriverFilter);
-Object.assign(l.style, {display:"flex", borderColor:c, color:c, boxShadow:`0 0 15px ${c}`});
-l.innerHTML = currentDriverFilter + (d?.total_duration ? `<span style="font-size:14px; color:#fff;">ETA: ${d.total_duration}</span>` : "");
-}
-const mh = document.getElementById("map-driver-head");
-if(mh) { mh.style.display = "block"; mh.innerText = currentDriverFilter; mh.style.color = getDriverColor(currentDriverFilter); }
-if(document.getElementById('map-modal').style.display === 'block' && mainMap && d) {
-const b = document.getElementById("route-time-badge"); b.innerText = "ROUTE TIME: " + (d.total_duration||""); b.style.display = d.total_duration ? "block" : "none";
-document.getElementById('route-list').style.display = 'none';
-const pos = { lat: d.lat, lng: d.lng };
-mapMarkers[currentDriverFilter] ? (mapMarkers[currentDriverFilter].setPosition(pos), mapMarkers[currentDriverFilter].setIcon({ path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) }), mapMarkers[currentDriverFilter].setLabel(null)) : (mapMarkers[currentDriverFilter] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) } }));
-if(d.active_route) {
-activePolyline && activePolyline.setMap(null);
-const path = google.maps.geometry.encoding.decodePath(d.active_route);
-activePolyline = new google.maps.Polyline({ path: path, geodesic: true, strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5, map: mainMap });
-Object.keys(mapMarkers).forEach(k => { if(k !== currentDriverFilter && !k.startsWith('job_')) { mapMarkers[k].setMap(null); delete mapMarkers[k]; } });
-const jobs = [];
-Object.entries(rawJobs).forEach(([i,j])=>{
-if(j.assigned_to===currentDriverFilter) {
-if(j.status === 'pending_pickup') jobs.push({...j, t:'pickup', id:i});
-else if(j.status === 'pending_delivery') jobs.push({...j, t:'drop', id:i});
-}
-});
-const geo = new google.maps.Geocoder();
-const usedLabels = new Set();
-jobs.forEach((j, i) => {
-const addr = `${j.t==='pickup'?j.pickup_location:j.destination}, ${j.city||''}`, lbl = j.t==='pickup'?j.name:j.delivery_name;
-const s = stopLookup[j.id] || stopLookup[`${lbl} ${j.t==='pickup'?j.pickup_location:j.destination}`];
-let fLbl = "";
-if (!usedLabels.has(lbl)) {
-fLbl = s ? `${s}. ${lbl}` : lbl;
-usedLabels.add(lbl);
-}
-const k = `job_${i}`;
-mapMarkers[k] && mapMarkers[k].setMap(null);
-const mark = (loc) => mapMarkers[k] = new google.maps.Marker({ map: mainMap, position: loc, label: fLbl ? { text: fLbl, color: "#00b32d", fontWeight: "bold", fontSize: "12px", className: "driver-map-label" } : null, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5, fillColor: '#ff0000', fillOpacity: 1, strokeWeight: 1, strokeColor: 'white', labelOrigin: new google.maps.Point(0, i%2===0?-15:15) } });
-if(j.lat&&j.lng) mark({lat:parseFloat(j.lat),lng:parseFloat(j.lng)}); else geo.geocode({'address':addr}, (r,status) => { if(status==='OK') mark(r[0].geometry.location); });
-});
-if (!mapBoundsInitialized) { const b = new google.maps.LatLngBounds(); path.forEach(p => b.extend(p)); mainMap.fitBounds(b); mapBoundsInitialized = true; }
-} else if(!activePolyline) mainMap.setCenter(pos);
-}
-}
-const opts = document.getElementById('f-driver').options;
-for(let i=0; i<opts.length; i++) if(!['Unassigned','Assign Driver'].includes(opts[i].value)) driverStats[opts[i].value] = { p: 0, d: 0 };
-let ent = Object.entries(rawJobs);
-if(currentDriverFilter) ent.sort((a,b) => (stopLookup[a[0]]||999) - (stopLookup[b[0]]||999)); else ent.reverse();
-ent.forEach(([id, p]) => {
-if(currentDriverFilter && p.assigned_to !== currentDriverFilter) return;
-const info = (p.other_info||"").toLowerCase(), isFailed = info.includes("dnd") || info.includes("dnp");
-const searchCity = (p.pickup_city || "") + " " + (p.delivery_city || "") + " " + (p.city || "");
-let jobKey = id + '_' + p.status;
-let isNew = false;
-!seenJobs[jobKey] && (seenJobs[jobKey] = true, !isFirstLoad && (isNew = true));
-if(p.status === 'completed') {
-if (new Date(p.completed_at||p.timestamp).toDateString() !== new Date().toDateString()) return;
-if (afD && p.assigned_to !== afD) return;
-if (afN && !(p.name.toLowerCase().includes(afN) || p.delivery_name.toLowerCase().includes(afN))) return;
-if (afC && !searchCity.toLowerCase().includes(afC)) return;
-if (afM && !(JSON.stringify(p).toLowerCase().includes(afM))) return;
-const c = document.createElement("div"); c.className = "history-item"; c.onclick = () => viewDetails(id);
-Object.assign(c.style, {cursor:"pointer", borderLeft:"4px solid #333", opacity:"0.7"});
-c.innerHTML = `<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${p.assigned_to || 'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(p.completed_at||p.timestamp)}</span></div><div style="font-size:11px; color:#ffd700; font-weight:300; margin-bottom:10px; white-space:normal; word-wrap:break-word; line-height:1.4;">P: ${p.name||'-'} | ${p.pickup_city||p.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:normal; word-wrap:break-word; line-height:1.4;">D: ${p.delivery_name||'-'} | ${p.delivery_city||p.city||'-'}</div>`;
-arcList.appendChild(c); return;
-}
-const asgn = p.assigned_to, isU = !asgn || asgn === 'Unassigned';
-if(p.status === 'in_transit') {
-assignedCount++; if(driverStats[asgn]) driverStats[asgn].d++;
-const c = document.createElement("div"); c.className = "history-item" + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
-c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "transparent";
-const bg = getDriverColor(p.assigned_to);
-let dH = currentDriverFilter ? `<span style="color:#0099cc; font-weight:700;">IN TRANSIT</span>` : `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>`;
-const s = stopLookup[id] || stopLookup[`${p.delivery_name} ${p.destination}`], bH = s ? `<span style="color:#0099cc; font-weight:700; margin-right:6px;">${s}.</span>` : '';
-let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${bH}${dH}<span style="color:#ffd700;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span></div>`;
-if(currentDriverFilter) {
-    if(showTransit) uList.appendChild(c);
-} else tList.appendChild(c); 
-p.driver_edited_note && noteCount++; return;
-}
-const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
-const isDepot = type === 'delivery' && (isU || p.status === 'at_depot');
-if(isDepot) totalDepotJobs++;
-if (isFailed) {
-dndCount++; const c = document.createElement("div"); c.className = "history-item dnd-card" + (isNew ? ' new-card' : '');
-Object.assign(c.style, {background:"rgba(255,0,0,0.2)", border:"2px solid #ff0000", animation:"pulse-red-btn 2s infinite ease-in-out", cursor:"pointer", borderRadius:"4px"}); c.onclick = () => viewDetails(id);
-const bg = getDriverColor(asgn);
-const dH = currentDriverFilter ? `<span style="color:#ff0000; font-weight:700;">FAILED</span>` : ((!isU) ? `<span style="color:${bg}; font-weight:700;">${asgn}</span>` : `<span style="color:#ff0000; font-weight:700;">FAILED</span>`);
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffd700':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
-let arrow = type === 'pickup' ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
-let content = type === 'pickup' ? `<span style="color:#ffd700;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>` : `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffd700;">${p.name||'-'}</span>`;
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${bH}${dH}${content}</div>`;
-if(currentDriverFilter) {
-    if(type === 'pickup' && showPickups) uList.appendChild(c);
-    else if(type === 'delivery' && showDeliveries) uList.appendChild(c);
-} else dndList.appendChild(c);
-if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
-p.driver_edited_note && noteCount++; return;
-}
-if(isU && !isDepot) pending++; else { if(!isDepot) assignedCount++; if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++; }
-p.driver_edited_note && noteCount++;
-const c = document.createElement("div"); c.className = "history-item" + (type==='pickup'&&isU ? ' urgent-pickup' : '') + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
-c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "transparent";
-if (isU && !isFailed) { c.setAttribute("draggable", "true"); c.ondragstart = (e) => e.dataTransfer.setData("text/plain", id); }
-const bg = getDriverColor(p.assigned_to);
-let dH = p.assigned_to ? `<span style="color:${bg}; font-weight:700;">${p.assigned_to}</span>` : `<span style="color:#cc5200; font-weight:700;">UNASSIGNED</span>`;
-if(isDepot) dH = `<span style="color:#00BFFF; font-weight:700;">AT DEPOT</span>`;
-else if(currentDriverFilter) dH = `<span style="color:${bg}; font-weight:700;">${type === 'pickup' ? 'PICKUP' : 'DELIVERY'}</span>`;
-const s = stopLookup[id] || stopLookup[`${type==='pickup'?p.name:p.delivery_name} ${type==='pickup'?p.pickup_location:p.destination}`], bH = s ? `<span style="color:${type==='pickup'?'#ffd700':'#00b32d'}; font-weight:700; margin-right:6px;">${s}.</span>` : '';
-let arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
-let content = `<span style="color:#ffd700;">${p.name||'-'}</span>${arrow}<span style="color:#00ff00;">${p.delivery_name||'-'}</span>`;
-if (type === 'delivery' || isDepot) {
-    arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
-    content = `<span style="color:#00ff00;">${p.delivery_name||'-'}</span>${arrow}<span style="color:#ffd700;">${p.name||'-'}</span>`;
-}
-c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${bH}${dH}${content}</div>`;
-if(currentDriverFilter) {
-    let shouldShow = false;
-    if (isDepot && showDepot) shouldShow = true;
-    else if (!isDepot && type === 'pickup' && showPickups) shouldShow = true;
-    else if (!isDepot && type === 'delivery' && showDeliveries) shouldShow = true;
-    
-    if (shouldShow) uList.appendChild(c);
-} else if(isDepot) {
-depotList.appendChild(c);
-} else if (isU && !isFailed) {
-c.classList.add("unassigned-job-card");
-uList.appendChild(c);
-} else {
-(type === 'pickup' ? pList : dList).appendChild(c);
-}
-});
-const ad = document.getElementById('header-alert'), ud = document.getElementById('header-unassigned'), hd = document.getElementById('header-depot');
-if(dndCount > 0) { ad.style.display = 'block'; ad.innerText = dndCount + " DND/DNP"; document.getElementById('archive-all-dnd-btn').style.display = 'block'; }
-else { ad.style.display = 'none'; document.getElementById('archive-all-dnd-btn').style.display = 'none'; }
-ud.style.display = pending > 0 ? 'block' : 'none'; ud.innerText = pending + " UNASSIGNED";
-hd.style.display = totalDepotJobs > 0 ? 'block' : 'none'; hd.innerText = totalDepotJobs + " AT DEPOT";
-Object.keys(driverStats).forEach(d => {
-const p = driverStats[d].p, del = driverStats[d].d;
-const r = document.createElement("div"); r.className = "driver-stat-row pointer";
-r.ondragover = (e) => { e.preventDefault(); r.style.borderColor = "var(--accent)"; };
-r.ondragleave = (e) => { r.style.borderColor = "var(--border)"; };
-r.ondrop = (e) => { e.preventDefault(); r.style.borderColor = "var(--border)"; const jobId = e.dataTransfer.getData("text/plain"); if (jobId) assignJob(jobId, d); };
-r.onclick = () => { if (currentDriverFilter === d) clearDriverFilter(); else filterByDriver(d); };
-const dur = (driverLocationsData[d]?.total_duration) || "";
-r.innerHTML = `<div class="flex ac"><div class="ds-name" style="color:${getDriverColor(d)};">${d}</div>${dur ? `<span class="route-time-display">${dur}</span>` : ''}</div><div class="stat-info">${p>0?`<div class="stat-item">Pickups <span class="stat-val-p">${p}</span></div>`:''}${del>0?`<div class="stat-item">Deliveries <span class="stat-val-d">${del}</span></div>`:''}</div>`;
-sPanel.appendChild(r);
-});
-document.getElementById("stat-pending").innerText = pending + dndCount; document.getElementById("stat-assigned").innerText = assignedCount; document.getElementById("stat-note").innerText = noteCount;
-document.getElementById("note-box").style.display = noteCount > 0 ? "block" : "none";
-document.getElementById("pending-box").className = "stat-box" + ((pending + dndCount) > 0 ? " unassigned-glow" : "");
-['pickups', 'transit', 'depot', 'deliveries', 'dnd'].forEach(cat => {
-const list = document.getElementById('list-' + cat);
-if(list) {
-const count = list.children.length;
-const badge = document.getElementById('badge-' + cat);
-if(badge) {
-    badge.innerText = count;
-    if(count > 0) badge.classList.add('badge-active'); else badge.classList.remove('badge-active');
-}
-list.style.display = catState[cat] ? 'block' : 'none';
-const btn = document.getElementById('btn-' + cat);
-if(btn) {
-    if (list.querySelector('.new-card') && !catState[cat]) btn.classList.add('new-btn');
-    else btn.classList.remove('new-btn');
-    
-    if (cat === 'dnd') {
-        if (count === 0) btn.classList.add('dnd-empty-btn');
-        else btn.classList.remove('dnd-empty-btn');
-    }
-}
-}
-});
-isFirstLoad = false;
-}
-function openZoneManager() {
-document.getElementById('zone-modal').style.display = 'block';
-showZoneSchedule();
-}
-function showZoneSchedule() {
-document.getElementById('zone-schedule-view').style.display = 'block';
-document.getElementById('zone-map-view').style.display = 'none';
-renderZoneRoster();
-}
-function showZoneMap() {
-document.getElementById('zone-schedule-view').style.display = 'none';
-document.getElementById('zone-map-view').style.display = 'flex';
-if (!zoneMap) initZoneMap();
-else { 
-google.maps.event.trigger(zoneMap, "resize"); 
-zoneMap.setCenter({ lat: 49.8425, lng: -99.9497 }); 
-}
-renderZoneMapInterface();
-}
-function initZoneMap() {
-zoneMap = new google.maps.Map(document.getElementById("zone-map"), { center: { lat: 49.8425, lng: -99.9497 }, zoom: 12, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
-drawingManager = new google.maps.drawing.DrawingManager({ drawingControl: false, polygonOptions: { editable: true } });
-drawingManager.setMap(zoneMap);
-google.maps.event.addListener(drawingManager, 'overlaycomplete', function(e) {
-if (e.type === 'polygon' && activeDrawingDriver && activeDrawingZoneId) {
-const newPoly = e.overlay;
-const newPath = newPoly.getPath();
-let isOverlap = false;
-for(let driver in zonePolygons) {
-if (driver === activeDrawingDriver) continue;
-const polys = zonePolygons[driver];
-for(let i=0; i<polys.length; i++) {
-const existingPoly = polys[i];
-for(let j=0; j<newPath.getLength(); j++) {
-if(google.maps.geometry.poly.containsLocation(newPath.getAt(j), existingPoly)) isOverlap = true;
-}
-const exPath = existingPoly.getPath();
-for(let j=0; j<exPath.getLength(); j++) {
-if(google.maps.geometry.poly.containsLocation(exPath.getAt(j), newPoly)) isOverlap = true;
-}
-}
-}
-if(isOverlap) {
-alert("Overlaps another driver's boundary! Please re-draw without overlapping.");
-e.overlay.setMap(null);
-return;
-}
-const path = newPath.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
-let existingPaths = [];
-const z = driverZones[activeDrawingDriver] && driverZones[activeDrawingDriver][activeDrawingZoneId];
-if (z && z.paths) existingPaths = z.paths;
-existingPaths.push(path);
-db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(existingPaths);
-e.overlay.setMap(null); 
-drawingManager.setDrawingMode(null);
-activeDrawingDriver = null;
-activeDrawingZoneId = null;
-document.getElementById('active-driver-zone-panel').style.display = 'none';
-renderZoneMapInterface();
-}
-});
-}
-function renderZoneRoster() {
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-let html = '';
-customDrivers.forEach((d) => {
-const color = getDriverColor(d);
-const driverData = driverZones[d] || {};
-let zonesHtml = '';
-Object.keys(driverData).forEach(zId => {
-const z = driverData[zId];
-let dayHtml = '<div class="day-row">';
-days.forEach(day => {
-const isActive = (z.days && z.days.includes(day)) ? 'day-active' : '';
-dayHtml += `<div class="day-toggle ${isActive}" onclick="toggleDay('${d}', '${zId}', '${day}')">${day[0]}</div>`;
-});
-dayHtml += '</div>';
-zonesHtml += `
+function saveEdit(a){let b=document.getElementById('e-note').value,c=document.getElementById('e-add-note').value;if(c.trim())b=(b?b+" ":"")+`[${currentUser}]: ${c.trim()}`;let d=document.getElementById('e-driver').value,e=rawJobs[a].other_info.toLowerCase();if((e.includes("dnd")||e.includes("dnp"))&&d!=='Unassigned'){b=b.replace(/dnd/gi,"").replace(/dnp/gi,"")+` [reassigned by ${currentUser}]`}db.ref('jobs').child(a).update({assigned_to:d,package_details:document.getElementById('e-pkg').value,po_number:document.getElementById('e-po').value,name:document.getElementById('e-name').value,pickup_location:document.getElementById('e-pickup').value,pickup_city:document.getElementById('e-city-p').value,delivery_city:document.getElementById('e-city-d').value,city:document.getElementById('e-city-p').value??document.getElementById('e-city-d').value,delivery_name:document.getElementById('e-drop-name').value,destination:document.getElementById('e-drop').value,other_info:b,customer_email:document.getElementById('e-email-p').value,customer_phone:document.getElementById('e-phone-p').value,last_edit_by:currentUser}).then(()=>{document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''})}
+
+function deleteJob(a){confirm("Delete this dispatch completely?")&&(db.ref('jobs').child(a).remove(),document.getElementById('detailsModal').style.display='none',document.body.style.overflow='')}
+
+function renderData(){let a=document.getElementById("list-pickups"),b=document.getElementById("list-deliveries"),c=document.getElementById("list-transit"),d=document.getElementById("list-depot"),e=document.getElementById("driver-stats-panel"),f=document.getElementById("list-archive"),g=document.getElementById("list-dnd"),h=document.getElementById("unassigned-immediate-list");a.innerHTML="";b.innerHTML="";c.innerHTML="";d.innerHTML="";e.innerHTML="";f.innerHTML="";g.innerHTML="";h.innerHTML="";let i=document.getElementById('filter-reset-ui'),j=document.getElementById('driver-job-filters');i&&(i.style.display=currentDriverFilter?'block':'none');j&&(j.style.display=currentDriverFilter?'flex':'none');document.querySelectorAll('.archive-column').forEach(k=>k.style.display=currentDriverFilter?'none':'');let l=document.getElementById('filter-chk-pickups')?.checked!==!1,m=document.getElementById('filter-chk-deliveries')?.checked!==!1,n=document.getElementById('filter-chk-transit')?.checked!==!1,o=document.getElementById('filter-chk-depot')?.checked!==!1,p=document.getElementById('af-driver')?.value,q=document.getElementById('af-name')?.value.toLowerCase(),r=document.getElementById('af-city')?.value.toLowerCase(),s=document.getElementById('af-manual-search')?.value.toLowerCase(),t={},u=0,v=0,w=0,x=0,y=0,z={};if(currentDriverFilter&&driverLocationsData[currentDriverFilter]){let A=driverLocationsData[currentDriverFilter];if(A.route_order&&Array.isArray(A.route_order))A.route_order.forEach((B,C)=>t[B]=C+1);else if(A.route_string)A.route_string.split(' | ').forEach(B=>{let C=B.indexOf('. ');if(C>-1)t[B.substring(C+2).trim()]=+(B.substring(0,C))})}if(currentDriverFilter){let A=driverLocationsData[currentDriverFilter],B=document.getElementById("selected-driver-label");if(B){let C=getDriverColor(currentDriverFilter);Object.assign(B.style,{display:"flex",borderColor:C,color:C,boxShadow:`0 0 15px ${C}`});B.innerHTML=currentDriverFilter+(A?.total_duration?`<span style="font-size:14px; color:#fff;">ETA: ${A.total_duration}</span>`:"")}let C=document.getElementById("map-driver-head");if(C){C.style.display="block";C.innerText=currentDriverFilter;C.style.color=getDriverColor(currentDriverFilter)}if(document.getElementById('map-modal').style.display==='block'&&mainMap&&A){let D=document.getElementById("route-time-badge");D.innerText="ROUTE TIME: "+(A.total_duration||"");D.style.display=A.total_duration?"block":"none";document.getElementById('route-list').style.display='none';let E={lat:A.lat,lng:A.lng};mapMarkers[currentDriverFilter]?(mapMarkers[currentDriverFilter].setPosition(E),mapMarkers[currentDriverFilter].setIcon({path:google.maps.SymbolPath.FORWARD_CLOSED_ARROW,fillColor:'#00b32d',fillOpacity:1,strokeWeight:1,strokeColor:'#000',scale:8,anchor:new google.maps.Point(0,2.5)}),mapMarkers[currentDriverFilter].setLabel(null)):(mapMarkers[currentDriverFilter]=new google.maps.Marker({position:E,map:mainMap,icon:{path:google.maps.SymbolPath.FORWARD_CLOSED_ARROW,fillColor:'#00b32d',fillOpacity:1,strokeWeight:1,strokeColor:'#000',scale:8,anchor:new google.maps.Point(0,2.5)}}));if(A.active_route){activePolyline&&activePolyline.setMap(null);let F=google.maps.geometry.encoding.decodePath(A.active_route);activePolyline=new google.maps.Polyline({path:F,geodesic:!0,strokeColor:"#2196f3",strokeOpacity:1.0,strokeWeight:5,map:mainMap});Object.keys(mapMarkers).forEach(G=>{if(G!==currentDriverFilter&&!G.startsWith('job_')){mapMarkers[G].setMap(null);delete mapMarkers[G]}});let G=[];Object.entries(rawJobs).forEach(([H,I])=>{if(I.assigned_to===currentDriverFilter){if(I.status==='pending_pickup')G.push({...I,t:'pickup',id:H});else if(I.status==='pending_delivery')G.push({...I,t:'drop',id:H})}});let H=new google.maps.Geocoder(),I=new Set();G.forEach((J,K)=>{let L=`${J.t==='pickup'?J.pickup_location:J.destination}, ${J.city||''}`,M=J.t==='pickup'?J.name:J.delivery_name,N=t[J.id]||t[`${M} ${J.t==='pickup'?J.pickup_location:J.destination}`],O="";if(!I.has(M)){O=N?`${N}. ${M}`:M;I.add(M)}let P=`job_${K}`;mapMarkers[P]&&mapMarkers[P].setMap(null);let Q=R=>mapMarkers[P]=new google.maps.Marker({map:mainMap,position:R,label:O?{text:O,color:"#00b32d",fontWeight:"bold",fontSize:"12px",className:"driver-map-label"}:null,icon:{path:google.maps.SymbolPath.CIRCLE,scale:5,fillColor:'#ff0000',fillOpacity:1,strokeWeight:1,strokeColor:'white',labelOrigin:new google.maps.Point(0,K%2===0?-15:15)}});if(J.lat&&J.lng)Q({lat:parseFloat(J.lat),lng:parseFloat(J.lng)});else H.geocode({'address':L},(R,S)=>{if(S==='OK')Q(R[0].geometry.location)})});if(!mapBoundsInitialized){let J=new google.maps.LatLngBounds();F.forEach(K=>J.extend(K));mainMap.fitBounds(J);mapBoundsInitialized=!0}}else if(!activePolyline)mainMap.setCenter(E)}}let A=document.getElementById('f-driver').options;for(let B=0;B<A.length;B++)if(!['Unassigned','Assign Driver'].includes(A[B].value))z[A[B].value]={p:0,d:0};let B=Object.entries(rawJobs);if(currentDriverFilter)B.sort((C,D)=>(t[C[0]]||999)-(t[D[0]]||999));else B.reverse();B.forEach(([C,D])=>{if(currentDriverFilter&&D.assigned_to!==currentDriverFilter)return;let E=(D.other_info||"").toLowerCase(),F=E.includes("dnd")||E.includes("dnp"),G=(D.pickup_city||"")+" "+(D.delivery_city||"")+" "+(D.city||""),H=C+'_'+D.status,I=!1;!seenJobs[H]&&(seenJobs[H]=!0,!isFirstLoad&&(I=!0));if(D.status==='completed'){if(new Date(D.completed_at||D.timestamp).toDateString()!==new Date().toDateString())return;if(p&&D.assigned_to!==p)return;if(q&&!(D.name.toLowerCase().includes(q)||D.delivery_name.toLowerCase().includes(q)))return;if(r&&!G.toLowerCase().includes(r))return;if(s&&!(JSON.stringify(D).toLowerCase().includes(s)))return;let J=document.createElement("div");J.className="history-item";J.onclick=()=>viewDetails(C);Object.assign(J.style,{cursor:"pointer",borderLeft:"4px solid #333",opacity:"0.7"});J.innerHTML=`<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom:5px;"><span style="font-weight:400; color:#555; text-decoration:line-through; font-size:11px;">${D.assigned_to||'Unassigned'}</span><span style="font-size:16px; color:#00b32d; font-weight:400; text-align:center;">DONE</span><span style="font-size:10px; color:#888; text-align:right; font-weight:400;">${formatTime12(D.completed_at||D.timestamp)}</span></div><div style="font-size:11px; color:#ffd700; font-weight:300; margin-bottom:10px; white-space:normal; word-wrap:break-word; line-height:1.4;">P: ${D.name||'-'} | ${D.pickup_city||D.city||'-'}</div><div style="font-size:11px; color:#00ff00; font-weight:300; white-space:normal; word-wrap:break-word; line-height:1.4;">D: ${D.delivery_name||'-'} | ${D.delivery_city||D.city||'-'}</div>`;f.appendChild(J);return}let J=D.assigned_to,K=!J||J==='Unassigned';if(D.status==='in_transit'){v++;if(z[J])z[J].d++;let L=document.createElement("div");L.className="history-item"+(I?' new-card':'');L.onclick=()=>viewDetails(C);L.style.cursor="pointer";L.style.borderLeft="none";L.style.background="transparent";let M=getDriverColor(D.assigned_to),N=currentDriverFilter?`<span style="color:#0099cc; font-weight:700;">IN TRANSIT</span>`:`<span style="color:${M}; font-weight:700;">${D.assigned_to}</span>`,O=t[C]||t[`${D.delivery_name} ${D.destination}`],P=O?`<span style="color:#0099cc; font-weight:700; margin-right:6px;">${O}.</span>`:'',Q=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;L.innerHTML=`<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${P}${N}<span style="color:#ffd700;">${D.name||'-'}</span>${Q}<span style="color:#00ff00;">${D.delivery_name||'-'}</span></div>`;if(currentDriverFilter){if(n)h.appendChild(L)}else c.appendChild(L);D.driver_edited_note&&w++;return}let L=D.status==='pending_pickup'?'pickup':'delivery',M=L==='delivery'&&(K||D.status==='at_depot');if(M)y++;if(F){x++;let N=document.createElement("div");N.className="history-item dnd-card"+(I?' new-card':'');Object.assign(N.style,{background:"rgba(255,0,0,0.2)",border:"2px solid #ff0000",animation:"pulse-red-btn 2s infinite ease-in-out",cursor:"pointer",borderRadius:"4px"});N.onclick=()=>viewDetails(C);let O=getDriverColor(J),P=currentDriverFilter?`<span style="color:#ff0000; font-weight:700;">FAILED</span>`:((!K)?`<span style="color:${O}; font-weight:700;">${J}</span>`:`<span style="color:#ff0000; font-weight:700;">FAILED</span>`),Q=t[C]||t[`${L==='pickup'?D.name:D.delivery_name} ${L==='pickup'?D.pickup_location:D.destination}`],R=Q?`<span style="color:${L==='pickup'?'#ffd700':'#00b32d'}; font-weight:700; margin-right:6px;">${Q}.</span>`:'',S=L==='pickup'?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,T=L==='pickup'?`<span style="color:#ffd700;">${D.name||'-'}</span>${S}<span style="color:#00ff00;">${D.delivery_name||'-'}</span>`:`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:#ffd700;">${D.name||'-'}</span>`;N.innerHTML=`<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${R}${P}${T}</div>`;if(currentDriverFilter){if(L==='pickup'&&l)h.appendChild(N);else if(L==='delivery'&&m)h.appendChild(N)}else g.appendChild(N);if(z[J])L==='pickup'?z[J].p++:z[J].d++;D.driver_edited_note&&w++;return}if(K&&!M)u++;else{if(!M)v++;if(z[J])L==='pickup'?z[J].p++:z[J].d++}D.driver_edited_note&&w++;let N=document.createElement("div");N.className="history-item"+(L==='pickup'&&K?' urgent-pickup':'')+(I?' new-card':'');N.onclick=()=>viewDetails(C);N.style.cursor="pointer";N.style.borderLeft="none";N.style.background="transparent";if(K&&!F){N.setAttribute("draggable","true");N.ondragstart=O=>O.dataTransfer.setData("text/plain",C)}let O=getDriverColor(D.assigned_to),P=D.assigned_to?`<span style="color:${O}; font-weight:700;">${D.assigned_to}</span>`:`<span style="color:#cc5200; font-weight:700;">UNASSIGNED</span>`;if(M)P=`<span style="color:#00BFFF; font-weight:700;">AT DEPOT</span>`;else if(currentDriverFilter)P=`<span style="color:${O}; font-weight:700;">${L==='pickup'?'PICKUP':'DELIVERY'}</span>`;let Q=t[C]||t[`${L==='pickup'?D.name:D.delivery_name} ${L==='pickup'?D.pickup_location:D.destination}`],R=Q?`<span style="color:${L==='pickup'?'#ffd700':'#00b32d'}; font-weight:700; margin-right:6px;">${Q}.</span>`:'',S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`,T=`<span style="color:#ffd700;">${D.name||'-'}</span>${S}<span style="color:#00ff00;">${D.delivery_name||'-'}</span>`;if(L==='delivery'||M){S=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin: 0 4px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;T=`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:#ffd700;">${D.name||'-'}</span>`}N.innerHTML=`<div style="display:flex; align-items:center; gap:8px; width:100%; font-size:13px; white-space:normal; word-wrap:break-word; line-height:1.4;">${R}${P}${T}</div>`;if(currentDriverFilter){let U=!1;if(M&&o)U=!0;else if(!M&&L==='pickup'&&l)U=!0;else if(!M&&L==='delivery'&&m)U=!0;if(U)h.appendChild(N)}else if(M){d.appendChild(N)}else if(K&&!F){N.classList.add("unassigned-job-card");h.appendChild(N)}else{(L==='pickup'?a:b).appendChild(N)}});let C=document.getElementById('header-alert'),D=document.getElementById('header-unassigned'),E=document.getElementById('header-depot');if(x>0){C.style.display='block';C.innerText=x+" DND/DNP";document.getElementById('archive-all-dnd-btn').style.display='block'}else{C.style.display='none';document.getElementById('archive-all-dnd-btn').style.display='none'}D.style.display=u>0?'block':'none';D.innerText=u+" UNASSIGNED";E.style.display=y>0?'block':'none';E.innerText=y+" AT DEPOT";Object.keys(z).forEach(F=>{let G=z[F].p,H=z[F].d,I=document.createElement("div");I.className="driver-stat-row pointer";I.ondragover=J=>{J.preventDefault();I.style.borderColor="var(--accent)"};I.ondragleave=J=>{I.style.borderColor="var(--border)"};I.ondrop=J=>{J.preventDefault();I.style.borderColor="var(--border)";let K=J.dataTransfer.getData("text/plain");if(K)assignJob(K,F)};I.onclick=()=>{if(currentDriverFilter===F)clearDriverFilter();else filterByDriver(F)};let J=(driverLocationsData[F]?.total_duration)||"";I.innerHTML=`<div class="flex ac"><div class="ds-name" style="color:${getDriverColor(F)};">${F}</div>${J?`<span class="route-time-display">${J}</span>`:''}</div><div class="stat-info">${G>0?`<div class="stat-item">Pickups <span class="stat-val-p">${G}</span></div>`:''}${H>0?`<div class="stat-item">Deliveries <span class="stat-val-d">${H}</span></div>`:''}</div>`;e.appendChild(I)});document.getElementById("stat-pending").innerText=u+x;document.getElementById("stat-assigned").innerText=v;document.getElementById("stat-note").innerText=w;document.getElementById("note-box").style.display=w>0?"block":"none";document.getElementById("pending-box").className="stat-box"+((u+x)>0?" unassigned-glow":"");['pickups','transit','depot','deliveries','dnd'].forEach(F=>{let G=document.getElementById('list-'+F);if(G){let H=G.children.length,I=document.getElementById('badge-'+F);if(I){I.innerText=H;if(H>0)I.classList.add('badge-active');else I.classList.remove('badge-active')}G.style.display=catState[F]?'block':'none';let J=document.getElementById('btn-'+F);if(J){if(G.querySelector('.new-card')&&!catState[F])J.classList.add('new-btn');else J.classList.remove('new-btn');if(F==='dnd'){if(H===0)J.classList.add('dnd-empty-btn');else J.classList.remove('dnd-empty-btn')}}}});isFirstLoad=!1}
+
+function openZoneManager(){document.getElementById('zone-modal').style.display='block';showZoneSchedule()}
+
+function showZoneSchedule(){document.getElementById('zone-schedule-view').style.display='block';document.getElementById('zone-map-view').style.display='none';renderZoneRoster()}
+
+function showZoneMap(){document.getElementById('zone-schedule-view').style.display='none';document.getElementById('zone-map-view').style.display='flex';if(!zoneMap)initZoneMap();else{google.maps.event.trigger(zoneMap,"resize");zoneMap.setCenter({lat:49.8425,lng:-99.9497})}renderZoneMapInterface()}
+
+function initZoneMap(){zoneMap=new google.maps.Map(document.getElementById("zone-map"),{center:{lat:49.8425,lng:-99.9497},zoom:12,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});drawingManager=new google.maps.drawing.DrawingManager({drawingControl:!1,polygonOptions:{editable:!0}});drawingManager.setMap(zoneMap);google.maps.event.addListener(drawingManager,'overlaycomplete',function(a){if(a.type==='polygon'&&activeDrawingDriver&&activeDrawingZoneId){let b=a.overlay,c=b.getPath(),d=!1;for(let e in zonePolygons){if(e===activeDrawingDriver)continue;let f=zonePolygons[e];for(let g=0;g<f.length;g++){let h=f[g];for(let i=0;i<c.getLength();i++){if(google.maps.geometry.poly.containsLocation(c.getAt(i),h))d=!0}let j=h.getPath();for(let i=0;i<j.getLength();i++){if(google.maps.geometry.poly.containsLocation(j.getAt(i),b))d=!0}}}if(d){alert("Overlaps another driver's boundary! Please re-draw without overlapping.");a.overlay.setMap(null);return}let e=c.getArray().map(f=>({lat:f.lat(),lng:f.lng()})),f=[];let g=driverZones[activeDrawingDriver]&&driverZones[activeDrawingDriver][activeDrawingZoneId];if(g&&g.paths)f=g.paths;f.push(e);db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(f);a.overlay.setMap(null);drawingManager.setDrawingMode(null);activeDrawingDriver=null;activeDrawingZoneId=null;document.getElementById('active-driver-zone-panel').style.display='none';renderZoneMapInterface()}})}
+
+function renderZoneRoster(){let a=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],b='';customDrivers.forEach((c)=>{let d=getDriverColor(c),e=driverZones[c]||{},f='';Object.keys(e).forEach(g=>{let h=e[g],i='<div class="day-row">';a.forEach(j=>{let k=(h.days&&h.days.includes(j))?'day-active':'';i+=`<div class="day-toggle ${k}" onclick="toggleDay('${c}', '${g}', '${j}')">${j[0]}</div>`});i+='</div>';f+=`
 <div class="zone-item">
 <div class="zone-item-header">
-<input type="text" value="${z.label || ''}" placeholder="Zone Label" onchange="saveZone('${d}', '${zId}', 'label', this.value)" style="width: 150px; font-size: 11px; padding: 8px; margin:0; background: transparent; color: #fff; border-bottom: 1px solid #555; border-radius: 0; border-top:0; border-left:0; border-right:0;">
-<button class="btn-zone-del" onclick="deleteZone('${d}', '${zId}')">DELETE</button>
+<input type="text" value="${h.label||''}" placeholder="Zone Label" onchange="saveZone('${c}', '${g}', 'label', this.value)" style="width: 150px; font-size: 11px; padding: 8px; margin:0; background: transparent; color: #fff; border-bottom: 1px solid #555; border-radius: 0; border-top:0; border-left:0; border-right:0;">
+<button class="btn-zone-del" onclick="deleteZone('${c}', '${g}')">DELETE</button>
 </div>
-${dayHtml}
+${i}
 <div class="flex gap-10">
-<input type="time" value="${z.start||''}" onchange="saveZone('${d}', '${zId}', 'start', this.value)" style="margin:0; padding:10px;">
-<input type="time" value="${z.end||''}" onchange="saveZone('${d}', '${zId}', 'end', this.value)" style="margin:0; padding:10px;">
+<input type="time" value="${h.start||''}" onchange="saveZone('${c}', '${g}', 'start', this.value)" style="margin:0; padding:10px;">
+<input type="time" value="${h.end||''}" onchange="saveZone('${c}', '${g}', 'end', this.value)" style="margin:0; padding:10px;">
 </div>
-</div>`;
-});
-html += `<div class="zone-driver-row">
+</div>`});b+=`<div class="zone-driver-row">
 <div class="zone-driver-header">
-<div class="zone-driver-name" style="color:${color}">${d}</div>
-<button class="btn-zone-add" onclick="addZone('${d}')">+ ADD ZONE</button>
+<div class="zone-driver-name" style="color:${d}">${c}</div>
+<button class="btn-zone-add" onclick="addZone('${c}')">+ ADD ZONE</button>
 </div>
-${zonesHtml}
-</div>`;
-});
-document.getElementById('zone-roster').innerHTML = html;
-}
-function renderZoneMapInterface() {
-if(!zoneMap) return;
-for(let k in zonePolygons) { 
-if(Array.isArray(zonePolygons[k])) zonePolygons[k].forEach(p=>p.setMap(null));
-}
-zonePolygons = {};
-customDrivers.forEach((d) => {
-const color = getDriverColor(d);
-const driverData = driverZones[d] || {};
-zonePolygons[d] = [];
-Object.values(driverData).forEach(z => {
-if(z.paths) {
-z.paths.forEach(path => {
-const poly = new google.maps.Polygon({ paths: path, map: zoneMap, fillColor: color, fillOpacity: 0.3, strokeColor: color, strokeWeight: 2 });
-zonePolygons[d].push(poly);
-});
-}
-});
-});
-let html = '';
-customDrivers.forEach((d) => {
-const color = getDriverColor(d);
-html += `<button class="zone-driver-btn" onclick="selectDriverForMap('${d}', '${color}')" style="color:${color}">${d}</button>`;
-});
-document.getElementById('zone-driver-grid').innerHTML = html;
-}
-function selectDriverForMap(driver, color) {
-const panel = document.getElementById('active-driver-zone-panel');
-const driverData = driverZones[driver] || {};
-const keys = Object.keys(driverData);
-if (keys.length === 0) {
-panel.innerHTML = `<div style="text-align:center; color:#777; font-size:12px;">No zones created for ${driver}. Go to Schedule view to add one.</div>`;
-} else {
-let html = `<div style="font-weight:700; color:${color}; text-transform:uppercase; margin-bottom:8px;">${driver} ZONES</div>`;
-keys.forEach(zId => {
-const z = driverData[zId];
-html += `
+${f}
+</div>`});document.getElementById('zone-roster').innerHTML=b}
+
+function renderZoneMapInterface(){if(!zoneMap)return;for(let a in zonePolygons){if(Array.isArray(zonePolygons[a]))zonePolygons[a].forEach(b=>b.setMap(null))}zonePolygons={};customDrivers.forEach((a)=>{let b=getDriverColor(a),c=driverZones[a]||{};zonePolygons[a]=[];Object.values(c).forEach(d=>{if(d.paths){d.paths.forEach(e=>{let f=new google.maps.Polygon({paths:e,map:zoneMap,fillColor:b,fillOpacity:0.3,strokeColor:b,strokeWeight:2});zonePolygons[a].push(f)})}})});let a='';customDrivers.forEach((b)=>{let c=getDriverColor(b);a+=`<button class="zone-driver-btn" onclick="selectDriverForMap('${b}', '${c}')" style="color:${c}">${b}</button>`});document.getElementById('zone-driver-grid').innerHTML=a}
+
+function selectDriverForMap(a,b){let c=document.getElementById('active-driver-zone-panel'),d=driverZones[a]||{},e=Object.keys(d);if(e.length===0){c.innerHTML=`<div style="text-align:center; color:#777; font-size:12px;">No zones created for ${a}. Go to Schedule view to add one.</div>`}else{let f=`<div style="font-weight:700; color:${b}; text-transform:uppercase; margin-bottom:8px;">${a} ZONES</div>`;e.forEach(g=>{let h=d[g];f+=`
 <div class="active-zone-row">
-<div class="active-zone-label">${z.label || 'Unnamed Zone'}</div>
+<div class="active-zone-label">${h.label||'Unnamed Zone'}</div>
 <div style="display:flex; gap:5px;">
-<button class="btn-zone" onclick="drawZoneFor('${driver}', '${zId}', '${color}')">DRAW</button>
-<button class="btn-zone" onclick="clearZoneFor('${driver}', '${zId}')">CLEAR</button>
+<button class="btn-zone" onclick="drawZoneFor('${a}', '${g}', '${b}')">DRAW</button>
+<button class="btn-zone" onclick="clearZoneFor('${a}', '${g}')">CLEAR</button>
 </div>
-</div>`;
-});
-panel.innerHTML = html;
-}
-panel.style.display = 'block';
-}
-function addZone(driver) {
-const newRef = db.ref('driver_zones/' + driver).push();
-newRef.set({ label: 'New Zone', start: '', end: '', days: [], paths: [] });
-}
-function deleteZone(driver, zoneId) {
-if(confirm('Delete this zone?')) {
-db.ref(`driver_zones/${driver}/${zoneId}`).remove();
-}
-}
-function toggleDay(driver, zoneId, day) {
-const z = driverZones[driver][zoneId] || {};
-let days = z.days || [];
-if (days.includes(day)) days = days.filter(d => d !== day);
-else days.push(day);
-db.ref(`driver_zones/${driver}/${zoneId}/days`).set(days);
-}
-function saveZone(driver, zoneId, field, value) {
-db.ref(`driver_zones/${driver}/${zoneId}/${field}`).set(value);
-}
-function drawZoneFor(driver, zoneId, color) {
-const z = driverZones[driver][zoneId];
-if (!z.label || z.label === 'New Zone') {
-const lbl = prompt("Enter a label for this Zone (e.g., Morning Run)", z.label || "");
-if (lbl) db.ref(`driver_zones/${driver}/${zoneId}/label`).set(lbl);
-}
-activeDrawingDriver = driver;
-activeDrawingZoneId = zoneId;
-drawingManager.setOptions({ polygonOptions: { fillColor: color, fillOpacity: 0.3, strokeWeight: 2, strokeColor: color, editable: true } });
-drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
-}
-function clearZoneFor(driver, zoneId) { 
-if(confirm('Clear map area for this zone?')) {
-db.ref(`driver_zones/${driver}/${zoneId}/paths`).remove();
-setTimeout(() => selectDriverForMap(driver, getDriverColor(driver)), 200);
-} 
-}
-let wakeLock = null;
-async function requestWakeLock() {
-try {
-if ('wakeLock' in navigator) {
-wakeLock = await navigator.wakeLock.request('screen');
-}
-} catch (err) {
-console.error(err);
-}
-}
-document.addEventListener('visibilitychange', () => {
-wakeLock !== null && document.visibilityState === 'visible' && requestWakeLock();
-});
-let deferredPrompt; const installBtn = document.getElementById('install-btn');
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'block'; });
-installBtn.addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') installBtn.style.display = 'none'; deferredPrompt = null; } });
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./firebase-messaging-sw.js').then(r => { swReg = r; messaging.useServiceWorker(r); }).catch(e => console.log('SW Error', e)));
+</div>`});c.innerHTML=f}c.style.display='block'}
 
-let currentLocationTarget = null;
-let pickerMap = null;
-let pickerAutocomplete = null;
+function addZone(a){let b=db.ref('driver_zones/'+a).push();b.set({label:'New Zone',start:'',end:'',days:[],paths:[]})}
+function deleteZone(a,b){if(confirm('Delete this zone?')){db.ref(`driver_zones/${a}/${b}`).remove()}}
+function toggleDay(a,b,c){let d=driverZones[a][b]||{},e=d.days||[];if(e.includes(c))e=e.filter(f=>f!==c);else e.push(c);db.ref(`driver_zones/${a}/${b}/days`).set(e)}
+function saveZone(a,b,c,d){db.ref(`driver_zones/${a}/${b}/${c}`).set(d)}
 
-function openLocationPicker(target) {
-    currentLocationTarget = target;
-    document.getElementById('location-picker-modal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+function drawZoneFor(a,b,c){let d=driverZones[a][b];if(!d.label||d.label==='New Zone'){let e=prompt("Enter a label for this Zone (e.g., Morning Run)",d.label||"");if(e)db.ref(`driver_zones/${a}/${b}/label`).set(e)}activeDrawingDriver=a;activeDrawingZoneId=b;drawingManager.setOptions({polygonOptions:{fillColor:c,fillOpacity:0.3,strokeWeight:2,strokeColor:c,editable:!0}});drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON)}
 
-    if (!pickerMap) {
-        pickerMap = new google.maps.Map(document.getElementById("picker-map"), {
-            center: { lat: 49.8425, lng: -99.9497 },
-            zoom: 14,
-            gestureHandling: "greedy",
-            disableDefaultUI: true,
-            zoomControl: true
-        });
+function clearZoneFor(a,b){if(confirm('Clear map area for this zone?')){db.ref(`driver_zones/${a}/${b}/paths`).remove();setTimeout(()=>selectDriverForMap(a,getDriverColor(a)),200)}}
 
-        const input = document.getElementById('loc-search-bar');
-        pickerAutocomplete = new google.maps.places.Autocomplete(input);
-        pickerAutocomplete.bindTo('bounds', pickerMap);
+async function requestWakeLock(){try{if('wakeLock'in navigator){wakeLock=await navigator.wakeLock.request('screen')}}catch(a){console.error(a)}}
 
-        pickerAutocomplete.addListener('place_changed', () => {
-            const place = pickerAutocomplete.getPlace();
-            if (!place.geometry || !place.geometry.location) return;
-            pickerMap.setCenter(place.geometry.location);
-            pickerMap.setZoom(17);
-        });
+document.addEventListener('visibilitychange',()=>{wakeLock!==null&&document.visibilityState==='visible'&&requestWakeLock()});
 
-        input.addEventListener('input', function() {
-            const val = this.value.trim();
-            const gpsRegex = /^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/;
-            const match = val.match(gpsRegex);
-            if (match) {
-                const lat = parseFloat(match[1]);
-                const lng = parseFloat(match[3]);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    pickerMap.setCenter({ lat: lat, lng: lng });
-                    pickerMap.setZoom(17);
-                }
-            }
-        });
-    }
-    setTimeout(() => {
-        google.maps.event.trigger(pickerMap, 'resize');
-        pickerMap.setCenter({ lat: 49.8425, lng: -99.9497 });
-        document.getElementById('loc-search-bar').value = '';
-    }, 100);
-}
+window.addEventListener('beforeinstallprompt',a=>{a.preventDefault();deferredPrompt=a;installBtn.style.display='block'});
+installBtn.addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();let{outcome:a}=await deferredPrompt.userChoice;if(a==='accepted')installBtn.style.display='none';deferredPrompt=null}});
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./firebase-messaging-sw.js').then(a=>{swReg=a;messaging.useServiceWorker(a)}).catch(a=>console.log('SW Error',a)));
 
-function setPickerLocation() {
-    if (!pickerMap) return;
-    const center = pickerMap.getCenter();
-    const lat = center.lat().toFixed(5);
-    const lng = center.lng().toFixed(5);
-    const str = `${lat}, ${lng}`;
+function openLocationPicker(a){currentLocationTarget=a;document.getElementById('location-picker-modal').style.display='flex';document.body.style.overflow='hidden';if(!pickerMap){pickerMap=new google.maps.Map(document.getElementById("picker-map"),{center:{lat:49.8425,lng:-99.9497},zoom:14,gestureHandling:"greedy",disableDefaultUI:!0,zoomControl:!0});let b=document.getElementById('loc-search-bar');pickerAutocomplete=new google.maps.places.Autocomplete(b);pickerAutocomplete.bindTo('bounds',pickerMap);pickerAutocomplete.addListener('place_changed',()=>{let c=pickerAutocomplete.getPlace();if(!c.geometry||!c.geometry.location)return;pickerMap.setCenter(c.geometry.location);pickerMap.setZoom(17)});b.addEventListener('input',function(){let c=this.value.trim(),d=/^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/,e=c.match(d);if(e){let f=parseFloat(e[1]),g=parseFloat(e[3]);if(!isNaN(f)&&!isNaN(g)){pickerMap.setCenter({lat:f,lng:g});pickerMap.setZoom(17)}}})}setTimeout(()=>{google.maps.event.trigger(pickerMap,'resize');pickerMap.setCenter({lat:49.8425,lng:-99.9497});document.getElementById('loc-search-bar').value=''},100)}
 
-    if (currentLocationTarget === 'pickup') {
-        document.getElementById('f-pickup').value = str;
-    } else if (currentLocationTarget === 'drop') {
-        document.getElementById('f-drop-address').value = str;
-    }
-
-    document.getElementById('location-picker-modal').style.display = 'none';
-    document.body.style.overflow = '';
-}
+function setPickerLocation(){if(!pickerMap)return;let a=pickerMap.getCenter(),b=a.lat().toFixed(5),c=a.lng().toFixed(5),d=`${b}, ${c}`;if(currentLocationTarget==='pickup'){document.getElementById('f-pickup').value=d}else if(currentLocationTarget==='drop'){document.getElementById('f-drop-address').value=d}document.getElementById('location-picker-modal').style.display='none';document.body.style.overflow=''}
 </script>
    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
@@ -1586,42 +738,9 @@ function setPickerLocation() {
 </div>
 
 <script>
-  let devQuill;
+  let devQuill=new Quill('#dev-editor',{theme:'snow',modules:{toolbar:[['bold','italic','underline'],[{'list':'ordered'},{'list':'bullet'}],[{'align':[]}]]}});
 
-  // 1. Initialize the Quill editor immediately
-  devQuill = new Quill('#dev-editor', {
-    theme: 'snow',
-    modules: { 
-      toolbar: [ 
-        ['bold', 'italic', 'underline'], 
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }], 
-        [{ 'align': [] }] 
-      ] 
-    }
-  });
-
-  // 3. Save Function
-  function saveDevNote() {
-    const currentUser = firebase.auth().currentUser;
-    if (devQuill.getText().trim() === "" || !currentUser) return;
-    
-    const user = currentUser.email.split('@')[0];
-    const now = new Date();
-    const dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-    firebase.database().ref('developer').push({
-      text: devQuill.root.innerHTML,
-      user: user,
-      date: dateStr,
-      app: "COMMAND CENTER",
-      timestamp: firebase.database.ServerValue.TIMESTAMP
-    }).then(() => {
-      devQuill.setText(''); // Clear editor after saving
-    }).catch(err => {
-      console.error("Save error:", err);
-      alert("Error: You might not have permission to write to the database.");
-    });
-  }
+  function saveDevNote(){let a=firebase.auth().currentUser;if(devQuill.getText().trim()===""||!a)return;let b=a.email.split('@')[0],c=new Date(),d=c.toLocaleDateString()+' '+c.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});firebase.database().ref('developer').push({text:devQuill.root.innerHTML,user:b,date:d,app:"COMMAND CENTER",timestamp:firebase.database.ServerValue.TIMESTAMP}).then(()=>{devQuill.setText('')}).catch(e=>{console.error("Save error:",e);alert("Error: You might not have permission to write to the database.")})}
 </script>
 </body>
 </html>
