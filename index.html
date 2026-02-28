@@ -295,9 +295,7 @@ header { padding: 8px 4px; }
 </div>
 </div>
 <script>
-if(localStorage.getItem('ec_dispatch_collapsed') === 'false') {
-    document.getElementById('dispatch-form-content').style.display = 'block';
-}
+localStorage.getItem('ec_dispatch_collapsed') === 'false' && (document.getElementById('dispatch-form-content').style.display = 'block');
 function toggleDispatchForm() {
     const form = document.getElementById('dispatch-form-content');
     const isHidden = form.style.display === 'none';
@@ -440,7 +438,7 @@ function toggleDispatchForm() {
 </div>
 </div>
 
-<div id="location-picker-modal" class="modal" onclick="if(event.target===this) { this.style.display='none'; document.body.style.overflow=''; }">
+<div id="location-picker-modal" class="modal" onclick="event.target===this && (this.style.display='none', document.body.style.overflow='');">
 <div class="modal-content" style="padding: 0; max-width: 600px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; position: relative;">
 <div style="padding: 15px; background: var(--header-bg); border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center;">
 <h2 class="modal-h2 m-0" style="font-size:16px;">Pick Location</h2>
@@ -461,7 +459,7 @@ function toggleDispatchForm() {
 <div class="modal-content" onclick="event.stopPropagation()">
 </div>
 </div>
-<div id="zone-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
+<div id="zone-modal" class="modal" onclick="event.target===this && (this.style.display='none')">
 <div class="modal-content" style="max-width: 900px; width: 95%;">
 <div id="zone-schedule-view">
 <div class="flex jb ac mb-15">
@@ -486,7 +484,7 @@ function toggleDispatchForm() {
 </div>
 </div>
 </div>
-<div id="driver-manager-modal" class="modal" onclick="if(event.target===this) this.style.display='none'">
+<div id="driver-manager-modal" class="modal" onclick="event.target===this && (this.style.display='none')">
 <div class="modal-content">
 <h2 class="modal-h2">Manage Drivers</h2>
 <div id="driver-list-container" class="flex col gap-10 mb-15"></div>
@@ -520,27 +518,19 @@ let index = customDrivers.indexOf(name);
 return index !== -1 ? baseColors[index % baseColors.length] : '#00b32d';
 };
 window.assignJob = function(id, driver) {
-if(id && driver) {
-db.ref('jobs').child(id).update({ assigned_to: driver, last_edit_by: currentUser });
-}
+id && driver && db.ref('jobs').child(id).update({ assigned_to: driver, last_edit_by: currentUser });
 };
 function toggleArchive() {
 const el = document.getElementById('archive-section');
 const btn = document.getElementById('toggle-archive-btn');
-if (el.style.display === 'none') {
-el.style.display = 'block';
-btn.innerText = 'HIDE ARCHIVE';
-} else {
-el.style.display = 'none';
-btn.innerText = 'SHOW ARCHIVE';
-}
+el.style.display === 'none' ? (el.style.display = 'block', btn.innerText = 'HIDE ARCHIVE') : (el.style.display = 'none', btn.innerText = 'SHOW ARCHIVE');
 }
 document.addEventListener('keydown', (e) => {
 if (e.key === 'Escape') {
 closeMap();
 ['detailsModal', 'zone-modal', 'driver-manager-modal', 'location-picker-modal'].forEach(id => {
 const m = document.getElementById(id);
-if(m) { m.style.display = 'none'; }
+m && (m.style.display = 'none');
 });
 document.body.style.overflow = '';
 } else if (e.key === 'Enter') {
@@ -551,10 +541,7 @@ if (dm && (dm.style.display === 'block' || dm.style.display === 'flex')) { e.pre
 if (document.getElementById('location-picker-modal').style.display === 'flex' || document.getElementById('location-picker-modal').style.display === 'block') { e.preventDefault(); return; }
 if (document.getElementById('login-overlay').style.display !== 'none') { attemptLogin(); return; }
 const isFormInput = e.target.closest('#entry-panel') || e.target.closest('#group-pickup') || e.target.closest('#group-drop');
-if (isFormInput) {
-e.preventDefault();
-createJob();
-}
+isFormInput && (e.preventDefault(), createJob());
 }
 });
 function toggleCat(cat) {
@@ -562,44 +549,37 @@ catState[cat] = !catState[cat];
 const list = document.getElementById('list-' + cat);
 const btn = document.getElementById('btn-' + cat);
 list.style.display = catState[cat] ? 'block' : 'none';
-if (catState[cat]) {
-btn.classList.remove('new-btn');
-Array.from(list.querySelectorAll('.new-card')).forEach(el => el.classList.remove('new-card'));
-}
+catState[cat] && (btn.classList.remove('new-btn'), Array.from(list.querySelectorAll('.new-card')).forEach(el => el.classList.remove('new-card')));
 }
 function initCommandNotifications(email) {
-if ("Notification" in window) {
-Notification.requestPermission().then(perm => {
-if (perm === 'granted') {
-messaging.getToken({ serviceWorkerRegistration: swReg, vapidKey: "BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI" }).then(token => {
-if (token) db.ref('command_tokens/' + email.replace(/[.#$\[\]]/g, "")).set({ token: token, user: email, updated: firebase.database.ServerValue.TIMESTAMP });
+"Notification" in window && Notification.requestPermission().then(perm => {
+perm === 'granted' && messaging.getToken({ serviceWorkerRegistration: swReg, vapidKey: "BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI" }).then(token => {
+token && db.ref('command_tokens/' + email.replace(/[.#$\[\]]/g, "")).set({ token: token, user: email, updated: firebase.database.ServerValue.TIMESTAMP });
 }).catch(e => console.log('Token Error', e));
-}
 });
 messaging.onMessage(payload => {
 new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
 const a = document.getElementById('header-alert');
 a.style.display = 'block'; a.innerText = "⚠️ " + payload.notification.title;
-setTimeout(() => { if(!document.getElementById('list-dnd').innerHTML) a.style.display = 'none'; }, 5000);
+setTimeout(() => { !document.getElementById('list-dnd').innerHTML && (a.style.display = 'none'); }, 5000);
 });
 }
-}
-if (localStorage.getItem('ec_theme') === 'light') document.body.classList.add('light-mode');
+localStorage.getItem('ec_theme') === 'light' && document.body.classList.add('light-mode');
 function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('ec_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
 function filterByDriver(name) {
 currentDriverFilter = name; renderData();
 document.getElementById('entry-panel').style.display = 'none';
 document.getElementById('driver-stats-panel').style.display = 'none';
-if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.display = 'none'; }
-if (window.innerWidth >= 1024) { viewDriverRoute(name); }
+document.getElementById('archive-section') && (document.getElementById('archive-section').style.display = 'none');
+window.innerWidth >= 1024 && viewDriverRoute(name);
 window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function clearDriverFilter() {
 currentDriverFilter = null;
 document.getElementById('entry-panel').style.display = 'block';
 document.getElementById('driver-stats-panel').style.display = 'flex';
-if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none'; }
-if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
+document.getElementById('archive-section') && (document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none');
+document.getElementById("selected-driver-label") && (document.getElementById("selected-driver-label").style.display = "none");
 closeMap();
 renderData();
 }
@@ -622,7 +602,7 @@ function unloadActiveDriverAtDepot() {
 }
 function attemptLogin() {
 const e = document.getElementById('login-user').value.trim(), p = document.getElementById('login-pin').value.trim();
-if(e && p) firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => firebase.auth().signInWithEmailAndPassword(e, p)).catch(err => alert("Login Failed: " + err.message));
+e && p && firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => firebase.auth().signInWithEmailAndPassword(e, p)).catch(err => alert("Login Failed: " + err.message));
 }
 function formatTime12(ts) { if (!ts) return '--:--'; const d = new Date(ts); return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }); }
 function formatPhone(i) { let x = i.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/); i.value = !x[2] ? x[1] : '(' + x[1] + ')-' + x[2] + (x[3] ? '-' + x[3] : ''); }
@@ -652,14 +632,9 @@ let hasMatch = false;
 Array.from(list.children).forEach(c => {
 const match = c.innerText.toLowerCase().includes(val);
 c.style.display = match ? '' : 'none';
-if (match) hasMatch = true;
+match && (hasMatch = true);
 });
-if (val) {
-list.style.display = hasMatch ? 'block' : 'none';
-} else {
-const cat = id.split('-')[1];
-list.style.display = catState[cat] ? 'block' : 'none';
-}
+val ? (list.style.display = hasMatch ? 'block' : 'none') : (list.style.display = catState[id.split('-')[1]] ? 'block' : 'none');
 }
 });
 }
@@ -669,50 +644,49 @@ if (currentDriverFilter !== null) {
 currentDriverFilter = null;
 document.getElementById('entry-panel').style.display = 'block';
 document.getElementById('driver-stats-panel').style.display = 'flex';
-if(document.getElementById('archive-section')) { document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none'; }
-if(document.getElementById("selected-driver-label")) document.getElementById("selected-driver-label").style.display = "none";
+document.getElementById('archive-section') && (document.getElementById('archive-section').style.display = document.getElementById('toggle-archive-btn').innerText.includes('HIDE') ? 'block' : 'none');
+document.getElementById("selected-driver-label") && (document.getElementById("selected-driver-label").style.display = "none");
 renderData();
 }
 document.getElementById('map-driver-head').style.display = 'none'; mapBoundsInitialized = false; 
 document.getElementById('map-modal').style.display = 'block'; 
-if (window.innerWidth >= 1024 && !isEmbedded) document.getElementById('map-modal').classList.add('fullscreen-map');
+window.innerWidth >= 1024 && !isEmbedded && document.getElementById('map-modal').classList.add('fullscreen-map');
 document.getElementById('route-time-badge').style.display = 'none';
-setTimeout(() => { if(mainMap) google.maps.event.trigger(mainMap, "resize"); }, 100);
+setTimeout(() => { mainMap && google.maps.event.trigger(mainMap, "resize"); }, 100);
 if (!mainMap) {
 mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
 mainMap.addListener('click', () => { mainMap.setOptions({ scrollwheel: true }); });
 document.addEventListener('click', (e) => {
 if (!e.target.closest('#map-modal') && !e.target.closest('#map') && !e.target.closest('#locate-btn') && !e.target.closest('.driver-stat-row')) {
-if (mainMap) mainMap.setOptions({ scrollwheel: false });
+mainMap && mainMap.setOptions({ scrollwheel: false });
 }
 });
 }
-for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
-mapMarkers = {}; if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
-if(mapAllListener) db.ref('driver_locations').off('value', mapAllListener);
+for(let k in mapMarkers) mapMarkers[k] && mapMarkers[k].setMap(null);
+mapMarkers = {}; activePolyline && (activePolyline.setMap(null), activePolyline = null);
+mapAllListener && db.ref('driver_locations').off('value', mapAllListener);
 mapAllListener = db.ref('driver_locations').on('value', snap => {
 const drivers = snap.val(), bounds = new google.maps.LatLngBounds(); let hasDrivers = false;
 for (let name in drivers) {
 const d = drivers[name], pos = { lat: d.lat, lng: d.lng };
 const label = `${name}\n${formatTime12(d.gps_timestamp || d.timestamp)} | ${new Date(d.gps_timestamp||d.timestamp).toLocaleDateString()}`;
 bounds.extend(pos); hasDrivers = true;
-if (mapMarkers[name]) { mapMarkers[name].setPosition(pos); mapMarkers[name].setLabel({ text: label, className: "pulsing-dot driver-map-label" }); } 
-else { mapMarkers[name] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) }, label: { text: label, className: "pulsing-dot driver-map-label" }, title: name }); }
+mapMarkers[name] ? (mapMarkers[name].setPosition(pos), mapMarkers[name].setLabel({ text: label, className: "pulsing-dot driver-map-label" })) : (mapMarkers[name] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 2, strokeColor: '#ffffff', scale: 7, labelOrigin: new google.maps.Point(0, -2) }, label: { text: label, className: "pulsing-dot driver-map-label" }, title: name }));
 }
-if (hasDrivers && !mapBoundsInitialized) { mainMap.fitBounds(bounds); mapBoundsInitialized = true; google.maps.event.addListenerOnce(mainMap, 'idle', () => { if (mainMap.getZoom() > 16) mainMap.setZoom(16); }); }
+hasDrivers && !mapBoundsInitialized && (mainMap.fitBounds(bounds), mapBoundsInitialized = true, google.maps.event.addListenerOnce(mainMap, 'idle', () => mainMap.getZoom() > 16 && mainMap.setZoom(16)));
 });
 }
 function viewDriverRoute(name, e) {
-if(e) e.stopPropagation(); mapBoundsInitialized = false;
-if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
+e && e.stopPropagation(); mapBoundsInitialized = false;
+mapAllListener && (db.ref('driver_locations').off('value', mapAllListener), mapAllListener = null);
 currentDriverFilter = name; document.getElementById('map-modal').style.display = 'block';
-if (window.innerWidth >= 1024) document.getElementById('map-modal').classList.remove('fullscreen-map');
+window.innerWidth >= 1024 && document.getElementById('map-modal').classList.remove('fullscreen-map');
 if (!mainMap) {
 mainMap = new google.maps.Map(document.getElementById("map"), { scrollwheel: false, gestureHandling: "greedy", styles: [ { "featureType": "all", "elementType": "all", "stylers": [{ "invert_lightness": true }, { "saturation": 10 }, { "lightness": 30 }, { "gamma": 0.5 }, { "hue": "#435158" }] } ] });
 mainMap.addListener('click', () => { mainMap.setOptions({ scrollwheel: true }); });
 document.addEventListener('click', (ev) => {
 if (!ev.target.closest('#map-modal') && !ev.target.closest('#map') && !ev.target.closest('#locate-btn') && !ev.target.closest('.driver-stat-row')) {
-if (mainMap) mainMap.setOptions({ scrollwheel: false });
+mainMap && mainMap.setOptions({ scrollwheel: false });
 }
 });
 }
@@ -726,30 +700,29 @@ if (window.innerWidth >= 1024) {
 } else {
     document.getElementById('map-modal').style.display = 'none'; 
     document.getElementById('map-driver-head').style.display = 'none';
-    if(mapAllListener) { db.ref('driver_locations').off('value', mapAllListener); mapAllListener = null; }
-    if(activePolyline) { activePolyline.setMap(null); activePolyline = null; }
-    for(let k in mapMarkers) if(mapMarkers[k]) mapMarkers[k].setMap(null);
+    mapAllListener && (db.ref('driver_locations').off('value', mapAllListener), mapAllListener = null);
+    activePolyline && (activePolyline.setMap(null), activePolyline = null);
+    for(let k in mapMarkers) mapMarkers[k] && mapMarkers[k].setMap(null);
     mapMarkers = {};
 }
 }
 function zoomToDensest() {
 const bounds = new google.maps.LatLngBounds(); let found = false;
-Object.keys(mapMarkers).forEach(k => { if(mapMarkers[k].getPosition()) { bounds.extend(mapMarkers[k].getPosition()); found = true; } });
-if(activePolyline) { activePolyline.getPath().forEach(p => bounds.extend(p)); found = true; }
-if(found) mainMap.fitBounds(bounds);
+Object.keys(mapMarkers).forEach(k => { mapMarkers[k].getPosition() && (bounds.extend(mapMarkers[k].getPosition()), found = true); });
+activePolyline && (activePolyline.getPath().forEach(p => bounds.extend(p)), found = true);
+found && mainMap.fitBounds(bounds);
 }
 function zoomToAll() {
 const bounds = new google.maps.LatLngBounds(); let found = false;
-Object.keys(mapMarkers).forEach(k => { if(mapMarkers[k].getPosition()) { bounds.extend(mapMarkers[k].getPosition()); found = true; } });
-if(activePolyline) { activePolyline.getPath().forEach(p => bounds.extend(p)); found = true; }
-if(found) { mainMap.fitBounds(bounds); google.maps.event.addListenerOnce(mainMap, 'idle', () => mainMap.setZoom(mainMap.getZoom() - 1)); }
+Object.keys(mapMarkers).forEach(k => { mapMarkers[k].getPosition() && (bounds.extend(mapMarkers[k].getPosition()), found = true); });
+activePolyline && (activePolyline.getPath().forEach(p => bounds.extend(p)), found = true);
+found && (mainMap.fitBounds(bounds), google.maps.event.addListenerOnce(mainMap, 'idle', () => mainMap.setZoom(mainMap.getZoom() - 1)));
 }
-function requestNotifyPermission() { if ("Notification" in window) Notification.requestPermission(); }
+function requestNotifyPermission() { "Notification" in window && Notification.requestPermission(); }
 function setMode(mode) {
 currentMode = mode;
 const top = document.getElementById('top-input-section'), bot = document.getElementById('bottom-input-section'), grpP = document.getElementById('group-pickup'), grpD = document.getElementById('group-drop'), btnP = document.getElementById('btn-mode-pickup'), btnD = document.getElementById('btn-mode-delivery');
-if(mode === 'pickup') { top.appendChild(grpP); bot.appendChild(grpD); btnP.classList.add('active-mode'); btnD.classList.remove('active-mode', 'delivery-mode'); } 
-else { top.appendChild(grpD); bot.appendChild(grpP); btnP.classList.remove('active-mode'); btnD.classList.add('active-mode', 'delivery-mode'); }
+mode === 'pickup' ? (top.appendChild(grpP), bot.appendChild(grpD), btnP.classList.add('active-mode'), btnD.classList.remove('active-mode', 'delivery-mode')) : (top.appendChild(grpD), bot.appendChild(grpP), btnP.classList.remove('active-mode'), btnD.classList.add('active-mode', 'delivery-mode'));
 }
 setMode('pickup');
 firebase.auth().onAuthStateChanged((user) => {
@@ -759,16 +732,16 @@ db.ref(`roles/${username}/command`).once('value').then(roleSnap => {
 if(roleSnap.val() === true) {
 currentUser = user.email.split('@')[0]; initCommandNotifications(user.email);
 requestWakeLock();
-if(window.innerWidth >= 1024) openMap(true);
+window.innerWidth >= 1024 && openMap(true);
 document.getElementById('login-overlay').style.display = 'none'; document.getElementById('user-display').innerText = `Logged in as: ${currentUser}`;
 firebase.database().ref('developer').on('value', snap => {
   const list = document.getElementById('dev-list');
   list.innerHTML = '';
-  const notes = snap.val() || {};
+  const notes = snap.val() ?? {};
   Object.values(notes).forEach(note => {
     list.innerHTML += `
       <div class="dev-item">
-        <div class="dev-hdr">${note.user} - <span style="color: orange;">${note.app || 'Database'}</span> - ${note.date}</div>
+        <div class="dev-hdr">${note.user} - <span style="color: orange;">${note.app ?? 'Database'}</span> - ${note.date}</div>
         <div>${note.text}</div>
       </div>`;
   });
@@ -776,12 +749,12 @@ firebase.database().ref('developer').on('value', snap => {
 });
 db.ref('drivers').on('value', snap => {
 if(snap.exists()) {
-let raw = snap.val() || [];
+let raw = snap.val() ?? [];
 customDrivers = [];
 driverColors = {};
 raw.forEach(d => {
 if(typeof d === 'string') { customDrivers.push(d); }
-else if(d && d.name) { customDrivers.push(d.name); if(d.color) driverColors[d.name] = d.color; }
+else if(d && d.name) { customDrivers.push(d.name); d.color && (driverColors[d.name] = d.color); }
 });
 } else {
 customDrivers = [];
@@ -791,14 +764,14 @@ if(document.getElementById('zone-modal').style.display==='block') {
 if(document.getElementById('zone-schedule-view').style.display!=='none') renderZoneRoster();
 if(document.getElementById('zone-map-view').style.display!=='none') renderZoneMapInterface();
 }
-if(!isFirstLoad) renderData();
+!isFirstLoad && renderData();
 });
-db.ref("address_lookup").on("value", s => addressData = s.val() || {});
+db.ref("address_lookup").on("value", s => addressData = s.val() ?? {});
 const start = Date.now() - (604800000);
-db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() || {}; renderData(); });
-db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() || {}; renderData(); });
+db.ref("jobs").orderByChild("timestamp").startAt(start).on("value", s => { rawJobs = s.val() ?? {}; renderData(); });
+db.ref("driver_locations").on("value", s => { driverLocationsData = s.val() ?? {}; renderData(); });
 db.ref("driver_zones").on("value", s => { 
-driverZones = s.val() || {}; 
+driverZones = s.val() ?? {}; 
 renderZoneRoster(); 
 if(document.getElementById('zone-map-view').style.display !== 'none') renderZoneMapInterface(); 
 });
@@ -859,7 +832,7 @@ function saveDriverEdit(i) {
     const col = document.getElementById(`edit-color-${i}`).value;
     const oldName = customDrivers[i];
     if(n) {
-        if(n !== oldName) { delete driverColors[oldName]; customDrivers[i] = n; }
+        n !== oldName && (delete driverColors[oldName], customDrivers[i] = n);
         driverColors[n] = col;
         const driverData = customDrivers.map(d => ({ name: d, color: driverColors[d] || getDriverColor(d) }));
         db.ref('drivers').set(driverData).then(() => {
@@ -882,7 +855,7 @@ function deleteDriver(i) {
         });
     }
 }
-function resetFormFields() { ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; }); }
+function resetFormFields() { ['f-city', 'f-pickup', 'f-drop-name', 'f-drop-address', 'f-drop-city', 'f-po', 'f-info', 'f-name', 'f-pkg-details', 'f-customer-email-p', 'f-customer-email-d', 'f-customer-phone-p', 'f-customer-phone-d'].forEach(id => { const el = document.getElementById(id); el && (el.value = ""); }); }
 function startVoiceEntry() {
 const S = window.SpeechRecognition || window.webkitSpeechRecognition; if (!S) return alert("Voice API not supported");
 const rec = new S(); rec.lang = 'en-US'; rec.start();
@@ -894,7 +867,7 @@ const map = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':
 Object.keys(map).forEach(w => s = s.replace(new RegExp(`\\b${w}\\b`, 'g'), map[w]));
 customDrivers.forEach(d => {
 let m = s.match(new RegExp(`\\bfor\\s+(${d.toLowerCase()})\\b`));
-if (m) document.getElementById('f-driver').value = d;
+m && (document.getElementById('f-driver').value = d);
 });
 };
 rec.onend = () => document.getElementById('mic-icon').classList.remove('voice-active');
@@ -922,7 +895,7 @@ box.innerHTML = m.map(mapFn).join(''); box.style.display = 'block';
 function fillForm(name, nId, aId, cId, eId, pId, sId, csId) {
 const d = addressData[name]; if(!d) return;
 document.getElementById(nId).value = name; document.getElementById(aId).value = d.address||""; document.getElementById(cId).value = d.city||"";
-if(d.customer_email) document.getElementById(eId).value = d.customer_email; if(d.customer_phone) document.getElementById(pId).value = d.customer_phone;
+d.customer_email && (document.getElementById(eId).value = d.customer_email); d.customer_phone && (document.getElementById(pId).value = d.customer_phone);
 document.getElementById(sId).style.display = 'none'; document.getElementById(csId).style.display = 'none';
 }
 function archiveAllDND() {
@@ -935,7 +908,7 @@ updates[`/jobs/${id}/status`] = 'completed'; updates[`/jobs/${id}/completed_at`]
 updates[`/jobs/${id}/last_edit_by`] = currentUser; updates[`/jobs/${id}/job_history`] = (j.job_history ? j.job_history + '\n' : '') + "[ARCHIVED ALL]";
 }
 });
-if(Object.keys(updates).length) db.ref().update(updates);
+Object.keys(updates).length && db.ref().update(updates);
 }
 function autoAssignDepotJobs() {
 const jobsToAssign = [];
@@ -984,9 +957,7 @@ if (match) { bestDriver = d; break; }
 }
 if (bestDriver !== 'Unassigned') break;
 }
-if(bestDriver !== 'Unassigned') {
-db.ref('jobs').child(job.id).update({ assigned_to: bestDriver });
-}
+bestDriver !== 'Unassigned' && db.ref('jobs').child(job.id).update({ assigned_to: bestDriver });
 }
 setTimeout(() => processJob(index + 1), 600);
 });
@@ -1003,7 +974,7 @@ if(!hasP && !hasD) return alert("Complete Pickup (Name, Address, City) OR Delive
 const finalizeJob = (finalDriver) => {
 const job = { pickup_city: city, delivery_city: dCity, city: city || dCity, pickup_location: p, destination: dAddr, delivery_name: dName, package_details: document.getElementById('f-pkg-details').value, po_number: document.getElementById('f-po').value, name: name, other_info: info, customer_email: email||"", customer_phone: phone||"", status: currentMode === 'delivery' ? 'pending_delivery' : 'pending_pickup', assigned_to: finalDriver, timestamp: Date.now(), created_by: currentUser, last_edit_by: currentUser };
 db.ref('jobs').push(job);
-const save = (n, a, c) => { if(n) db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email||"", customer_phone: phone||"", last_edit_by: currentUser }); };
+const save = (n, a, c) => { n && db.ref("address_lookup").child(n.replace(/[.#$\[\]\/]/g, "").trim()).set({ address: a, city: c, customer_email: email ?? "", customer_phone: phone ?? "", last_edit_by: currentUser }); };
 save(name, p, city); save(dName, dAddr, dCity);
 resetFormFields();
 };
@@ -1052,9 +1023,9 @@ finalizeJob(asgn);
 }
 }
 let pressTimer;
-function startPress(el) { pressTimer = setTimeout(() => { el.readOnly = false; el.style.color = 'var(--text)'; el.style.textDecoration = 'none'; el.style.cursor = 'text'; el.focus(); if(navigator.vibrate) navigator.vibrate(50); }, 1500); }
+function startPress(el) { pressTimer = setTimeout(() => { el.readOnly = false; el.style.color = 'var(--text)'; el.style.textDecoration = 'none'; el.style.cursor = 'text'; el.focus(); navigator.vibrate && navigator.vibrate(50); }, 1500); }
 function cancelPress() { clearTimeout(pressTimer); }
-function handleLinkClick(el, type) { if(el.readOnly && el.value) window.location.href = (type === 'email' ? 'mailto:' : 'tel:') + el.value; }
+function handleLinkClick(el, type) { el.readOnly && el.value && (window.location.href = (type === 'email' ? 'mailto:' : 'tel:') + el.value); }
 function viewDetails(id) {
 const data = rawJobs[id]; if(!data) return;
 const val = (v) => v ? v.replace(/"/g, '&quot;') : "";
@@ -1096,15 +1067,13 @@ const html = `
 <div class="edit-btn-group"><button onclick="document.getElementById('detailsModal').style.display='none';document.body.style.overflow=''" class="btn-cancel">CANCEL</button><button onclick="saveEdit('${id}')" class="btn-save">SAVE</button></div>
 </div>`;
 document.querySelector('#detailsModal .modal-content').innerHTML = html;
-const ta = document.getElementById('e-note'); if(ta) ta.style.height = ta.scrollHeight + 'px';
+const ta = document.getElementById('e-note'); ta && (ta.style.height = ta.scrollHeight + 'px');
 document.getElementById('detailsModal').style.display = 'flex'; document.body.style.overflow = 'hidden';
 }
 function archiveAsFailed(id) {
-if(confirm("Archive this job as Failed (Unassigned)?")) {
-const hist = rawJobs[id]?.job_history ? rawJobs[id].job_history + '\n[ARCHIVED DND/DNP]' : '[ARCHIVED DND/DNP]';
-db.ref('jobs').child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, job_history: hist, last_edit_by: currentUser });
-document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = '';
-}
+confirm("Archive this job as Failed (Unassigned)?") && (
+db.ref('jobs').child(id).update({ status: 'completed', assigned_to: 'Unassigned', completed_at: firebase.database.ServerValue.TIMESTAMP, job_history: rawJobs[id]?.job_history ? rawJobs[id].job_history + '\n[ARCHIVED DND/DNP]' : '[ARCHIVED DND/DNP]', last_edit_by: currentUser }),
+document.getElementById('detailsModal').style.display = 'none', document.body.style.overflow = '');
 }
 function saveEdit(id) {
 let n = document.getElementById('e-note').value, add = document.getElementById('e-add-note').value;
@@ -1112,17 +1081,17 @@ if(add.trim()) n = (n ? n + " " : "") + `[${currentUser}]: ${add.trim()}`;
 const newD = document.getElementById('e-driver').value, old = rawJobs[id].other_info.toLowerCase();
 if ((old.includes("dnd") || old.includes("dnp")) && newD !== 'Unassigned') { n = n.replace(/dnd/gi, "").replace(/dnp/gi, "") + ` [reassigned by ${currentUser}]`; }
 db.ref('jobs').child(id).update({
-assigned_to: newD, package_details: document.getElementById('e-pkg').value, po_number: document.getElementById('e-po').value, name: document.getElementById('e-name').value, pickup_location: document.getElementById('e-pickup').value, pickup_city: document.getElementById('e-city-p').value, delivery_city: document.getElementById('e-city-d').value, city: document.getElementById('e-city-p').value || document.getElementById('e-city-d').value, delivery_name: document.getElementById('e-drop-name').value, destination: document.getElementById('e-drop').value, other_info: n, customer_email: document.getElementById('e-email-p').value, customer_phone: document.getElementById('e-phone-p').value, last_edit_by: currentUser
+assigned_to: newD, package_details: document.getElementById('e-pkg').value, po_number: document.getElementById('e-po').value, name: document.getElementById('e-name').value, pickup_location: document.getElementById('e-pickup').value, pickup_city: document.getElementById('e-city-p').value, delivery_city: document.getElementById('e-city-d').value, city: document.getElementById('e-city-p').value ?? document.getElementById('e-city-d').value, delivery_name: document.getElementById('e-drop-name').value, destination: document.getElementById('e-drop').value, other_info: n, customer_email: document.getElementById('e-email-p').value, customer_phone: document.getElementById('e-phone-p').value, last_edit_by: currentUser
 }).then(() => { document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; });
 }
-function deleteJob(id) { if(confirm("Delete this dispatch completely?")) { db.ref('jobs').child(id).remove(); document.getElementById('detailsModal').style.display = 'none'; document.body.style.overflow = ''; } }
+function deleteJob(id) { confirm("Delete this dispatch completely?") && (db.ref('jobs').child(id).remove(), document.getElementById('detailsModal').style.display = 'none', document.body.style.overflow = ''); }
 function renderData() {
 const pList = document.getElementById("list-pickups"), dList = document.getElementById("list-deliveries"), tList = document.getElementById("list-transit"), depotList = document.getElementById("list-depot"), sPanel = document.getElementById("driver-stats-panel"), arcList = document.getElementById("list-archive"), dndList = document.getElementById("list-dnd"), uList = document.getElementById("unassigned-immediate-list");
 pList.innerHTML = ""; dList.innerHTML = ""; tList.innerHTML = ""; depotList.innerHTML = ""; sPanel.innerHTML = ""; arcList.innerHTML = ""; dndList.innerHTML = ""; uList.innerHTML = "";
 const filterUI = document.getElementById('filter-reset-ui'); 
 const jobFilters = document.getElementById('driver-job-filters');
-if(filterUI) filterUI.style.display = currentDriverFilter ? 'block' : 'none';
-if(jobFilters) jobFilters.style.display = currentDriverFilter ? 'flex' : 'none';
+filterUI && (filterUI.style.display = currentDriverFilter ? 'block' : 'none');
+jobFilters && (jobFilters.style.display = currentDriverFilter ? 'flex' : 'none');
 document.querySelectorAll('.archive-column').forEach(c => c.style.display = currentDriverFilter ? 'none' : '');
 
 const showPickups = document.getElementById('filter-chk-pickups')?.checked !== false;
@@ -1150,10 +1119,9 @@ if(document.getElementById('map-modal').style.display === 'block' && mainMap && 
 const b = document.getElementById("route-time-badge"); b.innerText = "ROUTE TIME: " + (d.total_duration||""); b.style.display = d.total_duration ? "block" : "none";
 document.getElementById('route-list').style.display = 'none';
 const pos = { lat: d.lat, lng: d.lng };
-if(mapMarkers[currentDriverFilter]) { mapMarkers[currentDriverFilter].setPosition(pos); mapMarkers[currentDriverFilter].setIcon({ path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) }); mapMarkers[currentDriverFilter].setLabel(null); }
-else { mapMarkers[currentDriverFilter] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) } }); }
+mapMarkers[currentDriverFilter] ? (mapMarkers[currentDriverFilter].setPosition(pos), mapMarkers[currentDriverFilter].setIcon({ path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) }), mapMarkers[currentDriverFilter].setLabel(null)) : (mapMarkers[currentDriverFilter] = new google.maps.Marker({ position: pos, map: mainMap, icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: '#00b32d', fillOpacity: 1, strokeWeight: 1, strokeColor: '#000', scale: 8, anchor: new google.maps.Point(0, 2.5) } }));
 if(d.active_route) {
-if(activePolyline) activePolyline.setMap(null);
+activePolyline && activePolyline.setMap(null);
 const path = google.maps.geometry.encoding.decodePath(d.active_route);
 activePolyline = new google.maps.Polyline({ path: path, geodesic: true, strokeColor: "#2196f3", strokeOpacity: 1.0, strokeWeight: 5, map: mainMap });
 Object.keys(mapMarkers).forEach(k => { if(k !== currentDriverFilter && !k.startsWith('job_')) { mapMarkers[k].setMap(null); delete mapMarkers[k]; } });
@@ -1175,7 +1143,7 @@ fLbl = s ? `${s}. ${lbl}` : lbl;
 usedLabels.add(lbl);
 }
 const k = `job_${i}`;
-if(mapMarkers[k]) mapMarkers[k].setMap(null);
+mapMarkers[k] && mapMarkers[k].setMap(null);
 const mark = (loc) => mapMarkers[k] = new google.maps.Marker({ map: mainMap, position: loc, label: fLbl ? { text: fLbl, color: "#00b32d", fontWeight: "bold", fontSize: "12px", className: "driver-map-label" } : null, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5, fillColor: '#ff0000', fillOpacity: 1, strokeWeight: 1, strokeColor: 'white', labelOrigin: new google.maps.Point(0, i%2===0?-15:15) } });
 if(j.lat&&j.lng) mark({lat:parseFloat(j.lat),lng:parseFloat(j.lng)}); else geo.geocode({'address':addr}, (r,status) => { if(status==='OK') mark(r[0].geometry.location); });
 });
@@ -1193,10 +1161,7 @@ const info = (p.other_info||"").toLowerCase(), isFailed = info.includes("dnd") |
 const searchCity = (p.pickup_city || "") + " " + (p.delivery_city || "") + " " + (p.city || "");
 let jobKey = id + '_' + p.status;
 let isNew = false;
-if (!seenJobs[jobKey]) {
-seenJobs[jobKey] = true;
-if (!isFirstLoad) isNew = true;
-}
+!seenJobs[jobKey] && (seenJobs[jobKey] = true, !isFirstLoad && (isNew = true));
 if(p.status === 'completed') {
 if (new Date(p.completed_at||p.timestamp).toDateString() !== new Date().toDateString()) return;
 if (afD && p.assigned_to !== afD) return;
@@ -1221,7 +1186,7 @@ c.innerHTML = `<div style="display:flex; align-items:center; gap:8px; width:100%
 if(currentDriverFilter) {
     if(showTransit) uList.appendChild(c);
 } else tList.appendChild(c); 
-if(p.driver_edited_note) noteCount++; return;
+p.driver_edited_note && noteCount++; return;
 }
 const type = p.status === 'pending_pickup' ? 'pickup' : 'delivery';
 const isDepot = type === 'delivery' && (isU || p.status === 'at_depot');
@@ -1240,10 +1205,10 @@ if(currentDriverFilter) {
     else if(type === 'delivery' && showDeliveries) uList.appendChild(c);
 } else dndList.appendChild(c);
 if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++;
-if(p.driver_edited_note) noteCount++; return;
+p.driver_edited_note && noteCount++; return;
 }
 if(isU && !isDepot) pending++; else { if(!isDepot) assignedCount++; if(driverStats[asgn]) type==='pickup' ? driverStats[asgn].p++ : driverStats[asgn].d++; }
-if(p.driver_edited_note) noteCount++;
+p.driver_edited_note && noteCount++;
 const c = document.createElement("div"); c.className = "history-item" + (type==='pickup'&&isU ? ' urgent-pickup' : '') + (isNew ? ' new-card' : ''); c.onclick = () => viewDetails(id);
 c.style.cursor = "pointer"; c.style.borderLeft = "none"; c.style.background = "transparent";
 if (isU && !isFailed) { c.setAttribute("draggable", "true"); c.ondragstart = (e) => e.dataTransfer.setData("text/plain", id); }
@@ -1514,7 +1479,7 @@ console.error(err);
 }
 }
 document.addEventListener('visibilitychange', () => {
-if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
+wakeLock !== null && document.visibilityState === 'visible' && requestWakeLock();
 });
 let deferredPrompt; const installBtn = document.getElementById('install-btn');
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'block'; });
