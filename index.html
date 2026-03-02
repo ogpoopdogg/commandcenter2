@@ -224,7 +224,7 @@ header, #login-overlay { opacity: 0; transition: opacity 1s; }
 </head>
 <body>
 <div id="app-splash">
-<video id="splash-video" src="https://res.cloudinary.com/dn71xzktc/video/upload/v1/Video_With_Logo_Added_zhrqkr.mp4" muted playsinline></video>
+<video id="splash-video" src="https://res.cloudinary.com/dn71xzktc/video/upload/v1/Video_With_Logo_Added_zhrqkr.mp4" autoplay muted playsinline></video>
 <div class="splash-text">Loading E&C Command Center</div>
 </div>
 <div id=login-overlay>
@@ -496,7 +496,7 @@ function toggleDispatchForm() {
 let db=firebase.database(),messaging=firebase.messaging(),swReg=null,rawJobs={},driverLocationsData={},addressData={},currentUser=localStorage.getItem('ec_command_user'),currentMode='pickup',currentDriverFilter=null,mapBoundsInitialized=!1,driverColors={},zoneMap,drawingManager,driverZones={},zonePolygons={},activeDrawingDriver=null,activeDrawingZoneId=null,seenJobs={},catState={pickups:!1,transit:!1,depot:!1,deliveries:!1,dnd:!1},isFirstLoad=!0,copySvg='<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>',customDrivers=[],baseColors=['#FF8C00','#00BFFF','#3F51B5','#FF69B4','#9C27B0','#E91E63','#4CAF50','#FF5722','#00BCD4'],getDriverColor=a=>{if(driverColors[a])return driverColors[a];let b=customDrivers.indexOf(a);return b!==-1?baseColors[b%baseColors.length]:'#00b32d'},mainMap,mapMarkers={},activePolyline=null,listeningRef=null,mapAllListener=null,pressTimer,wakeLock=null,deferredPrompt,installBtn=document.getElementById('install-btn'),currentLocationTarget=null,pickerMap=null,pickerAutocomplete=null;
 
 let authHandshakeDone=false;function exitSplashSequence(){let a=document.getElementById('app-splash'),b=document.querySelector('header'),c=document.getElementById('login-overlay');if(a)a.style.opacity='0';if(b)b.style.opacity='1';if(c)c.style.opacity='1';setTimeout(()=>{if(a)a.remove()},1000)}
-window.onload=()=>{let v=document.getElementById('splash-video');if(v){v.muted=!0;v.currentTime=2.0;setTimeout(()=>{v.play().catch(e=>{console.log("Autoplay blocked, exiting splash");exitSplashSequence()})},100);v.onended=()=>{if(authHandshakeDone){exitSplashSequence()}else{v.loop=!0;v.play().catch(()=>{})}}}}
+setTimeout(exitSplashSequence,8000);let v=document.getElementById('splash-video');if(v){v.addEventListener('loadedmetadata',()=>{v.currentTime=2.0});v.addEventListener('canplay',()=>{v.play().catch(e=>exitSplashSequence())});v.addEventListener('ended',()=>{if(authHandshakeDone){exitSplashSequence()}else{v.loop=!0;v.play().catch(()=>{})}})}
 
 firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
