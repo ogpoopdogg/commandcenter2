@@ -10,15 +10,15 @@
 <link href="//fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300&display=swap" rel=stylesheet>
 <style>
 :root { 
---accent: gold; --bg: #222; --card: #141414; --text: #e0e0e0; --card-text: #e0e0e0;
---active-green: #00b32d; --archive-orange: #cc5200; --note-blue: #0099cc; --pro-blue: #0056b3;
---header-bg: #000; --input-bg: #141414; --border: #333; --stat-bg: #161616; --modal-bg: #181818; --btn-bg: #1c1c1c;
---shadow-soft: 0 4px 12px rgba(0,0,0,0.1);
---route-text: #fff; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: var(--active-green);
+--accent: #facc15; --bg: #111827; --card: #1f2937; --text: #f9fafb; --card-text: #e5e7eb;
+--active-green: #22c55e; --archive-orange: #f97316; --note-blue: #3b82f6; --pro-blue: #2563eb;
+--header-bg: #030712; --input-bg: #374151; --border: #4b5563; --stat-bg: #1f2937; --modal-bg: #111827; --btn-bg: #374151;
+--shadow-soft: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3);
+--route-text: #ffffff; --dispatch-bg: rgba(34, 197, 94, 0.15); --dispatch-text: var(--active-green);
 }
 body.light-mode {
---bg: #f0f2f5; --card: #fff; --text: #000; --card-text: #000; --header-bg: #fff; --input-bg: #fff; --border: #ccc; --stat-bg: #e4e6eb; --modal-bg: #fff; --btn-bg: #f0f0f0;
---route-text: #000; --dispatch-bg: rgba(0, 179, 45, 0.1); --dispatch-text: #00661a; --accent: #000; --active-green: #000; --archive-orange: #000; --note-blue: #000; --pro-blue: #000;
+--bg: #f3f4f6; --card: #ffffff; --text: #111827; --card-text: #374151; --header-bg: #ffffff; --input-bg: #f9fafb; --border: #e5e7eb; --stat-bg: #f3f4f6; --modal-bg: #ffffff; --btn-bg: #f3f4f6;
+--route-text: #111827; --dispatch-bg: rgba(34, 197, 94, 0.15); --dispatch-text: #166534; --accent: #2563eb; --active-green: #16a34a; --archive-orange: #ea580c; --note-blue: #2563eb; --pro-blue: #1d4ed8;
 }
 body.light-mode * { color: #000 !important; }
 body.light-mode .history-item div[style*="color:gold"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
@@ -28,7 +28,7 @@ body.light-mode #toggle-dispatch-btn { background: #fff !important; color: #000 
 body.light-mode #selected-driver-label, body.light-mode #route-time-badge, body.light-mode #map-driver-head, body.light-mode #route-list { background: #fff !important; color: #000 !important; text-shadow: none !important; border-color: #ccc !important; }
 body.light-mode .driver-map-label { color: #00661a !important; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff !important; }
 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0 0 20px 0; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
-header { padding: 10px 20px; background: var(--header-bg); border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
+header { padding: 16px 24px; background: var(--header-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: relative; box-shadow: var(--shadow-soft); }
 .header-logo { height: 24px; width: auto; margin-right: 12px; vertical-align: middle; filter: drop-shadow(0 0 3px var(--accent)); }
 @keyframes dot-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 .pulsing-dot { animation: dot-pulse 2s infinite ease-in-out; }
@@ -59,11 +59,11 @@ header { padding: 10px 20px; background: var(--header-bg); border-bottom: 2px so
 .unassigned-glow { border: 1px solid var(--accent) !important; z-index: 10; box-shadow: var(--shadow-soft); }
 .shiny-text { background: linear-gradient(to right, var(--accent) 20%, #ccc 50%, var(--accent) 80%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: text-shine 3s linear infinite; }
 @keyframes text-shine { to { background-position: 200% center; } }
-input, select, textarea { width: 100%; padding: 10px 30px 10px 10px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-size: 13px; margin-bottom: 4px; box-sizing: border-box; transition: border 0.2s; }
-input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; background: var(--input-bg); }
+input, select, textarea { width: 100%; padding: 12px 30px 12px 16px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; font-size: 14px; margin-bottom: 8px; box-sizing: border-box; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; background: var(--input-bg); box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2); }
 .flex-row { display: flex; gap: 4px; margin-bottom: 4px; }
 .driver-select { width: 100%; background: var(--input-bg); color: var(--accent); border: 1px solid var(--border); font-weight: 600; padding: 10px; border-radius: 4px; margin-bottom: 8px; }
-button.primary { width: 100%; padding: 12px; background: var(--btn-bg); color: var(--text); font-weight: 700; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 4px; text-transform: uppercase; font-size: 14px; letter-spacing: 1.5px; transition: all 0.2s ease; box-shadow: var(--shadow-soft); overflow: hidden; }
+button.primary { width: 100%; padding: 14px 16px; background: var(--btn-bg); color: var(--text); font-weight: 700; border: 1px solid var(--border); border-bottom: 3px solid var(--accent); cursor: pointer; border-radius: 8px; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-soft); overflow: hidden; }
 button.primary:hover { background: #252525; border-color: var(--accent); transform: translateY(-2px); }
 button.primary:active { transform: translateY(1px); }
 button.primary.super-dispatch { background: var(--dispatch-bg) !important; color: var(--dispatch-text) !important; border: 1px solid var(--dispatch-text) !important; box-shadow: var(--shadow-soft) !important; text-shadow: none; letter-spacing: 2px; }
