@@ -588,7 +588,20 @@ function toggleCat(cat) {
     list.querySelectorAll('.new-card').forEach(card => card.classList.remove('new-card'));
   }
 }
-
+    function showAllCategories() {
+  // Reset to default view: show all columns, hide back button
+  const backBtn = document.getElementById('back-to-categories');
+  backBtn.style.display = 'none';
+  document.querySelectorAll('.archive-column').forEach(col => {
+    col.style.display = '';
+    col.classList.remove('expanded');
+  });
+  // Hide all lists (they will be shown by their individual catState)
+  for (let c in catState) {
+    catState[c] = false;
+  }
+  document.querySelectorAll('[id^="list-"]').forEach(list => list.style.display = 'none');
+}
 function initCommandNotifications(a){"Notification"in window&&Notification.requestPermission().then(b=>{b==='granted'&&messaging.getToken({serviceWorkerRegistration:swReg,vapidKey:"BA1S09dDHyCTLXZfDGckfFdg0kvCyezfgst5eMhe0TnL03C7eHn3yogeC_u20knFpMxFNsHGZHsDjNp0RXjKHfI"}).then(c=>{c&&db.ref('command_tokens/'+a.replace(/[.#$\[\]]/g,"")).set({token:c,user:a,updated:firebase.database.ServerValue.TIMESTAMP})}).catch(()=>{})});messaging.onMessage(b=>{new Audio('//actions.google.com/sounds/v1/alarms/beep_short.ogg').play();with(document){let c=getElementById('header-alert');c.style.display='block';c.innerText="⚠️ "+b.notification.title;setTimeout(()=>{!getElementById('list-dnd').innerHTML&&(c.style.display='none')},5000)}})}
 
 localStorage.getItem('ec_theme')==='light'&&document.body.classList.add('light-mode');
