@@ -389,7 +389,7 @@ function toggleDispatchForm() {
 </div>
 </div>
 <input type=text id=active-search class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left;box-sizing:border-box;border-radius:0;border:0 0 1px 0 solid var(--border);margin-bottom:0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
-<div id=driver-job-filters class="flex jc gap-10 mt-15 mb-15 none" style="padding:0 10px;font-size:11px;">
+    <button id="back-to-categories" class="route-btn" onclick="showAllCategories()" style="display:none; margin:10px auto; width:200px;">← BACK TO ALL CATEGORIES</button><div id=driver-job-filters class="flex jc gap-10 mt-15 mb-15 none" style="padding:0 10px;font-size:11px;">
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-pickups checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Pickups</label>
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-deliveries checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Deliveries</label>
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-transit checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> In Transit</label>
