@@ -216,7 +216,30 @@ header { padding: 8px 4px; }
 #zoom-out-btn { top: 10px !important; }
 #map-driver-head { top: 60px !important; left: 10px !important; right: auto !important; }
 }
-</style>
+    /* Make job cards appear in a grid inside each category panel */
+#list-pickups,
+#list-transit,
+#list-depot,
+#list-deliveries,
+#list-dnd,
+#list-archive {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+/* Ensure each card takes full width of its grid cell and looks consistent */
+.history-item {
+  width: 100%;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Override the flex class on archive container so grid works */
+#list-archive.flex.col {
+  display: grid !important;
+}</style>
 </head>
 <body>
 <div id=login-overlay>
