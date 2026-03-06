@@ -859,9 +859,8 @@ function openLocationPicker(a) {
             });
             let b = getElementById('loc-search-bar');
             pickerAutocomplete = new google.maps.places.Autocomplete(b, {
-                componentRestrictions: { country: 'ca' },
-                bounds: pickerMap.getBounds(),
-                strictBounds: false
+                componentRestrictions: { country: 'ca' }
+                // bounds removed – will be synced via bindTo
             });
             pickerAutocomplete.bindTo('bounds', pickerMap);
             pickerAutocomplete.addListener('place_changed', () => {
