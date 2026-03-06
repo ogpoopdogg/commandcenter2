@@ -680,14 +680,8 @@ function resetDriverView() {
     console.log("No bounds available for reset – map unchanged.");
   }
 
-  // Scroll the page back to the driver's info bar
-  const driverLabel = document.getElementById('selected-driver-label');
-  if (driverLabel) {
-    driverLabel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  } else {
-    // Fallback: scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  // Scroll to top of page to show header and logo
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
