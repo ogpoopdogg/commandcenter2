@@ -861,7 +861,6 @@ function openLocationPicker(a) {
             let b = getElementById('loc-search-bar');
             pickerAutocomplete = new google.maps.places.Autocomplete(b, {
                 componentRestrictions: { country: 'ca' }
-                // bounds removed – will be synced via bindTo
             });
             pickerAutocomplete.bindTo('bounds', pickerMap);
             pickerAutocomplete.addListener('place_changed', () => {
@@ -891,7 +890,6 @@ function openLocationPicker(a) {
                             lng: position.coords.longitude
                         };
                         pickerMap.setCenter(userPos);
-                        // 50km radius bias
                         const circle = new google.maps.Circle({
                             center: userPos,
                             radius: 50000
@@ -900,15 +898,30 @@ function openLocationPicker(a) {
                     },
                     (error) => {
                         console.warn("Geolocation error:", error);
-                        // Keep default center
                     }
                 );
             }
+
+            // --- NEW: Attach search button and Enter key handlers (only once) ---
+            if (!window._searchListenersAttached) {
+                const searchBtn = document.getElementById('search-location-btn');
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', searchLocation);
+                    document.getElementById('loc-search-bar').addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            searchLocation();
+                        }
+                    });
+                    window._searchListenersAttached = true;
+                }
+            }
+            // --- END NEW ---
         }
         setTimeout(() => {
             google.maps.event.trigger(pickerMap, 'resize');
             getElementById('loc-search-bar').value = '';
-            getElementById('loc-search-bar').focus(); // Focus input for immediate typing
+            getElementById('loc-search-bar').focus();
         }, 100);
     }
 }
