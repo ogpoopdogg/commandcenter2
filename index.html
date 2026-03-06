@@ -614,7 +614,7 @@ function clearDriverFilter(){currentDriverFilter=null;with(document){getElementB
 
 function unloadActiveDriverAtDepot(){if(!currentDriverFilter)return;if(!confirm("Move all 'In Transit' packages for "+currentDriverFilter+" to Depot?"))return;let a={},b=0;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c];if(d.status==='in_transit'&&d.assigned_to===currentDriverFilter){b++;a[`jobs/${c}/status`]='pending_delivery';a[`jobs/${c}/assigned_to`]='Unassigned';a[`jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+`Arrived at Depot (Pick-up by ${currentDriverFilter})`}});if(b===0)return alert("No 'In Transit' jobs found for "+currentDriverFilter);db.ref().update(a).then(()=>{alert("Unloaded "+b+" jobs to Depot.");clearDriverFilter()}).catch(c=>alert("Error: "+c.message))}
 
-function attemptLogin(){with(document){let a=getElementById('login-user').value.trim(),b=getElementById('login-pin').value.trim();a&&b&&firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(()=>firebase.auth().signInWithEmailAndPassword(a,b)).catch(c=>alert("Login Failed: "+c.message))}}
+function attemptLogin(){with(document){let a=getElementById('login-user').value.trim(),b=getElementById('login-pin').value.trim();a&&b&&firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(()=>firebase.auth().signInWithEmailAndPassword(a,b)).catch(c=>alert("Login Failed: "+c.message))}}
 
 function formatTime12(a){if(!a)return'--:--';let b=new Date(a);return isNaN(b.getTime())?'--:--':b.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:!0})}
 
