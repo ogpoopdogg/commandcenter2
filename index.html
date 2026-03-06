@@ -634,22 +634,50 @@ function zoomToDensest(){let a=new google.maps.LatLngBounds(),b=!1;Object.keys(m
 function zoomToAll(){let a=new google.maps.LatLngBounds(),b=!1;Object.keys(mapMarkers).forEach(c=>{mapMarkers[c].getPosition()&&(a.extend(mapMarkers[c].getPosition()),b=!0)});activePolyline&&(activePolyline.getPath().forEach(c=>a.extend(c)),b=!0);b&&(mainMap.fitBounds(a),google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.setZoom(mainMap.getZoom()-1)))}
 function resetDriverView() {
   if (!currentDriverFilter) return;
-  const driverData = driverLocationsData[currentDriverFilter];
-  if (!driverData) return;
-  const pos = { lat: driverData.lat, lng: driverData.lng };
+  if (!mainMap) return;
+
   const bounds = new google.maps.LatLngBounds();
-  bounds.extend(pos);
-  // If there is an active route, include its path in the bounds
-  if (driverData.active_route) {
-    const path = google.maps.geometry.encoding.decodePath(driverData.active_route);
-    path.forEach(p => bounds.extend(p));
+  let hasValidBounds = false;
+
+  // Try to include driver's current location
+  const driverData = driverLocationsData[currentDriverFilter];
+  if (driverData && driverData.lat && driverData.lng) {
+    const pos = { lat: driverData.lat, lng: driverData.lng };
+    bounds.extend(pos);
+    hasValidBounds = true;
+    // Include active route if available
+    if (driverData.active_route) {
+      try {
+        const path = google.maps.geometry.encoding.decodePath(driverData.active_route);
+        path.forEach(p => bounds.extend(p));
+      } catch (e) {
+        console.warn("Failed to decode active_route", e);
+      }
+    }
   }
-  // Fit the map to the calculated bounds
-  mainMap.fitBounds(bounds);
-  // If the bounds are just a single point (no route), set a reasonable zoom
-  if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
-    mainMap.setCenter(pos);
-    mainMap.setZoom(14);
+
+  // If we have no driver location or route, try to include all job markers for this driver
+  if (!hasValidBounds) {
+    // Job markers are stored with keys like 'job_0', 'job_1', etc.
+    Object.keys(mapMarkers).forEach(key => {
+      if (key.startsWith('job_')) {
+        const marker = mapMarkers[key];
+        if (marker && marker.getPosition()) {
+          bounds.extend(marker.getPosition());
+          hasValidBounds = true;
+        }
+      }
+    });
+  }
+
+  if (hasValidBounds) {
+    mainMap.fitBounds(bounds);
+    // If the bounds are a single point, zoom to a reasonable level
+    if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+      mainMap.setZoom(14);
+    }
+  } else {
+    console.log("No bounds available for reset – map unchanged.");
   }
 }
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
