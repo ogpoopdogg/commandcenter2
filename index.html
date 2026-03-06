@@ -679,6 +679,18 @@ function resetDriverView() {
   } else {
     console.log("No bounds available for reset – map unchanged.");
   }
+
+  // Scroll the page back to the driver's info bar
+  const driverLabel = document.getElementById('selected-driver-label');
+  if (driverLabel) {
+    driverLabel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    // Fallback: scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+} else {
+    console.log("No bounds available for reset – map unchanged.");
+  }
 }
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
 
