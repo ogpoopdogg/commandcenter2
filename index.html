@@ -688,10 +688,7 @@ function resetDriverView() {
     // Fallback: scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-} else {
-    console.log("No bounds available for reset – map unchanged.");
-  }
-}
+
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
 
 function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}}
