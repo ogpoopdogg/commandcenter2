@@ -844,7 +844,74 @@ function extractCity(a){if(!a.address_components)return"";for(let b=0;b<a.addres
 function initPlaces(){let a={componentRestrictions:{country:"ca"},bounds:new google.maps.Circle({center:new google.maps.LatLng(49.848,-99.950),radius:50000}).getBounds(),strictBounds:!1},b=document.getElementById("f-pickup"),c=document.getElementById("f-drop-address");if(b){let d=new google.maps.places.Autocomplete(b,a);d.addListener("place_changed",()=>{let e=d.getPlace(),f=extractCity(e);f&&(document.getElementById("f-city").value=f)})}if(c){let d=new google.maps.places.Autocomplete(c,a);d.addListener("place_changed",()=>{let e=d.getPlace(),f=extractCity(e);f&&(document.getElementById("f-drop-city").value=f)})}}
 window.addEventListener("load",initPlaces);
 
-function openLocationPicker(a){with(document){currentLocationTarget=a;getElementById('location-picker-modal').style.display='flex';body.style.overflow='hidden';if(!pickerMap){pickerMap=new google.maps.Map(getElementById("picker-map"),{center:{lat:49.8425,lng:-99.9497},zoom:14,gestureHandling:"greedy",disableDefaultUI:!0,zoomControl:!0});let b=getElementById('loc-search-bar');pickerAutocomplete=new google.maps.places.Autocomplete(b);pickerAutocomplete.bindTo('bounds',pickerMap);pickerAutocomplete.addListener('place_changed',()=>{let {geometry}=pickerAutocomplete.getPlace();if(!geometry||!geometry.location)return;pickerMap.setCenter(geometry.location);pickerMap.setZoom(17)});b.addEventListener('input',function(){let c=this.value.trim(),d=/^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/,e=c.match(d);if(e){let f=parseFloat(e[1]),g=parseFloat(e[3]);if(!isNaN(f)&&!isNaN(g)){pickerMap.setCenter({lat:f,lng:g});pickerMap.setZoom(17)}}})}setTimeout(()=>{google.maps.event.trigger(pickerMap,'resize');pickerMap.setCenter({lat:49.8425,lng:-99.9497});getElementById('loc-search-bar').value=''},100)}}
+function openLocationPicker(a) {
+    with(document) {
+        currentLocationTarget = a;
+        getElementById('location-picker-modal').style.display = 'flex';
+        body.style.overflow = 'hidden';
+        if (!pickerMap) {
+            pickerMap = new google.maps.Map(getElementById("picker-map"), {
+                center: { lat: 49.8425, lng: -99.9497 },
+                zoom: 14,
+                gestureHandling: "greedy",
+                disableDefaultUI: true,
+                zoomControl: true
+            });
+            let b = getElementById('loc-search-bar');
+            pickerAutocomplete = new google.maps.places.Autocomplete(b, {
+                componentRestrictions: { country: 'ca' },
+                bounds: pickerMap.getBounds(),
+                strictBounds: false
+            });
+            pickerAutocomplete.bindTo('bounds', pickerMap);
+            pickerAutocomplete.addListener('place_changed', () => {
+                let { geometry } = pickerAutocomplete.getPlace();
+                if (!geometry || !geometry.location) return;
+                pickerMap.setCenter(geometry.location);
+                pickerMap.setZoom(17);
+            });
+            b.addEventListener('input', function() {
+                let c = this.value.trim(),
+                    d = /^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/,
+                    e = c.match(d);
+                if (e) {
+                    let f = parseFloat(e[1]), g = parseFloat(e[3]);
+                    if (!isNaN(f) && !isNaN(g)) {
+                        pickerMap.setCenter({ lat: f, lng: g });
+                        pickerMap.setZoom(17);
+                    }
+                }
+            });
+            // Get user's location for map centering and result biasing
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userPos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        pickerMap.setCenter(userPos);
+                        // 50km radius bias
+                        const circle = new google.maps.Circle({
+                            center: userPos,
+                            radius: 50000
+                        });
+                        pickerAutocomplete.setBounds(circle.getBounds());
+                    },
+                    (error) => {
+                        console.warn("Geolocation error:", error);
+                        // Keep default center
+                    }
+                );
+            }
+        }
+        setTimeout(() => {
+            google.maps.event.trigger(pickerMap, 'resize');
+            getElementById('loc-search-bar').value = '';
+            getElementById('loc-search-bar').focus(); // Focus input for immediate typing
+        }, 100);
+    }
+}
 
 function setPickerLocation(){if(!pickerMap)return;let a=pickerMap.getCenter(),b=a.lat().toFixed(5),c=a.lng().toFixed(5),d=`${b}, ${c}`;with(document){const t={pickup:'f-pickup',drop:'f-drop-address'};t[currentLocationTarget]&&(getElementById(t[currentLocationTarget]).value=d);getElementById('location-picker-modal').style.display='none';body.style.overflow=''}}
 </script>
