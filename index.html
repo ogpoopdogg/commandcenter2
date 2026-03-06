@@ -633,7 +633,26 @@ function closeMap(){mapBoundsInitialized=!1;with(document){if(window.innerWidth>
 function zoomToDensest(){let a=new google.maps.LatLngBounds(),b=!1;Object.keys(mapMarkers).forEach(c=>{mapMarkers[c].getPosition()&&(a.extend(mapMarkers[c].getPosition()),b=!0)});activePolyline&&(activePolyline.getPath().forEach(c=>a.extend(c)),b=!0);b&&mainMap.fitBounds(a)}
 
 function zoomToAll(){let a=new google.maps.LatLngBounds(),b=!1;Object.keys(mapMarkers).forEach(c=>{mapMarkers[c].getPosition()&&(a.extend(mapMarkers[c].getPosition()),b=!0)});activePolyline&&(activePolyline.getPath().forEach(c=>a.extend(c)),b=!0);b&&(mainMap.fitBounds(a),google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.setZoom(mainMap.getZoom()-1)))}
-
+function resetDriverView() {
+  if (!currentDriverFilter) return;
+  const driverData = driverLocationsData[currentDriverFilter];
+  if (!driverData) return;
+  const pos = { lat: driverData.lat, lng: driverData.lng };
+  const bounds = new google.maps.LatLngBounds();
+  bounds.extend(pos);
+  // If there is an active route, include its path in the bounds
+  if (driverData.active_route) {
+    const path = google.maps.geometry.encoding.decodePath(driverData.active_route);
+    path.forEach(p => bounds.extend(p));
+  }
+  // Fit the map to the calculated bounds
+  mainMap.fitBounds(bounds);
+  // If the bounds are just a single point (no route), set a reasonable zoom
+  if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+    mainMap.setCenter(pos);
+    mainMap.setZoom(14);
+  }
+}
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
 
 function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}}
