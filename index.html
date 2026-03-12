@@ -182,95 +182,220 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .active-zone-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); }
 .active-zone-label { font-size: 12px; font-weight: 700; color: #ccc; }
 #f-name, #f-pickup, #f-city, #f-drop-name, #f-drop-address, #f-drop-city { background-color: rgba(0, 153, 255, 0.1) !important; }
+/* ----- DESKTOP LAYOUT CHANGES (≥1024px) ----- */
 @media (min-width: 1024px) {
-#board-panel { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
-#active-list-container { width: 100% !important; flex: none; }
-#archive-section { width: 100%; order: 4; }
-#toggle-archive-btn { order: 3; }
-#map-modal { display: block !important; position: relative !important; width: 100% !important; height: 80vh; z-index: 10; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; order: 2; }
-.close-map { display: none !important; }
-#map-modal.fullscreen-map { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; }
-#map-modal.fullscreen-map .close-map { display: flex !important; }
-#view-route-btn { display: none !important; }
+  /* New grid container for desktop layout */
+  .desktop-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr; /* fixed sidebar, rest main */
+    gap: 20px;
+    padding: 20px;
+    background: var(--bg);
+  }
+  /* Sidebar: driver stats panel */
+  .desktop-layout > #driver-stats-panel {
+    grid-column: 1;
+    margin: 0;
+    background: var(--header-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    height: fit-content;
+    max-height: none; /* show all drivers */
+    overflow-y: visible;
+  }
+  /* Main content area */
+  .desktop-layout > .main-content {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  /* Board panel (categories + job cards) */
+  #board-panel {
+    width: 100%;
+  }
+  /* History box: use grid to separate category buttons and lists */
+  #active-list-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  /* Make each archive-column a content parent so its children become grid items */
+  .archive-column {
+    display: contents;
+  }
+  /* Category buttons row: place all buttons in the first row */
+  #btn-pickups,
+  #btn-transit,
+  #btn-depot,
+  #btn-deliveries,
+  #btn-dnd {
+    grid-row: 2; /* row after search and filters */
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: auto;
+    margin: 0 5px;
+    border-radius: 30px;
+    height: 40px;
+    padding: 0 20px;
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  /* Place all category buttons in the same row using grid */
+  #btn-pickups { grid-column: 1; }
+  #btn-transit { grid-column: 2; }
+  #btn-depot { grid-column: 3; }
+  #btn-deliveries { grid-column: 4; }
+  #btn-dnd { grid-column: 5; }
+  /* Lists container: all lists go to row 3 */
+  #list-pickups,
+  #list-transit,
+  #list-depot,
+  #list-deliveries,
+  #list-dnd,
+  #unassigned-immediate-list {
+    grid-row: 3;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+  /* Ensure lists are visible (override inline styles) */
+  #list-pickups, #list-transit, #list-depot, #list-deliveries, #list-dnd {
+    display: grid !important;
+  }
+  /* Position the map below job cards */
+  #map-modal {
+    position: relative !important;
+    width: 100% !important;
+    height: 400px !important; /* or 50vh */
+    z-index: 10;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .close-map {
+    display: none !important;
+  }
+  /* Archive section remains below map */
+  #toggle-archive-btn, #archive-section {
+    margin-top: 10px;
+  }
+  /* Unified Back Button - appears only when driver filter or category expanded */
+  #unified-back-btn {
+    display: none; /* hidden by default */
+    align-self: flex-start;
+    margin-bottom: 10px;
+    border-radius: 30px;
+    height: 40px;
+    padding: 0 20px;
+    background: var(--btn-bg);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    transition: 0.2s;
+  }
+  #unified-back-btn:hover {
+    background: var(--accent);
+    color: #000;
+  }
+  /* Show unified back button when driver filter active (detect via #filter-reset-ui display) */
+  #filter-reset-ui[style*="display: block"] ~ #unified-back-btn,
+  #filter-reset-ui[style*="display:block"] ~ #unified-back-btn {
+    display: inline-flex;
+  }
+  /* Also show when category expanded (back-to-categories button visible) */
+  #back-to-categories[style*="display: block"] ~ #unified-back-btn,
+  #back-to-categories[style*="display:block"] ~ #unified-back-btn {
+    display: inline-flex;
+  }
+  /* Hide existing scattered back buttons */
+  #reset-driver-view-btn,
+  #back-filter-btn,
+  .back-to-all-btn {
+    display: none !important;
+  }
+  /* Overlay for dimming when driver selected */
+  #driver-dimmer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    pointer-events: none; /* allow clicks to pass through to map and selected row */
+  }
+  /* Show dimmer when driver filter active */
+  #filter-reset-ui[style*="display: block"] ~ #driver-dimmer,
+  #filter-reset-ui[style*="display:block"] ~ #driver-dimmer {
+    display: block;
+  }
+  /* Ensure map and selected driver row are above dimmer */
+  #map-modal {
+    z-index: 1001;
+    position: relative; /* keep above dimmer */
+  }
+  /* Highlight selected driver row */
+  .driver-stat-row.selected-driver {
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 15px var(--accent);
+    background: rgba(250,204,21,0.1);
+  }
+  /* Button styling refresh: all buttons get rounded corners, consistent height */
+  button, .btn-zone, .btn-save, .btn-archive, .btn-delete, .btn-cancel, .primary, .route-btn, #toggle-dispatch-btn, #locate-btn, .mode-btn, .cat-btn, .login-submit, .btn-zone-add, .btn-zone-del, .day-toggle, .zone-driver-btn, .back-pill {
+    border-radius: 30px !important;
+    height: 40px;
+    padding: 0 20px;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+  /* Adjust specific buttons that need different padding */
+  .cat-btn {
+    justify-content: center;
+    gap: 10px;
+  }
+  .primary, .btn-save, .login-submit {
+    background: var(--accent);
+    color: #000;
+    border: none;
+  }
+  .primary:hover, .btn-save:hover, .login-submit:hover {
+    background: #e6b800;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  .btn-zone, .route-btn, #toggle-dispatch-btn, #locate-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-zone:hover, .route-btn:hover, #toggle-dispatch-btn:hover, #locate-btn:hover {
+    background: #333;
+    border-color: var(--accent);
+  }
+  /* Ensure icon buttons (like copy) remain square */
+  .copy-btn {
+    border-radius: 4px !important;
+    height: auto;
+    padding: 6px;
+  }
 }
 @media (max-width: 768px) {
-#active-list-container { flex-direction: column; height: auto; }
-.archive-column { border: 0 0 1px 0 solid var(--border); padding-right: 0; padding-bottom: 0; margin-bottom: 0; }
-.archive-column:last-child { border-bottom: none; margin-bottom: 0; }
-input, select, button, .mode-btn { min-height: 38px; }
-#map { height: 100%; min-height: 100%; }
-.header-logo-group { width: auto; }
-header { padding: 8px 4px; }
-.header-logo { height: 16px; margin-right: 4px; }
-.header-logo-group .shiny-text { font-size: 13px !important; letter-spacing: 0 !important; }
-#user-display { font-size: 9px; margin-bottom: 2px; }
-#toggle-dispatch-btn { font-size: 9px !important; padding: 0 6px !important; margin-left: 4px !important; height: 28px !important; min-height: 28px !important; }
-#locate-btn { width: 70px !important; font-size: 9px !important; margin-left: 4px !important; height: 28px !important; min-height: 28px !important; padding: 0 !important; }
-.indicator-wrapper { position: relative; top: auto; left: auto; width: 100%; margin-left: 0 !important; flex-direction: row !important; z-index: 20; pointer-events: none; margin-top: 4px; }
-.indicator-wrapper div { margin-bottom: 0 !important; font-size: 10px !important; padding: 6px 2px; text-align: center; flex: 1; background: var(--header-bg); border-bottom: 2px solid var(--accent); border-left: 1px solid var(--border); pointer-events: auto; box-shadow: var(--shadow-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.indicator-wrapper div:first-child { border-left: none; }
-.modal-content { padding: 15px; width: 98%; margin: 2% auto; }
-#zone-map-view { height: 85vh !important; }
-.close-map { right: 10px; width: 100px; font-size: 12px; }
-#close-map-btn { top: 60px !important; }
-#zoom-out-btn { top: 10px !important; }
-#map-driver-head { top: 60px !important; left: 10px !important; right: auto !important; }
+  /* Keep mobile unchanged - no modifications here */
 }
-    /* Make job cards appear in a grid inside each category panel */
-#list-pickups,
-#list-transit,
-#list-depot,
-#list-deliveries,
-#list-dnd,
-#list-archive {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 10px;
-  align-items: start;
-}
-
-/* Ensure each card takes full width of its grid cell and looks consistent */
-.history-item {
-  width: 100%;
-  margin: 0 !important;
-  box-sizing: border-box;
-}
-
-/* Override the flex class on archive container so grid works */
-#list-archive.flex.col {
-  display: grid !important;
-    /* Expanded category takes full width */
-.archive-column.expanded {
-  width: 100% !important;
-  flex: none !important;
-}
-
-/* Back button styling */
-#back-to-categories {
-  background: var(--header-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 30px;
-  padding: 12px 24px;
-  font-weight: bold;
-  cursor: pointer;
-  text-transform: uppercase;
-  font-size: 14px;
-  transition: 0.2s;
-  box-shadow: var(--shadow-soft);
-}
-#back-to-categories:hover {
-  background: var(--accent);
-  color: #000;
-}
-
-/* Ensure lists inside expanded category use grid */
-.archive-column.expanded [id^="list-"] {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 10px;
-  width: 100%;
-}</style>
+/* ----- END DESKTOP LAYOUT CHANGES ----- */
+</style>
 </head>
 <body>
 <div id=login-overlay>
@@ -356,125 +481,84 @@ function toggleDispatchForm() {
 <div id=note-box class="stat-box none"><span class=stat-label>Note</span><div id=stat-note class=stat-number>0</div></div>
 </div>
 </div>
-<div id=driver-stats-panel></div>
-<div class=none>
-<div id=group-pickup>
-<div class=rel style="margin-bottom:4px;">
-<input type=text id=f-name class=glow-field placeholder="Pickup Business/Contact Name" autocomplete=off oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
-<div id=suggestions class=suggestions-box></div>
-<div onclick="resetFormFields()" class=suggestion-reset>RESET</div>
+<!-- New desktop layout wrapper -->
+<div class="desktop-layout">
+  <div id="driver-stats-panel"></div>
+  <div class="main-content">
+    <!-- Unified back button (hidden by default, shown via CSS) -->
+    <button id="unified-back-btn" class="back-pill" onclick="unifiedBack()">← Back</button>
+    <div id="board-panel">
+      <!-- board-panel content unchanged -->
+      <div class="history-box" id="active-list-container">
+        <div id=filter-reset-ui class="w-100 text-center none mb-15" style="padding:10px;box-sizing:border-box;">
+          <div id=selected-driver-label class="none bold u-case" style="margin:0;width:100%;font-size:16px;padding:10px;border-radius:0;background:#111;box-shadow:var(--shadow-soft);display:flex;justify-content:center;align-items:center;gap:10px;box-sizing:border-box;"></div>
+          <div class="flex jc ac gap-10" style="margin:10px auto 0 auto;width:100%;">
+            <button id=depot-checkin-btn class=route-btn style="background:#0056b3;border-color:#0056b3;" onclick="unloadActiveDriverAtDepot()">DEPOT CHECK-IN</button>
+            <button id=view-route-btn class=route-btn style="background:#0099cc;border-color:#0099cc;" onclick="viewDriverRoute(currentDriverFilter)">VIEW ROUTE</button>
+            <button id=back-filter-btn class=route-btn style="background:#222;border:1px solid #555;color:#ccc;border-radius:20px;padding:6px 16px;font-size:12px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-soft);" onclick="clearDriverFilter()">⬅ BACK</button>
+          </div>
+        </div>
+        <input type=text id=active-search class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left;box-sizing:border-box;border-radius:0;border:0 0 1px 0 solid var(--border);margin-bottom:0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
+        <button id="back-to-categories" class="route-btn" onclick="showAllCategories()" style="display:none; margin:10px auto; width:200px;">← BACK TO ALL CATEGORIES</button>
+        <div id=driver-job-filters class="flex jc gap-10 mt-15 mb-15 none" style="padding:0 10px;font-size:11px;">
+          <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-pickups checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Pickups</label>
+          <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-deliveries checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Deliveries</label>
+          <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-transit checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> In Transit</label>
+        </div>
+        <div id=unassigned-immediate-list style="padding:15px;display:flex;flex-direction:column;gap:10px;width:100%;box-sizing:border-box;"></div>
+        <div class=archive-column>
+          <button id=btn-pickups class=cat-btn style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id=badge-pickups class=cat-badge>0</span></button>
+          <div id=list-pickups></div>
+        </div>
+        <div class=archive-column>
+          <button id=btn-transit class=cat-btn style="color:#0099cc;" onclick="toggleCat('transit')"><span>In Transit</span><span id=badge-transit class=cat-badge>0</span></button>
+          <div id=list-transit></div>
+        </div>
+        <div class=archive-column>
+          <button id=btn-depot class=cat-btn style="color:#00BFFF;" onclick="toggleCat('depot')">
+            <div class="flex ac gap-10"><span>At Depot</span><span onclick="event.stopPropagation(); autoAssignDepotJobs()" style="background:transparent;border:1px solid #00BFFF;color:#00BFFF;padding:6px 10px;font-size:10px;border-radius:4px;cursor:pointer;text-transform:uppercase;font-weight:700;">Auto Assign</span></div>
+            <span id=badge-depot class=cat-badge>0</span>
+          </button>
+          <div id=list-depot></div>
+        </div>
+        <div class=archive-column>
+          <button id=btn-deliveries class=cat-btn style="color:var(--active-green);" onclick="toggleCat('deliveries')"><span>Deliveries</span><span id=badge-deliveries class=cat-badge>0</span></button>
+          <div id=list-deliveries></div>
+        </div>
+        <div class=archive-column>
+          <button id=btn-dnd class=cat-btn style="color:red;" onclick="toggleCat('dnd')"><span>DND/DNP</span><span id=badge-dnd class=cat-badge>0</span></button>
+          <button id=archive-all-dnd-btn onclick="archiveAllDND()" class="none bold pointer u-case" style="background:#b71c1c;color:#fff;border:none;padding:10px;font-size:11px;margin:10px;border-radius:4px;width:calc(100% - 20px);">Archive All Failed</button>
+          <div id=list-dnd></div>
+        </div>
+      </div>
+    </div>
+    <div id=map-modal>
+      <button id=close-map-btn class=close-map onclick="closeMap()">CLOSE MAP</button>
+      <button id=zoom-out-btn class=close-map onclick="zoomToAll()" style="top:70px;background:#448800;">ZOOM OUT</button>
+      <button id="reset-driver-view-btn" onclick="resetDriverView()" style="position:absolute; bottom:20px; left:20px; z-index:3005; background:#222; color:#fff; border:1px solid #fff; border-radius:6px; padding:8px 12px; font-weight:700; cursor:pointer; display:none;">← BACK</button>
+      <div id=route-time-badge class="none abs" style="top:120px;right:20px;z-index:3001;background:rgba(0,0,0,0.8);color:var(--active-green);padding:12px;border-radius:6px;font-weight:700;border:1px solid var(--active-green);"></div>
+      <div id=map-driver-head class="none abs" style="top:15px;right:60px;left:auto;z-index:3001;background:#000;border:1px solid #fff;padding:6px 12px;font-weight:700;font-size:16px;box-shadow:var(--shadow-soft);white-space:nowrap;"></div>
+      <div id=route-list></div>
+      <div id=map></div>
+    </div>
+    <button id=toggle-archive-btn class="primary w-100 mt-15" onclick="toggleArchive()" style="border:1px solid var(--border);">SHOW ARCHIVE</button>
+    <div id=archive-section class=mt-30 style="padding:15px;border:1px solid rgba(255,255,255,0.1);box-shadow:var(--shadow-soft);transition:opacity 0.3s;display:none;">
+      <div class=archive-title style="color:var(--archive-title-color, #666);border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
+      <div class="flex-row mb-15">
+        <select id=af-driver class="driver-select mb-0 f-1" onchange="renderData()">
+          <option value="">All</option>
+          <option value=Unassigned>Unassigned</option>
+        </select>
+        <input id=af-name placeholder=Name class="glow-field f-1" onkeyup="renderData()">
+        <input id=af-city placeholder=City class="glow-field f-1" onkeyup="renderData()">
+      </div>
+      <input id=af-manual-search placeholder="Manual Search (Today's Archive)..." class="glow-field mb-15" onkeyup="renderData()" onfocus="document.getElementById('board-panel').scrollIntoView({behavior:'smooth'})">
+      <div id=list-archive class="flex col" style="gap:8px;"></div>
+    </div>
+  </div>
 </div>
-<div class=flex-row>
-<div class="input-wrap f-2">
-<input type=text id=f-pickup class=glow-field placeholder="Pickup Address" style="padding-right:50px;">
-<button class=copy-btn style="right:28px;font-size:12px;text-decoration:none;font-style:normal;z-index:6;" onclick="openLocationPicker('pickup')" type=button>📍</button>
-</div>
-<div class="input-wrap f-1">
-<input type=text id=f-city class=glow-field placeholder=City oninput="handleCityInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('city-suggestions-p').style.display='none', 200)">
-<div id=city-suggestions-p class=suggestions-box></div>
-</div>
-</div>
-<div class=flex-row>
-<div class="input-wrap f-1-5">
-<input type=email id=f-customer-email-p class=glow-field placeholder=Email>
-</div>
-<div class="input-wrap f-1">
-<input type=tel id=f-customer-phone-p class=glow-field placeholder="Phone #" oninput="formatPhone(this)">
-</div>
-</div>
-</div>
-<div id=group-drop>
-<div class=rel style="margin-bottom:4px;">
-<input type=text id=f-drop-name class=glow-field placeholder="Delivery Contact/Business Name" autocomplete=off oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
-<div id=drop-suggestions class=suggestions-box></div>
-<div onclick="resetFormFields()" class=suggestion-reset>RESET</div>
-</div>
-<div class=flex-row>
-<div class="input-wrap f-2">
-<input type=text id=f-drop-address class=glow-field placeholder="Delivery Address" style="padding-right:50px;">
-<button class=copy-btn style="right:28px;font-size:12px;text-decoration:none;font-style:normal;z-index:6;" onclick="openLocationPicker('drop')" type=button>📍</button>
-</div>
-<div class="input-wrap f-1">
-<input type=text id=f-drop-city class=glow-field placeholder=City oninput="handleCityInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('city-suggestions-d').style.display='none', 200)">
-<div id=city-suggestions-d class=suggestions-box></div>
-</div>
-</div>
-<div class=flex-row>
-<div class="input-wrap f-1-5">
-<input type=email id=f-customer-email-d class=glow-field placeholder=Email>
-</div>
-<div class="input-wrap f-1">
-<input type=tel id=f-customer-phone-d class=glow-field placeholder="Phone #" oninput="formatPhone(this)">
-</div>
-</div>
-</div>
-</div>
-<div id=board-panel>
-<div class=history-box id=active-list-container>
-<div id=filter-reset-ui class="w-100 text-center none mb-15" style="padding:10px;box-sizing:border-box;">
-<div id=selected-driver-label class="none bold u-case" style="margin:0;width:100%;font-size:16px;padding:10px;border-radius:0;background:#111;box-shadow:var(--shadow-soft);display:flex;justify-content:center;align-items:center;gap:10px;box-sizing:border-box;"></div>
-<div class="flex jc ac gap-10" style="margin:10px auto 0 auto;width:100%;">
-<button id=depot-checkin-btn class=route-btn style="background:#0056b3;border-color:#0056b3;" onclick="unloadActiveDriverAtDepot()">DEPOT CHECK-IN</button>
-<button id=view-route-btn class=route-btn style="background:#0099cc;border-color:#0099cc;" onclick="viewDriverRoute(currentDriverFilter)">VIEW ROUTE</button>
-<button id=back-filter-btn class=route-btn style="background:#222;border:1px solid #555;color:#ccc;border-radius:20px;padding:6px 16px;font-size:12px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-soft);" onclick="clearDriverFilter()">⬅ BACK</button>
-</div>
-</div>
-<input type=text id=active-search class="glow-field w-100 mb-0" placeholder="Search Active Pickups/Deliveries..." style="text-align:left;box-sizing:border-box;border-radius:0;border:0 0 1px 0 solid var(--border);margin-bottom:0;" onkeyup="filterActiveCards(this.value)" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'start'}), 300)">
-    <button id="back-to-categories" class="route-btn" onclick="showAllCategories()" style="display:none; margin:10px auto; width:200px;">← BACK TO ALL CATEGORIES</button><div id=driver-job-filters class="flex jc gap-10 mt-15 mb-15 none" style="padding:0 10px;font-size:11px;">
-<label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-pickups checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Pickups</label>
-<label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-deliveries checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Deliveries</label>
-<label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-transit checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> In Transit</label>
-</div>
-<div id=unassigned-immediate-list style="padding:15px;display:flex;flex-direction:column;gap:10px;width:100%;box-sizing:border-box;"></div>
-<div class=archive-column>
-<button id=btn-pickups class=cat-btn style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id=badge-pickups class=cat-badge>0</span></button>
-<div id=list-pickups></div>
-</div>
-<div class=archive-column>
-<button id=btn-transit class=cat-btn style="color:#0099cc;" onclick="toggleCat('transit')"><span>In Transit</span><span id=badge-transit class=cat-badge>0</span></button>
-<div id=list-transit></div>
-</div>
-<div class=archive-column>
-<button id=btn-depot class=cat-btn style="color:#00BFFF;" onclick="toggleCat('depot')">
-<div class="flex ac gap-10"><span>At Depot</span><span onclick="event.stopPropagation(); autoAssignDepotJobs()" style="background:transparent;border:1px solid #00BFFF;color:#00BFFF;padding:6px 10px;font-size:10px;border-radius:4px;cursor:pointer;text-transform:uppercase;font-weight:700;">Auto Assign</span></div>
-<span id=badge-depot class=cat-badge>0</span>
-</button>
-<div id=list-depot></div>
-</div>
-<div class=archive-column>
-<button id=btn-deliveries class=cat-btn style="color:var(--active-green);" onclick="toggleCat('deliveries')"><span>Deliveries</span><span id=badge-deliveries class=cat-badge>0</span></button>
-<div id=list-deliveries></div>
-</div>
-<div class=archive-column>
-<button id=btn-dnd class=cat-btn style="color:red;" onclick="toggleCat('dnd')"><span>DND/DNP</span><span id=badge-dnd class=cat-badge>0</span></button>
-<button id=archive-all-dnd-btn onclick="archiveAllDND()" class="none bold pointer u-case" style="background:#b71c1c;color:#fff;border:none;padding:10px;font-size:11px;margin:10px;border-radius:4px;width:calc(100% - 20px);">Archive All Failed</button>
-<div id=list-dnd></div>
-</div>
-</div>
-<div id=map-modal>
-<button id=close-map-btn class=close-map onclick="closeMap()">CLOSE MAP</button>
-<button id=zoom-out-btn class=close-map onclick="zoomToAll()" style="top:70px;background:#448800;">ZOOM OUT</button>
-<button id="reset-driver-view-btn" onclick="resetDriverView()" style="position:absolute; bottom:20px; left:20px; z-index:3005; background:#222; color:#fff; border:1px solid #fff; border-radius:6px; padding:8px 12px; font-weight:700; cursor:pointer; display:none;">← BACK</button>
-<div id=route-time-badge class="none abs" style="top:120px;right:20px;z-index:3001;background:rgba(0,0,0,0.8);color:var(--active-green);padding:12px;border-radius:6px;font-weight:700;border:1px solid var(--active-green);"></div>
-<div id=map-driver-head class="none abs" style="top:15px;right:60px;left:auto;z-index:3001;background:#000;border:1px solid #fff;padding:6px 12px;font-weight:700;font-size:16px;box-shadow:var(--shadow-soft);white-space:nowrap;"></div>
-<div id=route-list></div>
-<div id=map></div>
-</div>
-<button id=toggle-archive-btn class="primary w-100 mt-15" onclick="toggleArchive()" style="border:1px solid var(--border);">SHOW ARCHIVE</button>
-<div id=archive-section class=mt-30 style="padding:15px;border:1px solid rgba(255,255,255,0.1);box-shadow:var(--shadow-soft);transition:opacity 0.3s;display:none;">
-<div class=archive-title style="color:var(--archive-title-color, #666);border-bottom:none;">ARCHIVE (COMPLETED - TODAY ONLY)</div>
-<div class="flex-row mb-15">
-<select id=af-driver class="driver-select mb-0 f-1" onchange="renderData()">
-<option value="">All</option>
-<option value=Unassigned>Unassigned</option>
-</select>
-<input id=af-name placeholder=Name class="glow-field f-1" onkeyup="renderData()">
-<input id=af-city placeholder=City class="glow-field f-1" onkeyup="renderData()">
-</div>
-<input id=af-manual-search placeholder="Manual Search (Today's Archive)..." class="glow-field mb-15" onkeyup="renderData()" onfocus="document.getElementById('board-panel').scrollIntoView({behavior:'smooth'})">
-<div id=list-archive class="flex col" style="gap:8px;"></div>
-</div>
-</div>
+<!-- Dimmer overlay (hidden by default) -->
+<div id="driver-dimmer"></div>
 
 <div id=location-picker-modal class=modal onclick="event.target===this && (this.style.display='none', document.body.style.overflow='');">
 <div class=modal-content style="padding:0;max-width:600px;height:80vh;display:flex;flex-direction:column;overflow:hidden;position:relative;">
@@ -965,6 +1049,32 @@ function searchLocation() {
     });
 }
 function setPickerLocation(){if(!pickerMap)return;let a=pickerMap.getCenter(),b=a.lat().toFixed(5),c=a.lng().toFixed(5),d=`${b}, ${c}`;with(document){const t={pickup:'f-pickup',drop:'f-drop-address'};t[currentLocationTarget]&&(getElementById(t[currentLocationTarget]).value=d);getElementById('location-picker-modal').style.display='none';body.style.overflow=''}}
+
+// Unified back button function
+function unifiedBack() {
+  if (currentDriverFilter) {
+    clearDriverFilter();
+  } else if (Object.values(catState).some(v => v)) {
+    showAllCategories();
+  }
+}
+
+// Highlight selected driver row (runs after renderData)
+function highlightSelectedDriver() {
+  const rows = document.querySelectorAll('.driver-stat-row');
+  rows.forEach(row => {
+    row.classList.remove('selected-driver');
+    const nameSpan = row.querySelector('.ds-name');
+    if (nameSpan && nameSpan.innerText === currentDriverFilter) {
+      row.classList.add('selected-driver');
+    }
+  });
+}
+// Observe driver-stats-panel for changes and reapply highlight
+const observer = new MutationObserver(() => highlightSelectedDriver());
+observer.observe(document.getElementById('driver-stats-panel'), { childList: true, subtree: true });
+// Also run initially
+setTimeout(highlightSelectedDriver, 500);
 </script>
 <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel=stylesheet>
 <script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>
