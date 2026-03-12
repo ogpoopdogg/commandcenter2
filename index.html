@@ -560,6 +560,58 @@ function toggleDispatchForm() {
 <!-- Dimmer overlay (hidden by default) -->
 <div id="driver-dimmer"></div>
 
+<!-- Hidden container for pickup/drop sections (moved outside of entry-panel but accessible) -->
+<div id="group-pickup" style="display:none;">
+<div class=rel style="margin-bottom:4px;">
+<input type=text id=f-name class=glow-field placeholder="Pickup Business/Contact Name" autocomplete=off oninput="handleNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('suggestions').style.display='none', 200)">
+<div id=suggestions class=suggestions-box></div>
+<div onclick="resetFormFields()" class=suggestion-reset>RESET</div>
+</div>
+<div class=flex-row>
+<div class="input-wrap f-2">
+<input type=text id=f-pickup class=glow-field placeholder="Pickup Address" style="padding-right:50px;">
+<button class=copy-btn style="right:28px;font-size:12px;text-decoration:none;font-style:normal;z-index:6;" onclick="openLocationPicker('pickup')" type=button>📍</button>
+</div>
+<div class="input-wrap f-1">
+<input type=text id=f-city class=glow-field placeholder=City oninput="handleCityInput(this.value, 'pickup')" onblur="setTimeout(()=>document.getElementById('city-suggestions-p').style.display='none', 200)">
+<div id=city-suggestions-p class=suggestions-box></div>
+</div>
+</div>
+<div class=flex-row>
+<div class="input-wrap f-1-5">
+<input type=email id=f-customer-email-p class=glow-field placeholder=Email>
+</div>
+<div class="input-wrap f-1">
+<input type=tel id=f-customer-phone-p class=glow-field placeholder="Phone #" oninput="formatPhone(this)">
+</div>
+</div>
+</div>
+<div id="group-drop" style="display:none;">
+<div class=rel style="margin-bottom:4px;">
+<input type=text id=f-drop-name class=glow-field placeholder="Delivery Contact/Business Name" autocomplete=off oninput="handleDropNameInput(this.value)" onblur="setTimeout(()=>document.getElementById('drop-suggestions').style.display='none', 200)">
+<div id=drop-suggestions class=suggestions-box></div>
+<div onclick="resetFormFields()" class=suggestion-reset>RESET</div>
+</div>
+<div class=flex-row>
+<div class="input-wrap f-2">
+<input type=text id=f-drop-address class=glow-field placeholder="Delivery Address" style="padding-right:50px;">
+<button class=copy-btn style="right:28px;font-size:12px;text-decoration:none;font-style:normal;z-index:6;" onclick="openLocationPicker('drop')" type=button>📍</button>
+</div>
+<div class="input-wrap f-1">
+<input type=text id=f-drop-city class=glow-field placeholder=City oninput="handleCityInput(this.value, 'drop')" onblur="setTimeout(()=>document.getElementById('city-suggestions-d').style.display='none', 200)">
+<div id=city-suggestions-d class=suggestions-box></div>
+</div>
+</div>
+<div class=flex-row>
+<div class="input-wrap f-1-5">
+<input type=email id=f-customer-email-d class=glow-field placeholder=Email>
+</div>
+<div class="input-wrap f-1">
+<input type=tel id=f-customer-phone-d class=glow-field placeholder="Phone #" oninput="formatPhone(this)">
+</div>
+</div>
+</div>
+
 <div id=location-picker-modal class=modal onclick="event.target===this && (this.style.display='none', document.body.style.overflow='');">
 <div class=modal-content style="padding:0;max-width:600px;height:80vh;display:flex;flex-direction:column;overflow:hidden;position:relative;">
 <div style="padding:15px;background:var(--header-bg);border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;align-items:center;">
@@ -771,7 +823,7 @@ function resetDriverView() {
 
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
 
-function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}}
+function setMode(a){with(document){currentMode=a;let b=document.getElementById('top-input-section');let c=document.getElementById('bottom-input-section');let d=document.getElementById('group-pickup');let e=document.getElementById('group-drop');let f=document.getElementById('btn-mode-pickup');let g=document.getElementById('btn-mode-delivery');if(a==='pickup'){if(b && d) b.appendChild(d);if(c && e) c.appendChild(e);f.classList.add('active-mode');g.classList.remove('active-mode','delivery-mode');}else{if(b && e) b.appendChild(e);if(c && d) c.appendChild(d);f.classList.remove('active-mode');g.classList.add('active-mode','delivery-mode');}}}
 setMode('pickup');
 
 firebase.auth().onAuthStateChanged(a=>{if(a){let {email}=a,b=email.split('@')[0].toLowerCase();db.ref(`roles/${b}/command`).once('value').then(c=>{if(c.val()===!0){currentUser=email.split('@')[0];initCommandNotifications(email);requestWakeLock();window.innerWidth>=1024&&openMap(!0);with(document){getElementById('login-overlay').style.display='none';getElementById('user-display').innerText=`Logged in as: ${currentUser}`;firebase.database().ref('developer').on('value',d=>{let e=getElementById('dev-list');e.innerHTML='';let f=d.val()??{};Object.values(f).forEach(g=>{e.innerHTML+=`
