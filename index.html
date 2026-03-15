@@ -35,8 +35,34 @@ header { padding: 16px 24px; background: var(--header-bg); border-bottom: 1px so
 #locate-btn, .route-btn { background: url('//mt.google.com/vt/lyrs=m&x=235&y=348&z=10') center/cover; color: #002244; border: 1px solid #444; border-radius: 6px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
 #locate-btn { padding: 0; width: 100%; height: 40px; font-size: 11px; box-shadow: var(--shadow-soft); transition: transform 0.2s; }
 #locate-btn:active { transform: scale(0.98); }
-#toggle-dispatch-btn { background: #000; border: 1px solid var(--accent); color: var(--active-green); font-weight: 700; cursor: pointer; border-radius: 6px; padding: 0 10px; height: 30px; font-size: 10px; text-transform: uppercase; margin-left: 10px; white-space: nowrap; box-shadow: var(--shadow-soft); transition: transform 0.2s; }
+#toggle-dispatch-btn { background: #000; border: 1px solid var(--accent); color: var(--active-green); font-weight: 700; cursor: pointer; border-radius: 6px; padding: 0 10px; height: 30px; font-size: 10px; text-transform: uppercase; margin-left: 10px; white-space: nowrap; box-shadow: var(--shadow-soft); transition: transform 0.2s, box-shadow 0.2s; }
 #toggle-dispatch-btn:active { transform: scale(0.98); }
+#toggle-dispatch-btn.dispatch-open {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--accent);
+}
+/* Soft pulse for microphone */
+@keyframes soft-pulse {
+  0% { box-shadow: 0 0 5px rgba(255,255,255,0.2); }
+  50% { box-shadow: 0 0 15px rgba(255,255,255,0.6); }
+  100% { box-shadow: 0 0 5px rgba(255,255,255,0.2); }
+}
+#voice-btn {
+  animation: soft-pulse 2s infinite ease-in-out;
+}
+/* Header gear button */
+.header-gear {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0 8px;
+  color: var(--text);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .route-btn { border: 1px solid var(--accent); padding: 8px 16px; font-size: 12px; white-space: nowrap; width: auto !important; margin: 0 auto; display: inline-block; }
 #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
 #map { width: 100%; height: 100%; }
@@ -311,6 +337,7 @@ header { padding: 8px 4px; }
 </div>
 </div>
 <div style="display:flex;align-items:center;">
+<button class="header-gear" onclick="openDriverManager()">⚙️</button>
 <button id=toggle-dispatch-btn onclick="toggleDispatchForm()">DISPATCH FORM</button>
 <button id=locate-btn onclick="openMap()" style="width:100px;height:30px;font-size:10px;margin-left:10px;">Driver Map</button>
 </div>
@@ -338,12 +365,12 @@ header { padding: 8px 4px; }
 <input type=text id=f-info placeholder="Driver Notes...">
 </div>
 <div id=bottom-input-section style="margin-top:0;"></div>
-<div class="flex ac gap-10" style="margin:4px 0;width:100%;">
+<div class="flex gap-12" style="margin:4px 0;width:100%;">
 <select id=f-driver class=driver-select style="margin-bottom:0;border:1px solid var(--accent);flex:1;">
 <option value=Unassigned selected disabled hidden>Assign Driver</option>
 <option value=Unassigned>UNASSIGNED</option>
 </select>
-<button onclick="openDriverManager()" style="background:transparent;border:none;cursor:pointer;font-size:20px;padding:0 8px;color:var(--text);">⚙️</button>
+<div style="width:50px;"></div> <!-- dummy to match voice button width -->
 </div>
 <div class="flex gap-12">
 <button class="primary super-dispatch f-1" onclick="createJob()">Dispatch</button>
@@ -357,6 +384,9 @@ function toggleDispatchForm() {
         let a=getElementById('dispatch-form-content'),b=a.style.display==='none';
         a.style.display=b?'block':'none';
         localStorage.setItem('ec_dispatch_collapsed',b?'false':'true');
+        let btn = getElementById('toggle-dispatch-btn');
+        if(b) btn.classList.add('dispatch-open');
+        else btn.classList.remove('dispatch-open');
     }
 }
 </script>
@@ -568,7 +598,7 @@ window.assignJob=function(a,b){if(a&&b){let j=rawJobs[a],upd={assigned_to:b,last
 
 function toggleArchive(){with(document){let a=getElementById('archive-section'),b=getElementById('toggle-archive-btn');a.style.display==='none'?(a.style.display='block',b.innerText='HIDE ARCHIVE'):(a.style.display='none',b.innerText='SHOW ARCHIVE')}}
 
-document.addEventListener('keydown',a=>{if(a.key==='Escape'){closeMap();with(document){['detailsModal','zone-modal','driver-manager-modal','location-picker-modal'].forEach(b=>{let c=getElementById(b);c&&(c.style.display='none')});body.style.overflow=''}}else if(a.key==='Enter'){let b=a.target.tagName.toLowerCase();if(b==='textarea'||b==='button')return;with(document){let c=getElementById('detailsModal');if(c&&(c.style.display==='block'||c.style.display==='flex')){a.preventDefault();a.target.blur();return}if(getElementById('login-overlay').style.display!=='none'){attemptLogin();return}}let d=a.target.closest('#entry-panel')||a.target.closest('#group-pickup')||a.target.closest('#group-drop');d&&(a.preventDefault(),createJob())}});
+document.addEventListener('keydown',a=>{if(a.key==='Escape'){closeMap();with(document){['detailsModal','zone-modal','driver-manager-modal','location-picker-modal'].forEach(b=>{let c=getElementById(b);c&&(c.style.display='none')});body.style.overflow=''}}else if(a.key==='Enter'){let b=a.target.tagName.toLowerCase();if(b==='textarea'||b==='button')return;with(document){let c=getElementById('detailsModal');if(c&&(c.style.display==='block'||c.style.display==='flex')){a.preventDefault();a.target.blur();return}if(getElementById('login-overlay').style.display!=='none'){attemptLogin();return}}let d=a.target.closest('#entry-panel')||a.target.closest('#group-pickup')||a.target.closest('#group-drop');d&&(a.preventDefault(),createJob())}}});
 
 function toggleCat(cat) {
   const count = parseInt(document.getElementById('badge-' + cat).innerText) || 0;
