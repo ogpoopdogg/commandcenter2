@@ -804,7 +804,19 @@ firebase.auth().onAuthStateChanged(a=>{if(a){let {email}=a,b=email.split('@')[0]
       <div class=dev-item>
         <div class=dev-hdr>${g.user} - <span style="color:orange;">${g.app??'Database'}</span> - ${g.date}</div>
         <div>${g.text}</div>
-      </div>`});e.scrollTop=e.scrollHeight});db.ref('drivers').on('value',d=>{if(d.exists()){let e=d.val()??[];customDrivers=[];driverColors={};e.forEach(f=>{if(typeof f==='string'){customDrivers.push(f)}else if(f&&f.name){customDrivers.push(f.name);f.color&&(driverColors[f.name]=f.color)}})}else{customDrivers=[]}updateAllDriverDropdowns();if(getElementById('zone-modal').style.display==='block'){if(getElementById('zone-schedule-view').style.display!=='none')renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()}!isFirstLoad&&renderData()});db.ref("address_lookup").on("value",d=>addressData=d.val()??{});let e=Date.now()-(604800000);db.ref("jobs").orderByChild("timestamp").startAt(e).on("value",d=>{rawJobs=d.val()??{};renderData()});db.ref("driver_locations").on("value",d=>{driverLocationsData=d.val()??{};renderData()});db.ref("driver_zones").on("value",d=>{driverZones=d.val()??{};renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()})}}else{alert("ACCESS DENIED");firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex'}}).catch(err=>{console.error(err);alert("Error checking role: "+err.message);firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex';})}else{document.getElementById('login-overlay').style.display='flex'}});
+      </div>`});e.scrollTop=e.scrollHeight});db.ref('drivers').on('value',d=>{if(d.exists()){let e=d.val()??[];customDrivers=[];driverColors={};e.forEach(f=>{if(typeof f==='string'){customDrivers.push(f)}else if(f&&f.name){customDrivers.push(f.name);f.color&&(driverColors[f.name]=f.color)}})}else{customDrivers=[]}updateAllDriverDropdowns();if(getElementById('zone-modal').style.display==='block'){if(getElementById('zone-schedule-view').style.display!=='none')renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()}!isFirstLoad&&renderData()});db.ref("address_lookup").on("value",d=>addressData=d.val()??{});let e=Date.now()-(604800000);db.ref("jobs").orderByChild("timestamp").startAt(e).on("value",d=>{rawJobs=d.val()??{};renderData()});db.ref("driver_locations").on("value",d=>{driverLocationsData=d.val()??{};renderData()});db.ref("driver_zones").on("value",d=>{driverZones=d.val()??{};renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()});
+// Periodic reschedule check every hour
+setInterval(() => {
+    if (rawJobs) {
+        Object.keys(rawJobs).forEach(jobId => {
+            let job = rawJobs[jobId];
+            if (job.status !== 'completed') {
+                autoScheduleJob(jobId);
+            }
+        });
+    }
+}, 60 * 60 * 1000);
+}}else{alert("ACCESS DENIED");firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex'}}).catch(err=>{console.error(err);alert("Error checking role: "+err.message);firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex';})}else{document.getElementById('login-overlay').style.display='flex'}});
 function updateAllDriverDropdowns(){with(document){let a=b=>{let c=b?'<option value=Unassigned selected disabled hidden>Assign Driver</option><option value=Unassigned>UNASSIGNED</option>':'';customDrivers.forEach(d=>c+=`<option value="${d}">${d}</option>`);return c},b=getElementById('f-driver').value;getElementById('f-driver').innerHTML=a(!0);if(customDrivers.includes(b)||b==='Unassigned')getElementById('f-driver').value=b;let c=getElementById('af-driver').value;getElementById('af-driver').innerHTML='<option value="">All</option><option value=Unassigned>Unassigned</option>'+customDrivers.map(d=>`<option value="${d}">${d}</option>`).join('');getElementById('af-driver').value=c}}
 
 function openDriverManager(){with(document){getElementById('driver-manager-modal').style.display='block';renderDriverManagerList()}}
@@ -845,6 +857,119 @@ function fillForm(a,b,c,d,e,f,g,h){let i=addressData[a];if(!i)return;with(docume
 function archiveAllDND(){if(!confirm("Archive ALL active DND/DNP jobs?"))return;let a={},b=firebase.database.ServerValue.TIMESTAMP;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c],e=(d.other_info||"").toLowerCase();if(d.status!=='completed'&&(e.includes("dnd")||e.includes("dnp"))){a[`/jobs/${c}/status`]='completed';a[`/jobs/${c}/completed_at`]=b;a[`/jobs/${c}/last_edit_by`]=currentUser;a[`/jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+"[ARCHIVED ALL]"}});Object.keys(a).length&&db.ref().update(a)}
 
 function autoAssignDepotJobs(){let a=[];Object.entries(rawJobs).forEach(([b,c])=>{if(c.status==='pending_delivery'&&(c.assigned_to==='Unassigned'||!c.assigned_to)){a.push({id:b,...c})}});if(a.length===0)return alert("No depot jobs to assign.");if(!confirm(`Attempt to auto-assign ${a.length} jobs?`))return;let b=new google.maps.Geocoder(),c=d=>{if(d>=a.length)return alert("Auto-assignment complete.");let e=a[d],f=e.destination+(e.delivery_city?", "+e.delivery_city:(e.city?", "+e.city:""));b.geocode({'address':f},(g,h)=>{if(h==='OK'&&g[0]){let i=g[0].geometry.location,j=new Date(),k=j.getHours()*60+j.getMinutes(),l=j.toLocaleDateString('en-US',{weekday:'short'}),m='Unassigned';for(let n in driverZones){let o=driverZones[n];if(o){for(let p in o){let q=o[p];if(!q)continue;if(q.days&&!q.days.includes(l))continue;if(q.start&&q.end){let[r,s]=q.start.split(':').map(t=>+t),[u,v]=q.end.split(':').map(w=>+w),x=r*60+s,y=u*60+v;if(k<x||k>y)continue}let z=!1;if(q.paths){for(let A=0;A<q.paths.length;A++){let B=new google.maps.Polygon({paths:q.paths[A]});if(google.maps.geometry.poly.containsLocation(i,B)){z=!0;break}}}if(z){m=n;break}}}if(m!=='Unassigned')break}m!=='Unassigned'&&db.ref('jobs').child(e.id).update({assigned_to:m})}setTimeout(()=>c(d+1),600)})};c(0)}
+
+// --- New auto‑schedule functions (begin) ---
+function autoScheduleJob(jobId) {
+    db.ref('jobs').child(jobId).once('value').then(snap => {
+        const job = snap.val();
+        if (!job || job.status === 'completed') return;
+        // Determine address to geocode
+        let address = '';
+        if (job.status === 'pending_pickup') {
+            address = (job.pickup_location ? job.pickup_location + (job.pickup_city ? ', ' + job.pickup_city : '') : '');
+        } else if (job.status === 'pending_delivery' || job.status === 'in_transit') {
+            address = (job.destination ? job.destination + (job.delivery_city ? ', ' + job.delivery_city : '') : '');
+        } else {
+            address = job.destination || job.pickup_location || '';
+        }
+        if (!address) return;
+
+        if (job.lat && job.lng) {
+            checkZonesAndSchedule(job, job.lat, job.lng, jobId);
+        } else {
+            geocodeAddress(address, (lat, lng) => {
+                if (lat && lng) {
+                    db.ref('jobs').child(jobId).update({ lat, lng }).then(() => {
+                        checkZonesAndSchedule(job, lat, lng, jobId);
+                    });
+                }
+            });
+        }
+    });
+}
+
+function geocodeAddress(address, callback) {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+            const loc = results[0].geometry.location;
+            callback(loc.lat(), loc.lng());
+        } else {
+            console.warn('Geocoding failed for', address);
+            callback(null, null);
+        }
+    });
+}
+
+function checkZonesAndSchedule(job, lat, lng, jobId) {
+    const point = new google.maps.LatLng(lat, lng);
+    let foundDriver = null;
+    let foundZoneId = null;
+    let foundZone = null;
+    // Iterate drivers
+    for (let driver in driverZones) {
+        const zones = driverZones[driver];
+        for (let zoneId in zones) {
+            const zone = zones[zoneId];
+            if (zone.paths && Array.isArray(zone.paths)) {
+                for (let path of zone.paths) {
+                    const polygon = new google.maps.Polygon({ paths: path });
+                    if (google.maps.geometry.poly.containsLocation(point, polygon)) {
+                        foundDriver = driver;
+                        foundZoneId = zoneId;
+                        foundZone = zone;
+                        break;
+                    }
+                }
+                if (foundDriver) break;
+            }
+        }
+        if (foundDriver) break;
+    }
+    if (!foundDriver) return; // no zone found, leave as is
+
+    let scheduledTime = job.scheduled_time ? new Date(job.scheduled_time) : new Date();
+    const days = foundZone.days || [];
+    const startStr = foundZone.start || '09:00';
+    const dayOfWeek = scheduledTime.toLocaleDateString('en-US', { weekday: 'short' });
+    const timeStr = scheduledTime.getHours().toString().padStart(2,'0') + ':' + scheduledTime.getMinutes().toString().padStart(2,'0');
+    const isDayValid = days.length === 0 || days.includes(dayOfWeek);
+    const isTimeValid = (!startStr || timeStr >= startStr) && (!foundZone.end || timeStr <= foundZone.end);
+    if (isDayValid && isTimeValid) {
+        if (job.assigned_to !== foundDriver) {
+            db.ref('jobs').child(jobId).update({ assigned_to: foundDriver });
+        }
+        return;
+    }
+
+    // Need to find next available slot
+    let currentDate = new Date(scheduledTime);
+    if (currentDate < new Date()) {
+        currentDate = new Date();
+    }
+    const maxDays = 60;
+    for (let i = 0; i <= maxDays; i++) {
+        let checkDate = new Date(currentDate);
+        checkDate.setDate(currentDate.getDate() + i);
+        const checkDay = checkDate.toLocaleDateString('en-US', { weekday: 'short' });
+        if (days.length === 0 || days.includes(checkDay)) {
+            let [hour, minute] = (startStr || '09:00').split(':').map(Number);
+            let candidate = new Date(checkDate);
+            candidate.setHours(hour, minute, 0, 0);
+            if (candidate >= scheduledTime) {
+                let updates = {
+                    scheduled_time: candidate.getTime(),
+                    assigned_to: foundDriver,
+                    job_history: (job.job_history ? job.job_history + '\n' : '') + `[Auto-rescheduled to ${candidate.toLocaleString()} due to driver availability]`
+                };
+                db.ref('jobs').child(jobId).update(updates);
+                return;
+            }
+        }
+    }
+    console.warn('No available slot found for job', jobId);
+}
+// --- New auto‑schedule functions (end) ---
 
 // New helper functions for recurring schedules
 function toggleRecurringOptions() {
@@ -949,32 +1074,28 @@ function checkAndGenerateRecurringJobs() {
             let s = schedules[id];
             if (!s.active) continue;
             if (s.next_generation && s.next_generation <= now) {
-                // Transaction to ensure only one client creates
-                const scheduleRef = db.ref('recurring_schedules').child(id);
-                scheduleRef.transaction(current => {
-                    if (!current) return current;
-                    if (!current.active) return current;
-                    if (current.next_generation > now) return current;
-                    // Create job
-                    let jobDetails = current.details || {};
-                    let job = {
-                        ...jobDetails,
-                        scheduled_time: current.next_generation,
-                        recurring_id: id,
-                        status: 'pending_pickup', // default; can be overridden
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        created_by: currentUser,
-                        last_edit_by: currentUser
-                    };
-                    db.ref('jobs').push(job);
-                    // Update next_generation
-                    let next = computeNextGeneration(current.next_generation, current.pattern);
-                    current.next_generation = next;
-                    if (current.end_date && next > current.end_date) {
-                        current.active = false;
-                    }
-                    return current;
-                }).catch(err => console.warn('Transaction failed', err));
+                // Generate a new job key
+                const newJobKey = db.ref('jobs').push().key;
+                let jobDetails = s.details || {};
+                let job = {
+                    ...jobDetails,
+                    scheduled_time: s.next_generation,
+                    recurring_id: id,
+                    status: 'pending_pickup',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    created_by: currentUser,
+                    last_edit_by: currentUser
+                };
+                let next = computeNextGeneration(s.next_generation, s.pattern);
+                let updates = {};
+                updates[`/jobs/${newJobKey}`] = job;
+                updates[`/recurring_schedules/${id}/next_generation`] = next;
+                if (s.end_date && next > s.end_date) {
+                    updates[`/recurring_schedules/${id}/active`] = false;
+                }
+                db.ref().update(updates).then(() => {
+                    autoScheduleJob(newJobKey);
+                }).catch(err => console.warn('Failed to create recurring job', err));
             }
         }
     });
@@ -1053,7 +1174,12 @@ function createJob(){with(document){
     let scheduledTime = scheduledTimeInput ? new Date(scheduledTimeInput).getTime() : null;
     let m=n=>{let o={pickup_city:d,delivery_city:c,city:d||c,pickup_location:a,destination:b,delivery_name:f,package_details:getElementById('f-pkg-details').value,po_number:getElementById('f-po').value,name:e,other_info:h,p_email:ep||"",p_phone:pp||"",d_email:ed||"",d_phone:pd||"",status:currentMode==='delivery'?'pending_delivery':'pending_pickup',assigned_to:n,timestamp:Date.now(),created_by:currentUser,last_edit_by:currentUser};
     if (scheduledTime) o.scheduled_time = scheduledTime;
-    db.ref('jobs').push(o);let p=(q,r,s,ce,cp)=>{if(q){let k=q.replace(/[.#$\[\]\/]/g,"").trim();let upd={address:r,city:s,last_edit_by:currentUser};if(ce!=="")upd.customer_email=ce;if(cp!=="")upd.customer_phone=cp;db.ref("address_lookup").child(k).update(upd);}};p(e,a,d,ep,pp);p(f,b,c,ed,pd);resetFormFields()};if(g==='Unassigned'&&currentMode==='pickup'){let n=new google.maps.Geocoder(),o=currentMode==='pickup'?a:b,p=currentMode==='pickup'?d:c;n.geocode({'address':o+(p?", "+p:"")},(q,r)=>{let s='Unassigned';if(r==='OK'&&q[0]){let t=q[0].geometry.location,u=new Date(),v=u.getHours()*60+u.getMinutes(),w=u.toLocaleDateString('en-US',{weekday:'short'});for(let x in driverZones){let y=driverZones[x];if(y){for(let z in y){let A=y[z];if(!A)continue;if(A.days&&!A.days.includes(w))continue;if(A.start&&A.end){let[B,C]=A.start.split(':').map(D=>+D),[E,F]=A.end.split(':').map(G=>+G),H=B*60+C,I=E*60+F;if(v<H||v>I)continue}let J=!1;if(A.paths){for(let K=0;K<A.paths.length;K++){let L=new google.maps.Polygon({paths:A.paths[K]});if(google.maps.geometry.poly.containsLocation(t,L)){J=!0;break}}}if(J){s=x;break}}}if(s!=='Unassigned')break}}m(s)})}else{m(g)}}}
+    const newRef = db.ref('jobs').push(o);
+    newRef.then(() => {
+        autoScheduleJob(newRef.key);
+    }).catch(err => console.error(err));
+    let p=(q,r,s,ce,cp)=>{if(q){let k=q.replace(/[.#$\[\]\/]/g,"").trim();let upd={address:r,city:s,last_edit_by:currentUser};if(ce!=="")upd.customer_email=ce;if(cp!=="")upd.customer_phone=cp;db.ref("address_lookup").child(k).update(upd);}};p(e,a,d,ep,pp);p(f,b,c,ed,pd);resetFormFields()};
+    if(g==='Unassigned'&&currentMode==='pickup'){let n=new google.maps.Geocoder(),o=currentMode==='pickup'?a:b,p=currentMode==='pickup'?d:c;n.geocode({'address':o+(p?", "+p:"")},(q,r)=>{let s='Unassigned';if(r==='OK'&&q[0]){let t=q[0].geometry.location,u=new Date(),v=u.getHours()*60+u.getMinutes(),w=u.toLocaleDateString('en-US',{weekday:'short'});for(let x in driverZones){let y=driverZones[x];if(y){for(let z in y){let A=y[z];if(!A)continue;if(A.days&&!A.days.includes(w))continue;if(A.start&&A.end){let[B,C]=A.start.split(':').map(D=>+D),[E,F]=A.end.split(':').map(G=>+G),H=B*60+C,I=E*60+F;if(v<H||v>I)continue}let J=!1;if(A.paths){for(let K=0;K<A.paths.length;K++){let L=new google.maps.Polygon({paths:A.paths[K]});if(google.maps.geometry.poly.containsLocation(t,L)){J=!0;break}}}if(J){s=x;break}}}if(s!=='Unassigned')break}}m(s)})}else{m(g)}}}
 
 function startPress(a){pressTimer=setTimeout(()=>{a.readOnly=!1;a.style.color='var(--text)';a.style.textDecoration='none';a.style.cursor='text';a.focus();navigator.vibrate&&navigator.vibrate(50)},1500)}
 function cancelPress(){clearTimeout(pressTimer)}
@@ -1103,7 +1229,11 @@ function archiveAsFailed(a){with(document){confirm("Archive this job as Failed (
 function saveEdit(a){with(document){let b=getElementById('e-note').value,c=getElementById('e-add-note').value;if(c.trim())b=(b?b+" ":"")+`[${currentUser}]: ${c.trim()}`;let d=getElementById('e-driver').value,e=rawJobs[a].other_info.toLowerCase();if((e.includes("dnd")||e.includes("dnp"))&&d!=='Unassigned'){b=b.replace(/dnd/gi,"").replace(/dnp/gi,"")+` [reassigned by ${currentUser}]`}
 let scheduled = getElementById('e-scheduled-time').value;
 let scheduledTime = scheduled ? new Date(scheduled).getTime() : null;
-db.ref('jobs').child(a).update({assigned_to:d,package_details:getElementById('e-pkg').value,po_number:getElementById('e-po').value,name:getElementById('e-name').value,pickup_location:getElementById('e-pickup').value,pickup_city:getElementById('e-city-p').value,delivery_city:getElementById('e-city-d').value,city:getElementById('e-city-p').value??getElementById('e-city-d').value,delivery_name:getElementById('e-drop-name').value,destination:getElementById('e-drop').value,other_info:b,p_email:getElementById('e-email-p').value,p_phone:getElementById('e-phone-p').value,d_email:getElementById('e-email-d').value,d_phone:getElementById('e-phone-d').value,scheduled_time:scheduledTime,last_edit_by:currentUser}).then(()=>{getElementById('detailsModal').style.display='none';body.style.overflow=''})}}
+db.ref('jobs').child(a).update({assigned_to:d,package_details:getElementById('e-pkg').value,po_number:getElementById('e-po').value,name:getElementById('e-name').value,pickup_location:getElementById('e-pickup').value,pickup_city:getElementById('e-city-p').value,delivery_city:getElementById('e-city-d').value,city:getElementById('e-city-p').value??getElementById('e-city-d').value,delivery_name:getElementById('e-drop-name').value,destination:getElementById('e-drop').value,other_info:b,p_email:getElementById('e-email-p').value,p_phone:getElementById('e-phone-p').value,d_email:getElementById('e-email-d').value,d_phone:getElementById('e-phone-d').value,scheduled_time:scheduledTime,last_edit_by:currentUser}).then(() => {
+    autoScheduleJob(a);
+    getElementById('detailsModal').style.display='none';
+    body.style.overflow='';
+})}}
 
 function deleteJob(a){
     with(document){
