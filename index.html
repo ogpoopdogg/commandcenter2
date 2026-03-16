@@ -800,6 +800,128 @@ function requestNotifyPermission(){"Notification"in window&&Notification.request
 function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}}
 setMode('pickup');
 
+// NEW: function to check scheduled jobs and activate them if due
+function checkScheduledJobs() {
+    if (!rawJobs) return;
+    const now = Date.now();
+    Object.keys(rawJobs).forEach(jobId => {
+        const job = rawJobs[jobId];
+        // Only consider non‑completed jobs with a scheduled_time that is now or in the past
+        if (job.status !== 'completed' && job.scheduled_time && job.scheduled_time <= now) {
+            // Determine the address to use for zone check based on current status
+            let address = '';
+            if (job.status === 'pending_pickup' || !job.status) {
+                address = (job.pickup_location ? job.pickup_location + (job.pickup_city ? ', ' + job.pickup_city : '') : '');
+            } else if (job.status === 'pending_delivery' || job.status === 'in_transit') {
+                address = (job.destination ? job.destination + (job.delivery_city ? ', ' + job.delivery_city : '') : '');
+            } else {
+                address = job.destination || job.pickup_location || '';
+            }
+            if (!address) return;
+
+            // If coordinates are missing, try to geocode (but don't block on it)
+            const doActivation = (lat, lng) => {
+                // Determine which driver zone contains this point
+                let foundDriver = null;
+                if (lat && lng) {
+                    const point = new google.maps.LatLng(lat, lng);
+                    for (let driver in driverZones) {
+                        const zones = driverZones[driver];
+                        for (let zoneId in zones) {
+                            const zone = zones[zoneId];
+                            if (zone.paths && Array.isArray(zone.paths)) {
+                                for (let path of zone.paths) {
+                                    const polygon = new google.maps.Polygon({ paths: path });
+                                    if (google.maps.geometry.poly.containsLocation(point, polygon)) {
+                                        foundDriver = driver;
+                                        break;
+                                    }
+                                }
+                                if (foundDriver) break;
+                            }
+                        }
+                        if (foundDriver) break;
+                    }
+                }
+
+                // If no zone found, fall back to existing assignment or leave as is
+                if (!foundDriver) {
+                    // If already assigned, keep it; otherwise, maybe leave scheduled? We'll call autoScheduleJob to possibly reschedule.
+                    if (!job.assigned_to || job.assigned_to === 'Unassigned') {
+                        // No zone found and unassigned – let autoScheduleJob handle it (it will try to find a zone or reschedule)
+                        autoScheduleJob(jobId);
+                    }
+                    return;
+                }
+
+                // Check if driver is available now based on schedule
+                const zoneData = driverZones[foundDriver];
+                let isAvailableNow = false;
+                const nowDate = new Date();
+                const dayOfWeek = nowDate.toLocaleDateString('en-US', { weekday: 'short' });
+                const timeStr = nowDate.getHours().toString().padStart(2,'0') + ':' + nowDate.getMinutes().toString().padStart(2,'0');
+
+                // Iterate through all zones for this driver to find a matching schedule (we can just check any zone)
+                for (let zoneId in zoneData) {
+                    const zone = zoneData[zoneId];
+                    const days = zone.days || [];
+                    const start = zone.start || '00:00';
+                    const end = zone.end || '23:59';
+                    if (days.length === 0 || days.includes(dayOfWeek)) {
+                        if (timeStr >= start && timeStr <= end) {
+                            isAvailableNow = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isAvailableNow) {
+                    // Activate the job: set appropriate status, assign driver, add history
+                    let newStatus = '';
+                    if (job.status === 'pending_pickup' || !job.status) {
+                        newStatus = 'pending_pickup';
+                    } else if (job.status === 'pending_delivery' || job.status === 'in_transit') {
+                        newStatus = 'pending_delivery';
+                    } else {
+                        newStatus = 'pending_pickup'; // fallback
+                    }
+                    const updates = {
+                        status: newStatus,
+                        assigned_to: foundDriver,
+                        scheduled_time: null, // clear scheduled time to avoid re‑processing
+                        job_history: (job.job_history ? job.job_history + '\n' : '') + `[Auto‑activated from scheduled time at ${new Date().toLocaleString()}]`
+                    };
+                    db.ref('jobs').child(jobId).update(updates);
+                } else {
+                    // Driver not available now – reschedule via autoScheduleJob
+                    autoScheduleJob(jobId);
+                }
+            };
+
+            if (job.lat && job.lng) {
+                doActivation(job.lat, job.lng);
+            } else {
+                // Geocode to get coordinates
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: address }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const loc = results[0].geometry.location;
+                        const lat = loc.lat();
+                        const lng = loc.lng();
+                        // Save coordinates for future use
+                        db.ref('jobs').child(jobId).update({ lat, lng }).then(() => {
+                            doActivation(lat, lng);
+                        });
+                    } else {
+                        // Geocoding failed – cannot determine zone, so just call autoScheduleJob (it may reschedule or leave as is)
+                        autoScheduleJob(jobId);
+                    }
+                });
+            }
+        }
+    });
+}
+
 firebase.auth().onAuthStateChanged(a=>{if(a){let {email}=a,b=email.split('@')[0].toLowerCase();db.ref(`roles/${b}/command`).once('value').then(c=>{if(c.val()===!0){currentUser=email.split('@')[0];initCommandNotifications(email);requestWakeLock();window.innerWidth>=1024&&openMap(!0);with(document){getElementById('login-overlay').style.display='none';getElementById('user-display').innerText=`Logged in as: ${currentUser}`;firebase.database().ref('developer').on('value',d=>{let e=getElementById('dev-list');e.innerHTML='';let f=d.val()??{};Object.values(f).forEach(g=>{e.innerHTML+=`
       <div class=dev-item>
         <div class=dev-hdr>${g.user} - <span style="color:orange;">${g.app??'Database'}</span> - ${g.date}</div>
@@ -816,6 +938,8 @@ setInterval(() => {
         });
     }
 }, 60 * 60 * 1000);
+// NEW: per‑minute check for scheduled jobs
+setInterval(checkScheduledJobs, 60 * 1000);
 }}else{alert("ACCESS DENIED");firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex'}}).catch(err=>{console.error(err);alert("Error checking role: "+err.message);firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex';})}else{document.getElementById('login-overlay').style.display='flex'}});
 function updateAllDriverDropdowns(){with(document){let a=b=>{let c=b?'<option value=Unassigned selected disabled hidden>Assign Driver</option><option value=Unassigned>UNASSIGNED</option>':'';customDrivers.forEach(d=>c+=`<option value="${d}">${d}</option>`);return c},b=getElementById('f-driver').value;getElementById('f-driver').innerHTML=a(!0);if(customDrivers.includes(b)||b==='Unassigned')getElementById('f-driver').value=b;let c=getElementById('af-driver').value;getElementById('af-driver').innerHTML='<option value="">All</option><option value=Unassigned>Unassigned</option>'+customDrivers.map(d=>`<option value="${d}">${d}</option>`).join('');getElementById('af-driver').value=c}}
 
