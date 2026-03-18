@@ -348,6 +348,24 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
+/* Recurring toggle button */
+.recurring-toggle-btn {
+    width: 100%;
+    height: 48px;
+    background: transparent;
+    border: 1px solid white;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+.recurring-toggle-btn.active {
+    background: white;
+    color: black;
+}
 </style>
 </head>
 <body>
@@ -402,19 +420,18 @@ header button[onclick="openDriverManager()"] {
     <div class="input-wrap f-1">
         <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
     </div>
-    <div class="input-wrap" style="flex:0 0 auto; display:flex; align-items:center; background:var(--input-bg); border:1px solid var(--border); border-radius:8px; padding:0 10px; height:48px; box-sizing:border-box;">
-        <input type="checkbox" id="f-recurring-checkbox" onchange="toggleRecurringOptions()" style="width:auto; margin-right:5px;"> 
-        <label for="f-recurring-checkbox" style="white-space:nowrap; color:var(--text);">Make recurring</label>
+    <div class="input-wrap f-1">
+        <button type="button" id="f-recurring-btn" class="recurring-toggle-btn" onclick="toggleRecurringButton()">Make Recurring</button>
     </div>
 </div>
 <div id="recurring-options" style="display:none; margin-bottom:8px;">
     <div class="flex gap-10 mb-6">
-        <select id="f-recur-frequency" class="driver-select" style="flex:0.3;" onchange="toggleWeeklyDays()">
+        <select id="f-recur-frequency" class="driver-select" style="flex:1;" onchange="toggleWeeklyDays()">
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
         </select>
-        <input type="number" id="f-recur-interval" value="1" min="1" style="width:80px;" placeholder="Interval">
+        <input type="number" id="f-recur-interval" value="1" min="1" style="flex:1; min-width:60px;" placeholder="Interval">
     </div>
     <div id="weekly-days" style="display:none;" class="flex wrap gap-6 mb-6">
         <label><input type="checkbox" value="Mon"> Mon</label>
@@ -426,8 +443,8 @@ header button[onclick="openDriverManager()"] {
         <label><input type="checkbox" value="Sun"> Sun</label>
     </div>
     <div class="flex gap-10 mb-6">
-        <label>Start: <input type="date" id="f-recur-start" class="glow-field"></label>
-        <label>End: <input type="date" id="f-recur-end" class="glow-field"></label>
+        <label style="flex:1; display:flex; flex-direction:column;">Start: <input type="date" id="f-recur-start" class="glow-field" style="width:100%;"></label>
+        <label style="flex:1; display:flex; flex-direction:column;">End: <input type="date" id="f-recur-end" class="glow-field" style="width:100%;"></label>
     </div>
 </div>
 <!-- End new fields -->
@@ -1012,7 +1029,7 @@ function saveDriverEdit(a){with(document){let b=getElementById(`edit-drv-${a}`).
 
 function deleteDriver(a){if(confirm("Remove driver?")){let b=customDrivers[a];customDrivers.splice(a,1);delete driverColors[b];let c=customDrivers.map(d=>({name:d,color:driverColors[d]||getDriverColor(d)}));db.ref('drivers').set(c).then(()=>{renderDriverManagerList();updateAllDriverDropdowns()})}}
 
-function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});document.getElementById('f-recurring-checkbox').checked=false;document.getElementById('recurring-options').style.display='none';}}
+function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});const btn = getElementById('f-recurring-btn'); if(btn) btn.classList.remove('active'); getElementById('recurring-options').style.display='none';}}
 
 function startVoiceEntry(){with(document){let a=window.SpeechRecognition||window.webkitSpeechRecognition;if(!a)return alert("Voice API not supported");let b=new a();b.lang='en-US';b.start();getElementById('mic-icon').classList.add('voice-active');b.onresult=c=>{let d=c.results[0][0].transcript.toLowerCase();if(d.trim()==="dispatch"){createJob();return}let e={'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10};Object.keys(e).forEach(f=>d=d.replace(new RegExp(`\\b${f}\\b`,'g'),e[f]));customDrivers.forEach(f=>{let g=d.match(new RegExp(`\\bfor\\s+(${f.toLowerCase()})\\b`));g&&(getElementById('f-driver').value=f)})};b.onend=()=>getElementById('mic-icon').classList.remove('voice-active')}}
 
@@ -1027,7 +1044,7 @@ function showSuggestions(a,b,c){with(document){let d=getElementById(b);if(a.leng
 
 function fillForm(a,b,c,d,e,f,g,h){let i=addressData[a];if(!i)return;with(document){getElementById(b).value=a;getElementById(c).value=i.address||"";getElementById(d).value=i.city||"";getElementById(e).value=i.customer_email||"";getElementById(f).value=i.customer_phone||"";getElementById(g).style.display='none';getElementById(h).style.display='none'}}
 
-function archiveAllDND(){if(!confirm("Archive ALL active DND/DNP jobs?"))return;let a={},b=firebase.database.ServerValue.TIMESTAMP;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c],e=(d.other_info||"").toLowerCase();if(d.status!=='completed'&&(e.includes("dnd")||e.includes("dnp"))){a[`/jobs/${c}/status`]='completed';a[`/jobs/${c}/completed_at`]=b;a[`/jobs/${c}/last_edit_by`]=currentUser;a[`/jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+"[ARCHIVED ALL]"}});Object.keys(a).length&&db.ref().update(a)}
+function archiveAllDND(){if(!confirm("Archive ALL active DND/DNP jobs?"))return;let a={},b=firebase.database.ServerValue.TIMESTAMP;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c],e=((d.other_info||"")+" "+(d.job_history||"")).toLowerCase();if(d.status!=='completed'&&(e.includes("dnd")||e.includes("dnp"))){a[`/jobs/${c}/status`]='completed';a[`/jobs/${c}/completed_at`]=b;a[`/jobs/${c}/last_edit_by`]=currentUser;a[`/jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+"[ARCHIVED ALL]"}});Object.keys(a).length&&db.ref().update(a)}
 
 function autoAssignDepotJobs(){let a=[];Object.entries(rawJobs).forEach(([b,c])=>{if(c.status==='pending_delivery'&&(c.assigned_to==='Unassigned'||!c.assigned_to)){a.push({id:b,...c})}});if(a.length===0)return alert("No depot jobs to assign.");if(!confirm(`Attempt to auto-assign ${a.length} jobs?`))return;let b=new google.maps.Geocoder(),c=d=>{if(d>=a.length)return alert("Auto-assignment complete.");let e=a[d],f=e.destination+(e.delivery_city?", "+e.delivery_city:(e.city?", "+e.city:""));b.geocode({'address':f},(g,h)=>{if(h==='OK'&&g[0]){let i=g[0].geometry.location,j=new Date(),k=j.getHours()*60+j.getMinutes(),l=j.toLocaleDateString('en-US',{weekday:'short'}),m='Unassigned';for(let n in driverZones){let o=driverZones[n];if(o){for(let p in o){let q=o[p];if(!q)continue;if(q.days&&!q.days.includes(l))continue;if(q.start&&q.end){let[r,s]=q.start.split(':').map(t=>+t),[u,v]=q.end.split(':').map(w=>+w),x=r*60+s,y=u*60+v;if(k<x||k>y)continue}let z=!1;if(q.paths){for(let A=0;A<q.paths.length;A++){let B=new google.maps.Polygon({paths:q.paths[A]});if(google.maps.geometry.poly.containsLocation(i,B)){z=!0;break}}}if(z){m=n;break}}}if(m!=='Unassigned')break}m!=='Unassigned'&&db.ref('jobs').child(e.id).update({assigned_to:m})}setTimeout(()=>c(d+1),600)})};c(0)}
 
@@ -1168,10 +1185,16 @@ function checkZonesAndSchedule(job, lat, lng, jobId) {
 // --- New auto‑schedule functions (end) ---
 
 // New helper functions for recurring schedules
-function toggleRecurringOptions() {
-    const chk = document.getElementById('f-recurring-checkbox');
+function toggleRecurringButton() {
     const opts = document.getElementById('recurring-options');
-    opts.style.display = chk.checked ? 'block' : 'none';
+    const btn = document.getElementById('f-recurring-btn');
+    const isVisible = opts.style.display === 'block';
+    opts.style.display = isVisible ? 'none' : 'block';
+    btn.classList.toggle('active', !isVisible);
+    // If showing, ensure weekly days visibility based on current frequency
+    if (!isVisible) {
+        toggleWeeklyDays();
+    }
 }
 function toggleWeeklyDays() {
     const freq = document.getElementById('f-recur-frequency').value;
@@ -1359,8 +1382,8 @@ function createRecurringSchedule() {
 }
 
 function createJob(){with(document){
-    // Check if recurring
-    if (document.getElementById('f-recurring-checkbox').checked) {
+    // Check if recurring options visible
+    if (document.getElementById('recurring-options').style.display === 'block') {
         createRecurringSchedule();
         return;
     }
@@ -1503,7 +1526,7 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
     I.ondrop=J=>{J.preventDefault();I.classList.remove('drag-over-glow');let K=J.dataTransfer.getData("text/plain");if(K)assignJob(K,F);};
     I.onclick=()=>{if(currentDriverFilter===F)clearDriverFilter();else filterByDriver(F);};
     let J=(G>0||H>0)?(driverLocationsData[F]?.total_duration||""):"";
-    I.innerHTML = `<div class="ds-name" style="color:${getDriverColor(F)}; font-size:0.9rem; display:flex; align-items:center; gap:6px;">${F}<span class="job-count" style="border:1px solid white; color:white; background:transparent; border-radius:12px; padding:2px 8px; font-size:0.8rem;">${G+H}</span></div>`;
+    I.innerHTML = `<div class="ds-name" style="color:${getDriverColor(F)}; font-size:0.9rem; display:flex; align-items:center; justify-content:space-between; width:100%;">${F}<span class="job-count" style="color:white; background:transparent; padding:2px 8px; font-size:0.8rem;">${G+H}</span></div>`;
     e.appendChild(I)});getElementById("stat-pending").innerText=u+x;getElementById("stat-assigned").innerText=v;getElementById("stat-note").innerText=w;getElementById("note-box").style.display=w>0?"block":"none";getElementById("pending-box").className="stat-box"+((u+x)>0?" unassigned-glow":"");['pickups','transit','depot','deliveries','dnd','scheduled'].forEach(F=>{let G=getElementById('list-'+F);if(G){let H=G.children.length,I=getElementById('badge-'+F);if(I){I.innerText=H;if(H>0)I.classList.add('badge-active');else I.classList.remove('badge-active')}G.style.display=catState[F]?'block':'none';let J=getElementById('btn-'+F);if(J){if(G.querySelector('.new-card')&&!catState[F])J.classList.add('new-btn');else J.classList.remove('new-btn');if(F==='dnd'){if(H===0)J.classList.add('dnd-empty-btn');else J.classList.remove('dnd-empty-btn')}}}});isFirstLoad=!1}}
 
 function openZoneManager(){with(document){getElementById('zone-modal').style.display='block';showZoneSchedule()}}
