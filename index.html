@@ -300,23 +300,24 @@ header button[onclick="openDriverManager()"] {
   flex: none !important;
 }
 
-/* Back button styling */
-#back-to-categories {
-  background: var(--header-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 30px;
-  padding: 12px 24px;
-  font-weight: bold;
+/* Back button styling - now inside category header */
+.cat-back-btn {
+  margin-left: 8px;
+  padding: 4px 8px;
+  background: var(--btn-bg);
+  border-radius: 4px;
+  font-size: 12px;
   cursor: pointer;
-  text-transform: uppercase;
-  font-size: 14px;
-  transition: 0.2s;
-  box-shadow: var(--shadow-soft);
+  display: none;
+  color: var(--text);
+  border: 1px solid var(--border);
 }
-#back-to-categories:hover {
+.cat-back-btn:hover {
   background: var(--accent);
   color: #000;
+}
+.archive-column.expanded .cat-back-btn {
+  display: inline-block;
 }
 
 /* Ensure lists inside expanded category use grid */
@@ -348,33 +349,37 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* Recurring toggle button - updated */
+/* Recurring toggle button - updated to match input fields */
 .recurring-toggle-btn {
-    width: 50%;
-    height: 48px;
-    background: transparent;
-    border: 2px solid #facc15; /* yellow */
+    background: var(--input-bg);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #facc15;
-    font-weight: 700;
-    text-transform: uppercase;
+    color: var(--text);
+    font-weight: 400;
     cursor: pointer;
-    padding: 0 10px;
+    padding: 12px 16px;
     box-sizing: border-box;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    text-transform: none;
 }
 .recurring-toggle-btn.active {
-    background: #facc15;
-    color: black;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2);
+    background: var(--input-bg);
+    color: var(--text);
 }
 body.light-mode .recurring-toggle-btn {
-    border-color: black;
-    color: black;
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--input-bg);
 }
 body.light-mode .recurring-toggle-btn.active {
-    background: black;
-    color: white;
     border-color: black;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.2);
+    background: var(--input-bg);
+    color: var(--text);
 }
 /* Spinner for login button */
 .spinner {
@@ -400,6 +405,36 @@ body.light-mode .recurring-toggle-btn.active {
 .btn-needs-drawing {
   animation: pulse-yellow 1.5s infinite !important;
   border: 2px solid gold !important;
+}
+/* Done buttons for zone manager */
+.btn-zone-done {
+    background: var(--active-green);
+    color: #000;
+    border: none;
+    padding: 8px 12px;
+    font-weight: 700;
+    font-size: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin-left: 8px;
+}
+.btn-time-done {
+    background: var(--btn-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    font-weight: 700;
+    font-size: 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin-left: 4px;
+    white-space: nowrap;
+}
+.btn-time-done:hover {
+    background: var(--accent);
+    color: #000;
 }
 </style>
 </head>
@@ -595,44 +630,43 @@ function toggleDispatchForm() {
 <div class=history-box id=active-list-container>
 <div id=filter-reset-ui class="w-100 text-center none mb-15" style="padding:10px;box-sizing:border-box;">
 <div id=selected-driver-label class="none bold u-case" style="margin:0;width:100%;font-size:16px;padding:10px;border-radius:0;background:#111;box-shadow:var(--shadow-soft);display:flex;justify-content:center;align-items:center;gap:10px;box-sizing:border-box;"></div>
-<div class="flex jc ac gap-10" style="margin:10px auto 0 auto;width:100%;">
+<div class="flex jc ac gap-10 wrap" style="margin:10px auto 0 auto;width:100%;">
 <button id=depot-checkin-btn class=route-btn style="background:#0056b3;border-color:#0056b3;" onclick="unloadActiveDriverAtDepot()">DEPOT CHECK-IN</button>
 <button id=back-filter-btn class=route-btn style="background:#222;border:1px solid #555;color:#ccc;border-radius:20px;padding:6px 16px;font-size:12px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-soft);" onclick="clearDriverFilter()">⬅ BACK</button>
-</div>
-</div>
-<button id="back-to-categories" class="back-btn" onclick="showAllCategories()" style="display:none; margin:10px 0 10px auto; width:auto; padding:8px 16px;">← back</button>
-<div id=driver-job-filters class="flex jc gap-10 mt-15 mb-15 none" style="padding:0 10px;font-size:11px;">
+<div class="flex ac gap-10" style="font-size:11px;">
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-pickups checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Pickups</label>
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-deliveries checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Deliveries</label>
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-transit checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> In Transit</label>
 </div>
+</div>
+</div>
+<!-- back button removed from here – now inside category headers -->
 <div id=unassigned-immediate-list style="padding:15px;display:flex;flex-direction:column;gap:10px;width:100%;box-sizing:border-box;"></div>
 <div class=archive-column>
-<button id=btn-pickups class=cat-btn style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id=badge-pickups class=cat-badge>0</span></button>
+<button id=btn-pickups class=cat-btn style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><div style="display:flex; align-items:center; width:100%;"><span style="flex:1; text-align:left;">Pickups</span><span id=badge-pickups class=cat-badge>0</span><span class="cat-back-btn" onclick="event.stopPropagation(); showAllCategories();">← back</span></div></button>
 <div id=list-pickups></div>
 </div>
 <div class=archive-column>
-<button id=btn-transit class=cat-btn style="color:#0099cc;" onclick="toggleCat('transit')"><span>In Transit</span><span id=badge-transit class=cat-badge>0</span></button>
+<button id=btn-transit class=cat-btn style="color:#0099cc;" onclick="toggleCat('transit')"><div style="display:flex; align-items:center; width:100%;"><span style="flex:1; text-align:left;">In Transit</span><span id=badge-transit class=cat-badge>0</span><span class="cat-back-btn" onclick="event.stopPropagation(); showAllCategories();">← back</span></div></button>
 <div id=list-transit></div>
 </div>
 <div class=archive-column>
 <button id=btn-depot class=cat-btn style="color:#00BFFF;" onclick="toggleCat('depot')">
-<div class="flex ac gap-10"><span>At Depot</span><span onclick="event.stopPropagation(); autoAssignDepotJobs()" style="background:transparent;border:1px solid #00BFFF;color:#00BFFF;padding:6px 10px;font-size:10px;border-radius:4px;cursor:pointer;text-transform:uppercase;font-weight:700;">Auto Assign</span></div>
-<span id=badge-depot class=cat-badge>0</span>
+<div style="display:flex; align-items:center; width:100%;"><span style="flex:1; text-align:left;">At Depot</span><span onclick="event.stopPropagation(); autoAssignDepotJobs()" style="background:transparent;border:1px solid #00BFFF;color:#00BFFF;padding:6px 10px;font-size:10px;border-radius:4px;cursor:pointer;text-transform:uppercase;font-weight:700; margin-right:8px;">Auto Assign</span><span id=badge-depot class=cat-badge>0</span><span class="cat-back-btn" onclick="event.stopPropagation(); showAllCategories();">← back</span></div>
 </button>
 <div id=list-depot></div>
 </div>
 <div class=archive-column>
-<button id=btn-deliveries class=cat-btn style="color:var(--active-green);" onclick="toggleCat('deliveries')"><span>Deliveries</span><span id=badge-deliveries class=cat-badge>0</span></button>
+<button id=btn-deliveries class=cat-btn style="color:var(--active-green);" onclick="toggleCat('deliveries')"><div style="display:flex; align-items:center; width:100%;"><span style="flex:1; text-align:left;">Deliveries</span><span id=badge-deliveries class=cat-badge>0</span><span class="cat-back-btn" onclick="event.stopPropagation(); showAllCategories();">← back</span></div></button>
 <div id=list-deliveries></div>
 </div>
 <!-- New Scheduled category column -->
 <div class=archive-column>
-<button id=btn-scheduled class=cat-btn style="color:#ff0;" onclick="toggleCat('scheduled')"><span>Scheduled</span><span id=badge-scheduled class=cat-badge>0</span></button>
+<button id=btn-scheduled class=cat-btn style="color:#ff0;" onclick="toggleCat('scheduled')"><div style="display:flex; align-items:center; width:100%;"><span style="flex:1; text-align:left;">Scheduled</span><span id=badge-scheduled class=cat-badge>0</span><span class="cat-back-btn" onclick="event.stopPropagation(); showAllCategories();">← back</span></div></button>
 <div id=list-scheduled></div>
 </div>
 <div class=archive-column>
-<button id=btn-dnd class=cat-btn style="color:red;" onclick="toggleCat('dnd')"><span>DND/DNP</span><span id=badge-dnd class=cat-badge>0</span></button>
+<button id=btn-dnd class=cat-btn style="color:red;" onclick="toggleCat('dnd')"><div style="display:flex; align-items:center; width:100%;"><span style="flex:1; text-align:left;">DND/DNP</span><span id=badge-dnd class=cat-badge>0</span><span class="cat-back-btn" onclick="event.stopPropagation(); showAllCategories();">← back</span></div></button>
 <button id=archive-all-dnd-btn onclick="archiveAllDND()" class="none bold pointer u-case" style="background:#b71c1c;color:#fff;border:none;padding:10px;font-size:11px;margin:10px;border-radius:4px;width:calc(100% - 20px);">Archive All Failed</button>
 <div id=list-dnd></div>
 </div>
@@ -773,16 +807,14 @@ document.addEventListener('keydown',a=>{if(a.key==='Escape'){closeMap();with(doc
 function toggleCat(cat) {
   const count = parseInt(document.getElementById('badge-' + cat).innerText) || 0;
   if (count === 0) return;
-  const backBtn = document.getElementById('back-to-categories');
   const allColumns = document.querySelectorAll('.archive-column');
   const clickedCol = document.getElementById('btn-' + cat).closest('.archive-column');
   const isExpanded = clickedCol.classList.contains('expanded');
 
   if (isExpanded) {
-    // Collapse: show all columns again, hide back button
+    // Collapse: show all columns again
     allColumns.forEach(col => col.style.display = '');
     clickedCol.classList.remove('expanded');
-    backBtn.style.display = 'none';
     // Reset catState for all? We'll set all lists to their previous state
     for (let c in catState) {
       catState[c] = false;
@@ -796,7 +828,6 @@ function toggleCat(cat) {
     allColumns.forEach(col => col.style.display = 'none');
     clickedCol.style.display = ''; // restore default display (block/flex)
     clickedCol.classList.add('expanded');
-    backBtn.style.display = 'block';
 
     // Set catState: only this category true, others false
     for (let c in catState) {
@@ -815,10 +846,8 @@ function toggleCat(cat) {
     document.getElementById('toggle-archive-btn').style.display = 'none';
   }
 }
-    function showAllCategories() {
-  // Reset to default view: show all columns, hide back button
-  const backBtn = document.getElementById('back-to-categories');
-  backBtn.style.display = 'none';
+function showAllCategories() {
+  // Reset to default view: show all columns
   document.querySelectorAll('.archive-column').forEach(col => {
     col.style.display = '';
     col.classList.remove('expanded');
@@ -1164,7 +1193,7 @@ function fillForm(a,b,c,d,e,f,g,h){let i=addressData[a];if(!i)return;with(docume
 
 function archiveAllDND(){if(!confirm("Archive ALL active DND/DNP jobs?"))return;let a={},b=firebase.database.ServerValue.TIMESTAMP;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c],e=((d.other_info||"")+" "+(d.job_history||"")).toLowerCase();if(d.status!=='completed'&&(e.includes("dnd")||e.includes("dnp"))){a[`/jobs/${c}/status`]='completed';a[`/jobs/${c}/completed_at`]=b;a[`/jobs/${c}/last_edit_by`]=currentUser;a[`/jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+"[ARCHIVED ALL]"}});Object.keys(a).length&&db.ref().update(a)}
 
-function autoAssignDepotJobs(){let a=[];Object.entries(rawJobs).forEach(([b,c])=>{if(c.status==='pending_delivery'&&(c.assigned_to==='Unassigned'||!c.assigned_to)){a.push({id:b,...c})}});if(a.length===0)return alert("No depot jobs to assign.");if(!confirm(`Attempt to auto-assign ${a.length} jobs?`))return;let b=new google.maps.Geocoder(),c=d=>{if(d>=a.length)return alert("Auto-assignment complete.");let e=a[d],f=e.destination+(e.delivery_city?", "+e.delivery_city:(e.city?", "+e.city:""));b.geocode({'address':f},(g,h)=>{if(h==='OK'&&g[0]){let i=g[0].geometry.location,j=new Date(),k=j.getHours()*60+j.getMinutes(),l=j.toLocaleDateString('en-US',{weekday:'short'}),m='Unassigned';for(let n in driverZones){let o=driverZones[n];if(o){for(let p in o){let q=o[p];if(!q)continue;if(q.days&&!q.days.includes(l))continue;if(q.start&&q.end){let[r,s]=q.start.split(':').map(t=>+t),[u,v]=q.end.split(':').map(w=>+w),x=r*60+s,y=u*60+v;if(k<x||k>y)continue}let z=!1;if(q.paths){for(let A=0;A<q.paths.length;A++){let B=new google.maps.Polygon({paths:q.paths[A]});if(google.maps.geometry.poly.containsLocation(i,B)){z=!0;break}}}if(z){m=n;break}}}if(m!=='Unassigned')break}m!=='Unassigned'&&db.ref('jobs').child(e.id).update({assigned_to:m})}setTimeout(()=>c(d+1),600)})};c(0)}
+function autoAssignDepotJobs(){let a=[];Object.entries(rawJobs).forEach(([b,c])=>{if(c.status==='pending_delivery'&&(c.assigned_to==='Unassigned'||!c.assigned_to)){a.push({id:b,...c})}});if(a.length===0)return alert("No depot jobs to assign.");if(!confirm(`Attempt to auto-assign ${a.length} jobs?`))return;let b=new google.maps.Geocoder(),c=d=>{if(d>=a.length)return alert("Auto-assignment complete.");let e=a[d],f=e.destination+(e.delivery_city?", "+e.delivery_city:(e.city?", "+e.city:""));b.geocode({'address':f},(g,h)=>{if(h==='OK'&&g[0]){let i=g[0].geometry.location,j=new Date(),k=j.getHours()*60+j.getMinutes(),l=j.toLocaleDateString('en-US',{weekday:'short'}),m='Unassigned';for(let n in driverZones){let o=driverZones[n];if(o){for(let p in o){let q=o[p];if(!q)continue;if(q.days&&!q.days.includes(l))continue;if(q.start&&q.end){let[r,s]=q.start.split(':').map(t=>+t),[u,v]=q.end.split(':').map(w=>+w),x=r*60+s,y=u*60+v;if(k<x||k>y)continue}let z=!1;if(q.paths){for(let A=0;A<q.paths.length;A++){let B=new google.maps.Polygon({paths:q.paths[A]});if(google.maps.geometry.poly.containsLocation(i,B)){z=!0;break}}}if(z){m=n;break}}}if(m!=='Unassigned')break}}m!=='Unassigned'&&db.ref('jobs').child(e.id).update({assigned_to:m})}setTimeout(()=>c(d+1),600)})};c(0)}
 
 // --- New auto‑schedule functions (begin) ---
 function autoScheduleJob(jobId) {
@@ -1597,6 +1626,34 @@ function deleteJob(a){
     }
 }
 
+// New variables for zone drawing prompts
+let driversNeedingDrawing = {};
+
+function driverDoneEditing(driver) {
+    driversNeedingDrawing[driver] = true;
+    updateDrawingPrompts();
+}
+
+function confirmTime(driver, zoneId, type) {
+    // just blur the input or do nothing – confirms the time
+    const input = document.querySelector(`#zone-roster input[data-driver="${driver}"][data-zone="${zoneId}"][data-time="${type}"]`);
+    if (input) input.blur();
+}
+
+function updateDrawingPrompts() {
+    const mapEditorBtn = document.getElementById('open-map-editor-btn');
+    const anyNeeded = Object.values(driversNeedingDrawing).some(v => v);
+    if (anyNeeded) {
+        mapEditorBtn.classList.add('btn-needs-drawing');
+    } else {
+        mapEditorBtn.classList.remove('btn-needs-drawing');
+    }
+    // If zone map is visible, update driver grid buttons
+    if (document.getElementById('zone-map-view').style.display !== 'none') {
+        renderZoneMapInterface();
+    }
+}
+
 function renderData(){with(document){
     // Generate recurring jobs first
     checkAndGenerateRecurringJobs();
@@ -1657,7 +1714,13 @@ function initZoneMap(){with(document){
   zoneMap=new google.maps.Map(getElementById("zone-map"),{center:{lat:49.8425,lng:-99.9497},zoom:12,gestureHandling:"greedy",styles:mapStyles});
   drawingManager=new google.maps.drawing.DrawingManager({drawingControl:!1,polygonOptions:{editable:!0}});
   drawingManager.setMap(zoneMap);
-  google.maps.event.addListener(drawingManager,'overlaycomplete',function(a){if(a.type==='polygon'&&activeDrawingDriver&&activeDrawingZoneId){let b=a.overlay,c=b.getPath(),d=!1;for(let e in zonePolygons){if(e===activeDrawingDriver)continue;let f=zonePolygons[e];for(let g=0;g<f.length;g++){let h=f[g];for(let i=0;i<c.getLength();i++){if(google.maps.geometry.poly.containsLocation(c.getAt(i),h))d=!0}let j=h.getPath();for(let i=0;i<j.getLength();i++){if(google.maps.geometry.poly.containsLocation(j.getAt(i),b))d=!0}}}if(d){alert("Overlaps another driver's boundary! Please re-draw without overlapping.");a.overlay.setMap(null);return}let e=c.getArray().map(f=>({lat:f.lat(),lng:f.lng()})),f=[];let g=driverZones[activeDrawingDriver]&&driverZones[activeDrawingDriver][activeDrawingZoneId];if(g&&g.paths)f=g.paths;f.push(e);db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(f);a.overlay.setMap(null);drawingManager.setDrawingMode(null);activeDrawingDriver=null;activeDrawingZoneId=null;getElementById('active-driver-zone-panel').style.display='none';renderZoneMapInterface()}});
+  google.maps.event.addListener(drawingManager,'overlaycomplete',function(a){if(a.type==='polygon'&&activeDrawingDriver&&activeDrawingZoneId){let b=a.overlay,c=b.getPath(),d=!1;for(let e in zonePolygons){if(e===activeDrawingDriver)continue;let f=zonePolygons[e];for(let g=0;g<f.length;g++){let h=f[g];for(let i=0;i<c.getLength();i++){if(google.maps.geometry.poly.containsLocation(c.getAt(i),h))d=!0}let j=h.getPath();for(let i=0;i<j.getLength();i++){if(google.maps.geometry.poly.containsLocation(j.getAt(i),b))d=!0}}}if(d){alert("Overlaps another driver's boundary! Please re-draw without overlapping.");a.overlay.setMap(null);return}let e=c.getArray().map(f=>({lat:f.lat(),lng:f.lng()})),f=[];let g=driverZones[activeDrawingDriver]&&driverZones[activeDrawingDriver][activeDrawingZoneId];if(g&&g.paths)f=g.paths;f.push(e);db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(f);a.overlay.setMap(null);drawingManager.setDrawingMode(null);
+    // Clear the needing drawing flag for this driver
+    if (driversNeedingDrawing[activeDrawingDriver]) {
+        driversNeedingDrawing[activeDrawingDriver] = false;
+        updateDrawingPrompts();
+    }
+    activeDrawingDriver=null;activeDrawingZoneId=null;getElementById('active-driver-zone-panel').style.display='none';renderZoneMapInterface()}});
   // Attach search
   let searchBtn = document.getElementById('zone-search-btn');
   let searchBar = document.getElementById('zone-search-bar');
@@ -1691,14 +1754,19 @@ f+=`
 <button class=btn-zone-del onclick="deleteZone('${c}', '${g}')">DELETE</button>
 </div>
 ${i}
-<div class="flex gap-10">
-<input type=time value="${h.start||''}" onchange="saveZone('${c}', '${g}', 'start', this.value)" style="margin:0;padding:10px;">
-<input type=time value="${h.end||''}" onchange="saveZone('${c}', '${g}', 'end', this.value)" style="margin:0;padding:10px;">
+<div class="flex gap-10" style="align-items:center;">
+<input type="time" value="${h.start||''}" onchange="saveZone('${c}', '${g}', 'start', this.value)" style="margin:0;padding:10px;" data-driver="${c}" data-zone="${g}" data-time="start">
+<button class="btn-time-done" onclick="confirmTime('${c}', '${g}', 'start')">Done</button>
+<input type="time" value="${h.end||''}" onchange="saveZone('${c}', '${g}', 'end', this.value)" style="margin:0;padding:10px;" data-driver="${c}" data-zone="${g}" data-time="end">
+<button class="btn-time-done" onclick="confirmTime('${c}', '${g}', 'end')">Done</button>
 </div>
 </div>`});b+=`<div class=zone-driver-row>
 <div class=zone-driver-header>
 <div class=zone-driver-name style="color:${d}">${c}</div>
+<div style="display:flex; gap:8px;">
 <button class=btn-zone-add onclick="addZone('${c}')">+ ADD ZONE</button>
+<button class="btn-zone-done" onclick="driverDoneEditing('${c}')">Done</button>
+</div>
 </div>
 ${f}
 </div>`});getElementById('zone-roster').innerHTML=b;
@@ -1711,7 +1779,7 @@ if(mapEditorBtn){
   }
 }}}
 
-function renderZoneMapInterface(){if(!zoneMap)return;for(let a in zonePolygons){if(Array.isArray(zonePolygons[a]))zonePolygons[a].forEach(b=>b.setMap(null))}zonePolygons={};customDrivers.forEach((a)=>{let b=getDriverColor(a),c=driverZones[a]||{};zonePolygons[a]=[];Object.values(c).forEach(d=>{if(d.paths){d.paths.forEach(e=>{let f=new google.maps.Polygon({paths:e,map:zoneMap,fillColor:b,fillOpacity:0.3,strokeColor:b,strokeWeight:2});zonePolygons[a].push(f)})}})});let a='';customDrivers.forEach((b)=>{let c=getDriverColor(b);a+=`<button class=zone-driver-btn onclick="selectDriverForMap('${b}', '${c}')" style="color:${c}">${b}</button>`});document.getElementById('zone-driver-grid').innerHTML=a}
+function renderZoneMapInterface(){if(!zoneMap)return;for(let a in zonePolygons){if(Array.isArray(zonePolygons[a]))zonePolygons[a].forEach(b=>b.setMap(null))}zonePolygons={};customDrivers.forEach((a)=>{let b=getDriverColor(a),c=driverZones[a]||{};zonePolygons[a]=[];Object.values(c).forEach(d=>{if(d.paths){d.paths.forEach(e=>{let f=new google.maps.Polygon({paths:e,map:zoneMap,fillColor:b,fillOpacity:0.3,strokeColor:b,strokeWeight:2});zonePolygons[a].push(f)})}})});let a='';customDrivers.forEach((b)=>{let c=getDriverColor(b);let needsDrawingClass = driversNeedingDrawing[b] ? ' btn-needs-drawing' : '';a+=`<button class="zone-driver-btn${needsDrawingClass}" onclick="selectDriverForMap('${b}', '${c}')" style="color:${c}">${b}</button>`});document.getElementById('zone-driver-grid').innerHTML=a}
 
 function selectDriverForMap(a,b){with(document){let c=getElementById('active-driver-zone-panel'),d=driverZones[a]||{},e=Object.keys(d);if(e.length===0){c.innerHTML=`<div style="text-align:center;color:#777;font-size:12px;">No zones created for ${a}. Go to Schedule view to add one.</div>`}else{let f=`<div style="font-weight:700;color:${b};text-transform:uppercase;margin-bottom:8px;">${a} ZONES</div>`;e.forEach(g=>{let h=d[g];f+=`
 <div class=active-zone-row>
