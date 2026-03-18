@@ -1052,29 +1052,34 @@ function checkZonesAndSchedule(job, lat, lng, jobId) {
     }
     if (!foundDriver) return; // no zone found, leave as is
 
-    let scheduledTime = job.scheduled_time ? new Date(job.scheduled_time) : new Date();
+    // Check if driver is available now based on schedule
+    const nowDate = new Date();
+    const dayOfWeek = nowDate.toLocaleDateString('en-US', { weekday: 'short' });
+    const timeStr = nowDate.getHours().toString().padStart(2,'0') + ':' + nowDate.getMinutes().toString().padStart(2,'0');
+
     const days = foundZone.days || [];
     const startStr = foundZone.start || '09:00';
-    const dayOfWeek = scheduledTime.toLocaleDateString('en-US', { weekday: 'short' });
-    const timeStr = scheduledTime.getHours().toString().padStart(2,'0') + ':' + scheduledTime.getMinutes().toString().padStart(2,'0');
+    const endStr = foundZone.end || '23:59';
     const isDayValid = days.length === 0 || days.includes(dayOfWeek);
-    const isTimeValid = (!startStr || timeStr >= startStr) && (!foundZone.end || timeStr <= foundZone.end);
+    const isTimeValid = (timeStr >= startStr) && (timeStr <= endStr);
+
     if (isDayValid && isTimeValid) {
+        // Current time is valid: assign immediately and do not reschedule
         if (job.assigned_to !== foundDriver) {
             db.ref('jobs').child(jobId).update({ assigned_to: foundDriver });
         }
-        return;
+        return; // EXIT – no rescheduling
     }
 
-    // Need to find next available slot
-    let currentDate = new Date(scheduledTime);
-    if (currentDate < new Date()) {
-        currentDate = new Date();
+    // --- Rescheduling logic (only runs if current time NOT valid) ---
+    let scheduledTime = job.scheduled_time ? new Date(job.scheduled_time) : new Date();
+    if (scheduledTime < nowDate) {
+        scheduledTime = nowDate;
     }
     const maxDays = 60;
     for (let i = 0; i <= maxDays; i++) {
-        let checkDate = new Date(currentDate);
-        checkDate.setDate(currentDate.getDate() + i);
+        let checkDate = new Date(scheduledTime);
+        checkDate.setDate(scheduledTime.getDate() + i);
         const checkDay = checkDate.toLocaleDateString('en-US', { weekday: 'short' });
         if (days.length === 0 || days.includes(checkDay)) {
             let [hour, minute] = (startStr || '09:00').split(':').map(Number);
