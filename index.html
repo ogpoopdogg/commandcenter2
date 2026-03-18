@@ -1055,13 +1055,31 @@ function checkZonesAndSchedule(job, lat, lng, jobId) {
     // Check if driver is available now based on schedule
     const nowDate = new Date();
     const dayOfWeek = nowDate.toLocaleDateString('en-US', { weekday: 'short' });
-    const timeStr = nowDate.getHours().toString().padStart(2,'0') + ':' + nowDate.getMinutes().toString().padStart(2,'0');
+    
+    // Convert current time to minutes for easier comparison
+    const currentMinutes = nowDate.getHours() * 60 + nowDate.getMinutes();
 
     const days = foundZone.days || [];
-    const startStr = foundZone.start || '09:00';
+    const startStr = foundZone.start || '00:00';
     const endStr = foundZone.end || '23:59';
+    
+    // Convert start and end times to minutes
+    const [startHour, startMinute] = startStr.split(':').map(Number);
+    const [endHour, endMinute] = endStr.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    
     const isDayValid = days.length === 0 || days.includes(dayOfWeek);
-    const isTimeValid = (timeStr >= startStr) && (timeStr <= endStr);
+    
+    // Check if current time is within the range (handles overnight schedules if needed)
+    let isTimeValid;
+    if (endMinutes >= startMinutes) {
+        // Normal schedule (e.g., 09:00-17:00)
+        isTimeValid = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    } else {
+        // Overnight schedule (e.g., 22:00-06:00)
+        isTimeValid = currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+    }
 
     if (isDayValid && isTimeValid) {
         // Current time is valid: assign immediately and do not reschedule
