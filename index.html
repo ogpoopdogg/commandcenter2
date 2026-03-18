@@ -101,7 +101,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 #login-overlay { position: fixed; inset: 0; background: #050505; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
 .login-box { width: 100%; max-width: 350px; background: #111; padding: 40px; border-radius: 12px; border: 1px solid #222; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 .login-input { width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none; }
-.login-submit { width: 100%; padding: 14px; margin-top: 20px; background: var(--accent); border: none; color: #000; font-weight: 700; font-size: 16px; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+.login-submit { width: 100%; padding: 14px; margin-top: 20px; background: var(--accent); border: none; color: #000; font-weight: 700; font-size: 16px; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 #user-display { color: var(--active-green); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px; }
 .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--border); z-index: 5000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text); font-weight: 500; font-size: 14px; }
@@ -348,23 +348,58 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* Recurring toggle button */
+/* Recurring toggle button - updated */
 .recurring-toggle-btn {
-    width: 100%;
+    width: 50%;
     height: 48px;
     background: transparent;
-    border: 1px solid white;
+    border: 2px solid #facc15; /* yellow */
     border-radius: 8px;
-    color: white;
+    color: #facc15;
     font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
     padding: 0 10px;
     box-sizing: border-box;
+    margin: 0 auto;
 }
 .recurring-toggle-btn.active {
-    background: white;
+    background: #facc15;
     color: black;
+}
+body.light-mode .recurring-toggle-btn {
+    border-color: black;
+    color: black;
+}
+body.light-mode .recurring-toggle-btn.active {
+    background: black;
+    color: white;
+    border-color: black;
+}
+/* Spinner for login button */
+.spinner {
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top: 2px solid #fff;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+/* Zone needs drawing animation */
+@keyframes pulse-yellow {
+  0% { box-shadow: 0 0 5px rgba(255,215,0,0.5); border-color: gold; }
+  50% { box-shadow: 0 0 15px gold; border-color: gold; }
+  100% { box-shadow: 0 0 5px rgba(255,215,0,0.5); border-color: gold; }
+}
+.zone-needs-drawing {
+  animation: pulse-yellow 1.5s infinite !important;
+  border: 2px solid gold !important;
+}
+.btn-needs-drawing {
+  animation: pulse-yellow 1.5s infinite !important;
+  border: 2px solid gold !important;
 }
 </style>
 </head>
@@ -374,7 +409,10 @@ header button[onclick="openDriverManager()"] {
 <h2 style="color:var(--accent);font-weight:700;letter-spacing:1px;margin-top:0;">COMMAND LOGIN</h2>
 <input type=email id=login-user class=login-input placeholder=Email autofocus>
 <input type=password id=login-pin class=login-input placeholder=Password>
-<button class=login-submit onclick="attemptLogin()">Authorize</button>
+<button class="login-submit" onclick="attemptLogin()" id="login-btn">
+  <span id="login-spinner" class="spinner" style="display:none;"></span>
+  <span id="login-text">Authorize</span>
+</button>
 </div>
 </div>
 <header>
@@ -415,7 +453,8 @@ header button[onclick="openDriverManager()"] {
 <div class="input-wrap mb-6">
 <input type=text id=f-info placeholder="Driver Notes...">
 </div>
-<!-- Begin new scheduled/recurring fields -->
+<div id=bottom-input-section></div>
+<!-- Begin new scheduled/recurring fields (moved above driver select) -->
 <div class="flex gap-10 mb-6">
     <div class="input-wrap f-1">
         <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
@@ -448,7 +487,6 @@ header button[onclick="openDriverManager()"] {
     </div>
 </div>
 <!-- End new fields -->
-<div id=bottom-input-section style="margin-top:0;"></div>
 <div class="flex ac gap-10" style="margin:4px 0;width:100%;">
 <select id=f-driver class=driver-select style="margin-bottom:0;border:1px solid var(--accent);">
 <option value=Unassigned selected disabled hidden>Assign Driver</option>
@@ -652,7 +690,7 @@ function toggleDispatchForm() {
 <div id=zone-schedule-view>
 <div class="flex jb ac mb-15">
 <h2 class="modal-h2 m-0">DRIVER SCHEDULES</h2>
-<button class=btn-zone style="font-size:12px;padding:14px;" onclick="showZoneMap()">OPEN MAP EDITOR</button>
+<button class="btn-zone" id="open-map-editor-btn" style="font-size:12px;padding:14px;" onclick="showZoneMap()">OPEN MAP EDITOR</button>
 </div>
 <div class=zone-roster id=zone-roster style="max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
 </div>
@@ -660,6 +698,11 @@ function toggleDispatchForm() {
 <div class="flex jb ac mb-10">
 <h2 class="modal-h2 m-0">ZONE MAP EDITOR</h2>
 <button class=btn-zone style="font-size:12px;padding:14px;" onclick="showZoneSchedule()">BACK TO SCHEDULES</button>
+</div>
+<!-- Search bar for zone map -->
+<div style="padding:10px; background:var(--header-bg); border-bottom:1px solid var(--border); display: flex; gap: 8px;">
+    <input type=text id=zone-search-bar class=glow-field placeholder="Search address or place" style="margin:0; flex:1;">
+    <button id=zone-search-btn class=btn-zone style="padding:10px 16px;">GO</button>
 </div>
 <div class="flex f-1" style="overflow:hidden;position:relative;border:1px solid var(--accent);box-sizing:border-box;">
 <div id=zone-map style="width:100%;height:100%;"></div>
@@ -701,6 +744,25 @@ function toggleDispatchForm() {
 firebase.initializeApp({ apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg", authDomain: "eandccourier-36fcc.firebaseapp.com", databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com", projectId: "eandccourier-36fcc", messagingSenderId: "1067680083511", appId: "1:1067680083511:android:22d1eb3757302492bd19b2" });
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 let db=firebase.database(),messaging=firebase.messaging(),swReg=null,rawJobs={},driverLocationsData={},addressData={},currentUser=localStorage.getItem('ec_command_user'),currentMode='pickup',currentDriverFilter=null,mapBoundsInitialized=!1,driverColors={},zoneMap,drawingManager,driverZones={},zonePolygons={},activeDrawingDriver=null,activeDrawingZoneId=null,seenJobs={},catState={pickups:!1,transit:!1,depot:!1,deliveries:!1,dnd:!1,scheduled:!1},isFirstLoad=!0,copySvg='<svg><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>',customDrivers=[],baseColors=['#FF8C00','#00BFFF','#3F51B5','#FF69B4','#9C27B0','#E91E63','#4CAF50','#FF5722','#00BCD4'],getDriverColor=a=>{if(driverColors[a])return driverColors[a];let b=customDrivers.indexOf(a);return b!==-1?baseColors[b%baseColors.length]:'#00b32d'},mainMap,mapMarkers={},activePolyline=null,listeningRef=null,mapAllListener=null,pressTimer,wakeLock=null,deferredPrompt,installBtn=document.getElementById('install-btn'),currentLocationTarget=null,pickerMap=null,pickerAutocomplete=null;
+
+// Map styles constant
+const mapStyles = [{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}];
+
+function ensureMainMap() {
+  if (!mainMap) {
+    mainMap = new google.maps.Map(document.getElementById("map"), {
+      scrollwheel: false,
+      gestureHandling: "greedy",
+      styles: mapStyles
+    });
+    mainMap.addListener('click', () => { mainMap.setOptions({scrollwheel: true}); });
+    addEventListener('click', (e) => {
+      if (!e.target.closest('#map-modal') && !e.target.closest('#map') && !e.target.closest('#locate-btn') && !e.target.closest('.driver-stat-row')) {
+        mainMap && mainMap.setOptions({scrollwheel: false});
+      }
+    });
+  }
+}
 
 window.assignJob=function(a,b){if(a&&b){let j=rawJobs[a],upd={assigned_to:b,last_edit_by:currentUser};if(j){let o=j.other_info||"",h=j.job_history||"",chk=(o+" "+h).toLowerCase();if(chk.includes("dnd")||chk.includes("dnp")){/* Deduce state: DNP implies pickup, otherwise fallback to existing status */let isPickup=chk.includes("dnp")||j.status==="pending_pickup";upd.other_info=o.replace(/dnd/gi,"").replace(/dnp/gi,"").trim();/* Cleanse history of DND/DNP to prevent renderData trapping */upd.job_history=(h?h.replace(/dnd/gi,"FAILED").replace(/dnp/gi,"FAILED")+'\n':'')+`[FAILED JOB REASSIGNED to ${b} by ${currentUser}]: ${o.replace(/dnd/gi,"").replace(/dnp/gi,"").trim()}`;upd.status=isPickup?'pending_pickup':'pending_delivery'}}db.ref('jobs').child(a).update(upd)}};
 
@@ -780,7 +842,26 @@ function clearDriverFilter(){currentDriverFilter=null;with(document){getElementB
 
 function unloadActiveDriverAtDepot(){if(!currentDriverFilter)return;if(!confirm("Move all 'In Transit' packages for "+currentDriverFilter+" to Depot?"))return;let a={},b=0;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c];if(d.status==='in_transit'&&d.assigned_to===currentDriverFilter){b++;a[`jobs/${c}/status`]='pending_delivery';a[`jobs/${c}/assigned_to`]='Unassigned';a[`jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+`Arrived at Depot (Pick-up by ${currentDriverFilter})`}});if(b===0)return alert("No 'In Transit' jobs found for "+currentDriverFilter);db.ref().update(a).then(()=>{alert("Unloaded "+b+" jobs to Depot.");clearDriverFilter()}).catch(c=>alert("Error: "+c.message))}
 
-function attemptLogin(){with(document){let a=getElementById('login-user').value.trim(),b=getElementById('login-pin').value.trim();a&&b&&firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(()=>firebase.auth().signInWithEmailAndPassword(a,b)).catch(c=>alert("Login Failed: "+c.message))}}
+function attemptLogin(){
+  with(document){
+    let a=getElementById('login-user').value.trim(),b=getElementById('login-pin').value.trim();
+    let loginBtn = getElementById('login-btn');
+    let spinner = getElementById('login-spinner');
+    let loginText = getElementById('login-text');
+    if(a&&b){
+      loginBtn.disabled = true;
+      spinner.style.display = 'inline-block';
+      loginText.innerText = ' Logging in...';
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(()=>firebase.auth().signInWithEmailAndPassword(a,b))
+        .catch(c=>{
+          alert("Login Failed: "+c.message);
+          loginBtn.disabled = false;
+          spinner.style.display = 'none';
+          loginText.innerText = 'Authorize';
+        });
+    }
+  }
+}
 
 function formatTime12(a){if(!a)return'--:--';let b=new Date(a);return isNaN(b.getTime())?'--:--':b.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',hour12:!0})}
 
@@ -801,9 +882,45 @@ function copyField(a){with(document){let b=getElementById(a);if(b){b.select();na
 
 function filterActiveCards(a){a=''+a.toLowerCase();with(document){['list-pickups','list-transit','list-depot','list-deliveries','list-dnd','list-scheduled'].forEach(b=>{let c=getElementById(b);if(c){let d=!1;Array.from(c.children).forEach(e=>{let f=e.innerText.toLowerCase().includes(a);e.style.display=f?'':'none';f&&(d=!0)});a?(c.style.display=d?'block':'none'):(c.style.display=catState[b.split('-')[1]]?'block':'none')}})}}
 
-function openMap(a){with(document){if(currentDriverFilter!==null){currentDriverFilter=null;document.getElementById('reset-driver-view-btn').style.display = 'none';getElementById('entry-panel').style.display='block';getElementById('driver-stats-panel').style.display='grid';let ar=getElementById('archive-section');ar&&(ar.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');let sl=getElementById("selected-driver-label");sl&&(sl.style.display="none");renderData()}getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.remove('driver-map-inline'); window.innerWidth>=1024&&!a&&getElementById('map-modal').classList.add('fullscreen-map');getElementById('route-time-badge').style.display='none';setTimeout(()=>{mainMap&&google.maps.event.trigger(mainMap,"resize")},100);if(!mainMap){mainMap=new google.maps.Map(getElementById("map"),{scrollwheel:!1,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});mainMap.addListener('click',()=>{mainMap.setOptions({scrollwheel:!0})});addEventListener('click',b=>{if(!b.target.closest('#map-modal')&&!b.target.closest('#map')&&!b.target.closest('#locate-btn')&&!b.target.closest('.driver-stat-row')){mainMap&&mainMap.setOptions({scrollwheel:!1})}})}}for(let b in mapMarkers)mapMarkers[b]&&mapMarkers[b].setMap(null);mapMarkers={};activePolyline&&(activePolyline.setMap(null),activePolyline=null);mapAllListener&&db.ref('driver_locations').off('value',mapAllListener);mapAllListener=db.ref('driver_locations').on('value',b=>{let c=b.val(),d=new google.maps.LatLngBounds(),e=!1,used={};for(let f in c){let g=c[f],h={lat:g.lat,lng:g.lng},k=h.lat.toFixed(3)+'_'+h.lng.toFixed(3);let offset=used[k]||0;used[k]=offset+1;let i=`${f}\n${formatTime12(g.gps_timestamp||g.timestamp)} | ${new Date(g.gps_timestamp||g.timestamp).toLocaleDateString()}`;d.extend(h);e=!0;let ic={path:google.maps.SymbolPath.CIRCLE,fillColor:'#00b32d',fillOpacity:1,strokeWeight:2,strokeColor:'#fff',scale:7,labelOrigin:new google.maps.Point(0,-2+(offset*30))};mapMarkers[f]?(mapMarkers[f].setPosition(h),mapMarkers[f].setIcon(ic),mapMarkers[f].setLabel({text:i,className:"pulsing-dot driver-map-label"})):(mapMarkers[f]=new google.maps.Marker({position:h,map:mainMap,icon:ic,label:{text:i,className:"pulsing-dot driver-map-label"},title:f}))}e&&!mapBoundsInitialized&&(mainMap.fitBounds(d),mapBoundsInitialized=!0,google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.getZoom()>16&&mainMap.setZoom(16)))})}
+function openMap(a){with(document){
+  ensureMainMap();
+  if(currentDriverFilter!==null){
+    currentDriverFilter=null;
+    document.getElementById('reset-driver-view-btn').style.display = 'none';
+    getElementById('entry-panel').style.display='block';
+    getElementById('driver-stats-panel').style.display='grid';
+    let ar=getElementById('archive-section');
+    ar&&(ar.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');
+    let sl=getElementById("selected-driver-label");
+    sl&&(sl.style.display="none");
+    renderData()
+  }
+  getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.remove('driver-map-inline'); window.innerWidth>=1024&&!a&&getElementById('map-modal').classList.add('fullscreen-map');
+  getElementById('route-time-badge').style.display='none';
+  setTimeout(()=>{mainMap&&google.maps.event.trigger(mainMap,"resize")},100);
+  for(let b in mapMarkers)mapMarkers[b]&&mapMarkers[b].setMap(null);
+  mapMarkers={};
+  activePolyline&&(activePolyline.setMap(null),activePolyline=null);
+  mapAllListener&&db.ref('driver_locations').off('value',mapAllListener);
+  mapAllListener=db.ref('driver_locations').on('value',b=>{
+    let c=b.val(),d=new google.maps.LatLngBounds(),e=!1,used={};
+    for(let f in c){
+      let g=c[f],h={lat:g.lat,lng:g.lng},k=h.lat.toFixed(3)+'_'+h.lng.toFixed(3);
+      let offset=used[k]||0;used[k]=offset+1;
+      let i=`${f}\n${formatTime12(g.gps_timestamp||g.timestamp)} | ${new Date(g.gps_timestamp||g.timestamp).toLocaleDateString()}`;
+      d.extend(h);e=!0;
+      let ic={path:google.maps.SymbolPath.CIRCLE,fillColor:'#00b32d',fillOpacity:1,strokeWeight:2,strokeColor:'#fff',scale:7,labelOrigin:new google.maps.Point(0,-2+(offset*30))};
+      mapMarkers[f]?(mapMarkers[f].setPosition(h),mapMarkers[f].setIcon(ic),mapMarkers[f].setLabel({text:i,className:"pulsing-dot driver-map-label"})):(mapMarkers[f]=new google.maps.Marker({position:h,map:mainMap,icon:ic,label:{text:i,className:"pulsing-dot driver-map-label"},title:f}))
+    }
+    e&&!mapBoundsInitialized&&(mainMap.fitBounds(d),mapBoundsInitialized=!0,google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.getZoom()>16&&mainMap.setZoom(16)))
+  })
+}}
 
-function viewDriverRoute(a,b){b&&b.stopPropagation();mapBoundsInitialized=!1;mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);currentDriverFilter=a;with(document){getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.add('driver-map-inline'); window.innerWidth>=1024&&getElementById('map-modal').classList.remove('fullscreen-map');if(!mainMap){mainMap=new google.maps.Map(getElementById("map"),{scrollwheel:!1,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});mainMap.addListener('click',()=>{mainMap.setOptions({scrollwheel:!0})});addEventListener('click',c=>{if(!c.target.closest('#map-modal')&&!c.target.closest('#map')&&!c.target.closest('#locate-btn')&&!c.target.closest('.driver-stat-row')){mainMap&&mainMap.setOptions({scrollwheel:!1})}})}}renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100)}
+function viewDriverRoute(a,b){b&&b.stopPropagation();mapBoundsInitialized=!1;mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);currentDriverFilter=a;with(document){
+  ensureMainMap();
+  getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.add('driver-map-inline'); window.innerWidth>=1024&&getElementById('map-modal').classList.remove('fullscreen-map');
+  renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100)
+}}
 
 function closeMap(){mapBoundsInitialized=!1;with(document){if(window.innerWidth>=1024){getElementById('map-modal').classList.remove('fullscreen-map');openMap(!0)}else{getElementById('map-modal').style.display='none';getElementById('map-driver-head').style.display='none';mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);activePolyline&&(activePolyline.setMap(null),activePolyline=null);for(let a in mapMarkers)mapMarkers[a]&&mapMarkers[a].setMap(null);mapMarkers={};document.getElementById('reset-driver-view-btn').style.display = 'none';}} document.getElementById('map-modal').classList.remove('driver-map-inline'); }
 function zoomToDensest(){let a=new google.maps.LatLngBounds(),b=!1;Object.keys(mapMarkers).forEach(c=>{mapMarkers[c].getPosition()&&(a.extend(mapMarkers[c].getPosition()),b=!0)});activePolyline&&(activePolyline.getPath().forEach(c=>a.extend(c)),b=!0);b&&mainMap.fitBounds(a)}
@@ -988,7 +1105,8 @@ function checkScheduledJobs() {
     });
 }
 
-firebase.auth().onAuthStateChanged(a=>{if(a){let {email}=a,b=email.split('@')[0].toLowerCase();db.ref(`roles/${b}/command`).once('value').then(c=>{if(c.val()===!0){currentUser=email.split('@')[0];initCommandNotifications(email);requestWakeLock();window.innerWidth>=1024&&openMap(!0);with(document){getElementById('login-overlay').style.display='none';getElementById('user-display').innerText=`Logged in as: ${currentUser}`;firebase.database().ref('developer').on('value',d=>{let e=getElementById('dev-list');e.innerHTML='';let f=d.val()??{};Object.values(f).forEach(g=>{e.innerHTML+=`
+firebase.auth().onAuthStateChanged(a=>{if(a){let {email}=a,b=email.split('@')[0].toLowerCase();db.ref(`roles/${b}/command`).once('value').then(c=>{if(c.val()===!0){currentUser=email.split('@')[0];initCommandNotifications(email);requestWakeLock();ensureMainMap(); // ensure map is always loaded
+window.innerWidth>=1024&&openMap(!0);with(document){getElementById('login-overlay').style.display='none';getElementById('user-display').innerText=`Logged in as: ${currentUser}`;firebase.database().ref('developer').on('value',d=>{let e=getElementById('dev-list');e.innerHTML='';let f=d.val()??{};Object.values(f).forEach(g=>{e.innerHTML+=`
       <div class=dev-item>
         <div class=dev-hdr>${g.user} - <span style="color:orange;">${g.app??'Database'}</span> - ${g.date}</div>
         <div>${g.text}</div>
@@ -1006,7 +1124,7 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 // NEW: per‑minute check for scheduled jobs
 setInterval(checkScheduledJobs, 60 * 1000);
-}}else{alert("ACCESS DENIED");firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex'}}).catch(err=>{console.error(err);alert("Error checking role: "+err.message);firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex';})}else{document.getElementById('login-overlay').style.display='flex'}});
+}}else{alert("ACCESS DENIED");firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex'}}).catch(err=>{console.error(err);alert("Error checking role: "+err.message);firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex';})}else{document.getElementById('login-overlay').style.display='flex';}});
 function updateAllDriverDropdowns(){with(document){let a=b=>{let c=b?'<option value=Unassigned selected disabled hidden>Assign Driver</option><option value=Unassigned>UNASSIGNED</option>':'';customDrivers.forEach(d=>c+=`<option value="${d}">${d}</option>`);return c},b=getElementById('f-driver').value;getElementById('f-driver').innerHTML=a(!0);if(customDrivers.includes(b)||b==='Unassigned')getElementById('f-driver').value=b;let c=getElementById('af-driver').value;getElementById('af-driver').innerHTML='<option value="">All</option><option value=Unassigned>Unassigned</option>'+customDrivers.map(d=>`<option value="${d}">${d}</option>`).join('');getElementById('af-driver').value=c}}
 
 function openDriverManager(){with(document){getElementById('driver-manager-modal').style.display='block';renderDriverManagerList()}}
@@ -1535,10 +1653,39 @@ function showZoneSchedule(){with(document){getElementById('zone-schedule-view').
 
 function showZoneMap(){with(document){getElementById('zone-schedule-view').style.display='none';getElementById('zone-map-view').style.display='flex';if(!zoneMap)initZoneMap();else{google.maps.event.trigger(zoneMap,"resize");zoneMap.setCenter({lat:49.8425,lng:-99.9497})}renderZoneMapInterface()}}
 
-function initZoneMap(){with(document){zoneMap=new google.maps.Map(getElementById("zone-map"),{center:{lat:49.8425,lng:-99.9497},zoom:12,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});drawingManager=new google.maps.drawing.DrawingManager({drawingControl:!1,polygonOptions:{editable:!0}});drawingManager.setMap(zoneMap);google.maps.event.addListener(drawingManager,'overlaycomplete',function(a){if(a.type==='polygon'&&activeDrawingDriver&&activeDrawingZoneId){let b=a.overlay,c=b.getPath(),d=!1;for(let e in zonePolygons){if(e===activeDrawingDriver)continue;let f=zonePolygons[e];for(let g=0;g<f.length;g++){let h=f[g];for(let i=0;i<c.getLength();i++){if(google.maps.geometry.poly.containsLocation(c.getAt(i),h))d=!0}let j=h.getPath();for(let i=0;i<j.getLength();i++){if(google.maps.geometry.poly.containsLocation(j.getAt(i),b))d=!0}}}if(d){alert("Overlaps another driver's boundary! Please re-draw without overlapping.");a.overlay.setMap(null);return}let e=c.getArray().map(f=>({lat:f.lat(),lng:f.lng()})),f=[];let g=driverZones[activeDrawingDriver]&&driverZones[activeDrawingDriver][activeDrawingZoneId];if(g&&g.paths)f=g.paths;f.push(e);db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(f);a.overlay.setMap(null);drawingManager.setDrawingMode(null);activeDrawingDriver=null;activeDrawingZoneId=null;getElementById('active-driver-zone-panel').style.display='none';renderZoneMapInterface()}})}}
+function initZoneMap(){with(document){
+  zoneMap=new google.maps.Map(getElementById("zone-map"),{center:{lat:49.8425,lng:-99.9497},zoom:12,gestureHandling:"greedy",styles:mapStyles});
+  drawingManager=new google.maps.drawing.DrawingManager({drawingControl:!1,polygonOptions:{editable:!0}});
+  drawingManager.setMap(zoneMap);
+  google.maps.event.addListener(drawingManager,'overlaycomplete',function(a){if(a.type==='polygon'&&activeDrawingDriver&&activeDrawingZoneId){let b=a.overlay,c=b.getPath(),d=!1;for(let e in zonePolygons){if(e===activeDrawingDriver)continue;let f=zonePolygons[e];for(let g=0;g<f.length;g++){let h=f[g];for(let i=0;i<c.getLength();i++){if(google.maps.geometry.poly.containsLocation(c.getAt(i),h))d=!0}let j=h.getPath();for(let i=0;i<j.getLength();i++){if(google.maps.geometry.poly.containsLocation(j.getAt(i),b))d=!0}}}if(d){alert("Overlaps another driver's boundary! Please re-draw without overlapping.");a.overlay.setMap(null);return}let e=c.getArray().map(f=>({lat:f.lat(),lng:f.lng()})),f=[];let g=driverZones[activeDrawingDriver]&&driverZones[activeDrawingDriver][activeDrawingZoneId];if(g&&g.paths)f=g.paths;f.push(e);db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(f);a.overlay.setMap(null);drawingManager.setDrawingMode(null);activeDrawingDriver=null;activeDrawingZoneId=null;getElementById('active-driver-zone-panel').style.display='none';renderZoneMapInterface()}});
+  // Attach search
+  let searchBtn = document.getElementById('zone-search-btn');
+  let searchBar = document.getElementById('zone-search-bar');
+  if(searchBtn && searchBar){
+    searchBtn.addEventListener('click', function(){
+      let query = searchBar.value.trim();
+      if(!query) return;
+      let geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: query }, (results, status) => {
+        if(status==='OK' && results[0]){
+          zoneMap.setCenter(results[0].geometry.location);
+          zoneMap.setZoom(15);
+        } else alert('Location not found');
+      });
+    });
+    searchBar.addEventListener('keypress', e => {
+      if(e.key==='Enter') {
+        e.preventDefault();
+        searchBtn.click();
+      }
+    });
+  }
+}}
 
-function renderZoneRoster(){with(document){let a=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],b='';customDrivers.forEach((c)=>{let d=getDriverColor(c),e=driverZones[c]||{},f='';Object.keys(e).forEach(g=>{let h=e[g],i='<div class=day-row>';a.forEach(j=>{let k=(h.days&&h.days.includes(j))?'day-active':'';i+=`<div class="day-toggle ${k}" onclick="toggleDay('${c}', '${g}', '${j}')">${j[0]}</div>`});i+='</div>';f+=`
-<div class=zone-item>
+function renderZoneRoster(){with(document){let a=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],b='';let anyZoneNeedsDrawing = false;
+customDrivers.forEach((c)=>{let d=getDriverColor(c),e=driverZones[c]||{},f='';Object.keys(e).forEach(g=>{let h=e[g],i='<div class=day-row>';a.forEach(j=>{let k=(h.days&&h.days.includes(j))?'day-active':'';i+=`<div class="day-toggle ${k}" onclick="toggleDay('${c}', '${g}', '${j}')">${j[0]}</div>`});i+='</div>';let needsDrawing = !h.paths || h.paths.length === 0; if(needsDrawing) anyZoneNeedsDrawing = true;
+f+=`
+<div class="zone-item ${needsDrawing ? 'zone-needs-drawing' : ''}">
 <div class=zone-item-header>
 <input type=text value="${h.label||''}" placeholder="Zone Label" onchange="saveZone('${c}', '${g}', 'label', this.value)" style="width:150px;font-size:11px;padding:8px;margin:0;background:transparent;color:#fff;border:0 0 1px 0 solid #555;border-radius:0;">
 <button class=btn-zone-del onclick="deleteZone('${c}', '${g}')">DELETE</button>
@@ -1554,7 +1701,15 @@ ${i}
 <button class=btn-zone-add onclick="addZone('${c}')">+ ADD ZONE</button>
 </div>
 ${f}
-</div>`});getElementById('zone-roster').innerHTML=b}}
+</div>`});getElementById('zone-roster').innerHTML=b;
+let mapEditorBtn = document.getElementById('open-map-editor-btn');
+if(mapEditorBtn){
+  if(anyZoneNeedsDrawing){
+    mapEditorBtn.classList.add('btn-needs-drawing');
+  } else {
+    mapEditorBtn.classList.remove('btn-needs-drawing');
+  }
+}}}
 
 function renderZoneMapInterface(){if(!zoneMap)return;for(let a in zonePolygons){if(Array.isArray(zonePolygons[a]))zonePolygons[a].forEach(b=>b.setMap(null))}zonePolygons={};customDrivers.forEach((a)=>{let b=getDriverColor(a),c=driverZones[a]||{};zonePolygons[a]=[];Object.values(c).forEach(d=>{if(d.paths){d.paths.forEach(e=>{let f=new google.maps.Polygon({paths:e,map:zoneMap,fillColor:b,fillOpacity:0.3,strokeColor:b,strokeWeight:2});zonePolygons[a].push(f)})}})});let a='';customDrivers.forEach((b)=>{let c=getDriverColor(b);a+=`<button class=zone-driver-btn onclick="selectDriverForMap('${b}', '${c}')" style="color:${c}">${b}</button>`});document.getElementById('zone-driver-grid').innerHTML=a}
 
