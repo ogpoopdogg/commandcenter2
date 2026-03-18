@@ -111,9 +111,9 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .mode-btn { flex: 1; padding: 10px; border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 12px; background: transparent; color: #666; border-radius: 3px; transition: 0.2s; }
 .mode-btn.active-mode { background: var(--accent); color: #000; }
 .mode-btn.active-mode.delivery-mode { background: var(--active-green) !important; color: #000; }
-#driver-stats-panel { background: var(--header-bg); padding: 10px; border: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid var(--border); display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; box-shadow: var(--shadow-soft); margin-bottom: 15px; transition: opacity 0.3s; }
-.driver-stat-row { display: inline-flex; align-items: center; padding: 6px 12px; background: var(--stat-bg); border-radius: 4px; border: 1px solid var(--border); min-height: auto; box-sizing: border-box; width: auto; margin: 0; }
-.ds-name { color: var(--text); font-weight: 700; font-size: 16px; width: auto; padding-right: 8px; text-transform: uppercase; }
+#driver-stats-panel { background: var(--header-bg); padding: 10px; border: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; box-shadow: var(--shadow-soft); margin-bottom: 15px; transition: opacity 0.3s; }
+.driver-stat-row { display: inline-flex; align-items: center; padding: 6px 12px; background: var(--stat-bg); border-radius: 4px; border: 1px solid var(--border); min-height: auto; box-sizing: border-box; width: 100%; margin: 0; min-width: 0; }
+.ds-name { color: var(--text); font-weight: 700; font-size: 16px; width: auto; padding-right: 8px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px); }
 .stat-info { display: flex; gap: 10px; margin-left: auto; align-items: center; }
 .stat-item { font-size: 11px; font-weight: 600; color: #777; text-transform: uppercase; display: flex; align-items: center; gap: 4px; background: var(--bg); padding: 4px 8px; border-radius: 3px; border: 1px solid var(--border); }
 .stat-val-p { color: var(--accent); font-size: 14px; font-weight: 700; }
@@ -213,7 +213,21 @@ header { padding: 8px 4px; }
 .header-logo { height: 16px; margin-right: 4px; }
 .header-logo-group .shiny-text { font-size: 13px !important; letter-spacing: 0 !important; }
 #user-display { font-size: 9px; margin-bottom: 2px; }
-#toggle-dispatch-btn { font-size: 9px !important; padding: 0 6px !important; margin-left: 4px !important; height: 28px !important; min-height: 28px !important; }
+#toggle-dispatch-btn, #f-driver {
+        width: 130px;
+    }
+#toggle-dispatch-btn {
+        padding: 0 6px;
+        font-size: 9px;
+        height: 26px;
+        margin-left: 4px;
+        width: auto;
+    }
+header button[onclick="openDriverManager()"] {
+        font-size: 16px;
+        margin-right: 4px;
+        padding: 0 4px;
+    }
 #locate-btn { width: 70px !important; font-size: 9px !important; margin-left: 4px !important; height: 28px !important; min-height: 28px !important; padding: 0 !important; }
 .indicator-wrapper { position: relative; top: auto; left: auto; width: 100%; margin-left: 0 !important; flex-direction: row !important; z-index: 20; pointer-events: none; margin-top: 4px; }
 .indicator-wrapper div { margin-bottom: 0 !important; font-size: 10px !important; padding: 6px 2px; text-align: center; flex: 1; background: var(--header-bg); border-bottom: 2px solid var(--accent); border-left: 1px solid var(--border); pointer-events: auto; box-shadow: var(--shadow-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -236,6 +250,24 @@ header { padding: 8px 4px; }
   }
     #toggle-dispatch-btn, #f-driver {
         width: 130px;
+    }
+    .stats-bar .stat-box {
+        padding: 4px 2px;
+        font-size: 9px;
+    }
+    .stats-bar .stat-label {
+        font-size: 7px;
+    }
+    .stats-bar .stat-number {
+        font-size: 12px;
+    }
+    .stats-bar .route-btn {
+        padding: 4px 6px;
+        font-size: 8px;
+        min-height: 24px;
+    }
+    .ds-name {
+        font-size: 0.8rem;
     }
 }
     /* Make job cards appear in a grid inside each category panel */
@@ -313,6 +345,9 @@ header { padding: 8px 4px; }
 #voice-btn {
     animation: soft-pulse 2s infinite ease-in-out;
 }
+.job-count {
+    flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -367,9 +402,9 @@ header { padding: 8px 4px; }
     <div class="input-wrap f-1">
         <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
     </div>
-    <div class="input-wrap" style="flex:0 0 auto; display:flex; align-items:center; padding:0 10px;">
+    <div class="input-wrap" style="flex:0 0 auto; display:flex; align-items:center; background:var(--input-bg); border:1px solid var(--border); border-radius:8px; padding:0 10px; height:48px; box-sizing:border-box;">
         <input type="checkbox" id="f-recurring-checkbox" onchange="toggleRecurringOptions()" style="width:auto; margin-right:5px;"> 
-        <label for="f-recurring-checkbox" style="white-space:nowrap;">Make recurring</label>
+        <label for="f-recurring-checkbox" style="white-space:nowrap; color:var(--text);">Make recurring</label>
     </div>
 </div>
 <div id="recurring-options" style="display:none; margin-bottom:8px;">
@@ -379,7 +414,7 @@ header { padding: 8px 4px; }
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
         </select>
-        <input type="number" id="f-recur-interval" value="1" min="1" style="width:60px;" placeholder="Interval">
+        <input type="number" id="f-recur-interval" value="1" min="1" style="width:80px;" placeholder="Interval">
     </div>
     <div id="weekly-days" style="display:none;" class="flex wrap gap-6 mb-6">
         <label><input type="checkbox" value="Mon"> Mon</label>
@@ -439,7 +474,7 @@ function toggleDispatchForm() {
 </div>
 <!-- New Recurring Schedules button -->
 <div class=stat-box>
-<button onclick="openRecurringSchedules()" class=route-btn style="background:var(--header-bg);color:#8a2be2;">RECURRING</button>
+<button onclick="openRecurringSchedules()" class=route-btn style="background:var(--header-bg);color:#ff0;">RECURRING</button>
 </div>
 <div id=assigned-box class=stat-box>
 <span class=stat-label>Assigned</span>
@@ -538,7 +573,7 @@ function toggleDispatchForm() {
 </div>
 <!-- New Scheduled category column -->
 <div class=archive-column>
-<button id=btn-scheduled class=cat-btn style="color:#8a2be2;" onclick="toggleCat('scheduled')"><span>Scheduled</span><span id=badge-scheduled class=cat-badge>0</span></button>
+<button id=btn-scheduled class=cat-btn style="color:#ff0;" onclick="toggleCat('scheduled')"><span>Scheduled</span><span id=badge-scheduled class=cat-badge>0</span></button>
 <div id=list-scheduled></div>
 </div>
 <div class=archive-column>
@@ -724,7 +759,7 @@ function toggleTheme(){document.body.classList.toggle('light-mode');localStorage
 
 function filterByDriver(a){currentDriverFilter=a;renderData();with(document){getElementById('entry-panel').style.display='none';getElementById('driver-stats-panel').style.display='none';let ar=getElementById('archive-section');ar&&(ar.style.display='none');getElementById('active-search').style.display='none';getElementById('toggle-archive-btn').style.display='none';}viewDriverRoute(a);window.scrollTo({top:0,behavior:'smooth'})}
 
-function clearDriverFilter(){currentDriverFilter=null;with(document){getElementById('entry-panel').style.display='block';getElementById('driver-stats-panel').style.display='flex';let a=getElementById('archive-section');a&&(a.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');let s=getElementById("selected-driver-label");s&&(s.style.display="none");document.getElementById('reset-driver-view-btn').style.display = 'none';getElementById('active-search').style.display = '';getElementById('toggle-archive-btn').style.display = '';}closeMap();renderData()}
+function clearDriverFilter(){currentDriverFilter=null;with(document){getElementById('entry-panel').style.display='block';getElementById('driver-stats-panel').style.display='grid';let a=getElementById('archive-section');a&&(a.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');let s=getElementById("selected-driver-label");s&&(s.style.display="none");document.getElementById('reset-driver-view-btn').style.display = 'none';getElementById('active-search').style.display = '';getElementById('toggle-archive-btn').style.display = '';}closeMap();renderData()}
 
 function unloadActiveDriverAtDepot(){if(!currentDriverFilter)return;if(!confirm("Move all 'In Transit' packages for "+currentDriverFilter+" to Depot?"))return;let a={},b=0;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c];if(d.status==='in_transit'&&d.assigned_to===currentDriverFilter){b++;a[`jobs/${c}/status`]='pending_delivery';a[`jobs/${c}/assigned_to`]='Unassigned';a[`jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+`Arrived at Depot (Pick-up by ${currentDriverFilter})`}});if(b===0)return alert("No 'In Transit' jobs found for "+currentDriverFilter);db.ref().update(a).then(()=>{alert("Unloaded "+b+" jobs to Depot.");clearDriverFilter()}).catch(c=>alert("Error: "+c.message))}
 
@@ -749,7 +784,7 @@ function copyField(a){with(document){let b=getElementById(a);if(b){b.select();na
 
 function filterActiveCards(a){a=''+a.toLowerCase();with(document){['list-pickups','list-transit','list-depot','list-deliveries','list-dnd','list-scheduled'].forEach(b=>{let c=getElementById(b);if(c){let d=!1;Array.from(c.children).forEach(e=>{let f=e.innerText.toLowerCase().includes(a);e.style.display=f?'':'none';f&&(d=!0)});a?(c.style.display=d?'block':'none'):(c.style.display=catState[b.split('-')[1]]?'block':'none')}})}}
 
-function openMap(a){with(document){if(currentDriverFilter!==null){currentDriverFilter=null;document.getElementById('reset-driver-view-btn').style.display = 'none';getElementById('entry-panel').style.display='block';getElementById('driver-stats-panel').style.display='flex';let ar=getElementById('archive-section');ar&&(ar.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');let sl=getElementById("selected-driver-label");sl&&(sl.style.display="none");renderData()}getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.remove('driver-map-inline'); window.innerWidth>=1024&&!a&&getElementById('map-modal').classList.add('fullscreen-map');getElementById('route-time-badge').style.display='none';setTimeout(()=>{mainMap&&google.maps.event.trigger(mainMap,"resize")},100);if(!mainMap){mainMap=new google.maps.Map(getElementById("map"),{scrollwheel:!1,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});mainMap.addListener('click',()=>{mainMap.setOptions({scrollwheel:!0})});addEventListener('click',b=>{if(!b.target.closest('#map-modal')&&!b.target.closest('#map')&&!b.target.closest('#locate-btn')&&!b.target.closest('.driver-stat-row')){mainMap&&mainMap.setOptions({scrollwheel:!1})}})}}for(let b in mapMarkers)mapMarkers[b]&&mapMarkers[b].setMap(null);mapMarkers={};activePolyline&&(activePolyline.setMap(null),activePolyline=null);mapAllListener&&db.ref('driver_locations').off('value',mapAllListener);mapAllListener=db.ref('driver_locations').on('value',b=>{let c=b.val(),d=new google.maps.LatLngBounds(),e=!1,used={};for(let f in c){let g=c[f],h={lat:g.lat,lng:g.lng},k=h.lat.toFixed(3)+'_'+h.lng.toFixed(3);let offset=used[k]||0;used[k]=offset+1;let i=`${f}\n${formatTime12(g.gps_timestamp||g.timestamp)} | ${new Date(g.gps_timestamp||g.timestamp).toLocaleDateString()}`;d.extend(h);e=!0;let ic={path:google.maps.SymbolPath.CIRCLE,fillColor:'#00b32d',fillOpacity:1,strokeWeight:2,strokeColor:'#fff',scale:7,labelOrigin:new google.maps.Point(0,-2+(offset*30))};mapMarkers[f]?(mapMarkers[f].setPosition(h),mapMarkers[f].setIcon(ic),mapMarkers[f].setLabel({text:i,className:"pulsing-dot driver-map-label"})):(mapMarkers[f]=new google.maps.Marker({position:h,map:mainMap,icon:ic,label:{text:i,className:"pulsing-dot driver-map-label"},title:f}))}e&&!mapBoundsInitialized&&(mainMap.fitBounds(d),mapBoundsInitialized=!0,google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.getZoom()>16&&mainMap.setZoom(16)))})}
+function openMap(a){with(document){if(currentDriverFilter!==null){currentDriverFilter=null;document.getElementById('reset-driver-view-btn').style.display = 'none';getElementById('entry-panel').style.display='block';getElementById('driver-stats-panel').style.display='grid';let ar=getElementById('archive-section');ar&&(ar.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');let sl=getElementById("selected-driver-label");sl&&(sl.style.display="none");renderData()}getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.remove('driver-map-inline'); window.innerWidth>=1024&&!a&&getElementById('map-modal').classList.add('fullscreen-map');getElementById('route-time-badge').style.display='none';setTimeout(()=>{mainMap&&google.maps.event.trigger(mainMap,"resize")},100);if(!mainMap){mainMap=new google.maps.Map(getElementById("map"),{scrollwheel:!1,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});mainMap.addListener('click',()=>{mainMap.setOptions({scrollwheel:!0})});addEventListener('click',b=>{if(!b.target.closest('#map-modal')&&!b.target.closest('#map')&&!b.target.closest('#locate-btn')&&!b.target.closest('.driver-stat-row')){mainMap&&mainMap.setOptions({scrollwheel:!1})}})}}for(let b in mapMarkers)mapMarkers[b]&&mapMarkers[b].setMap(null);mapMarkers={};activePolyline&&(activePolyline.setMap(null),activePolyline=null);mapAllListener&&db.ref('driver_locations').off('value',mapAllListener);mapAllListener=db.ref('driver_locations').on('value',b=>{let c=b.val(),d=new google.maps.LatLngBounds(),e=!1,used={};for(let f in c){let g=c[f],h={lat:g.lat,lng:g.lng},k=h.lat.toFixed(3)+'_'+h.lng.toFixed(3);let offset=used[k]||0;used[k]=offset+1;let i=`${f}\n${formatTime12(g.gps_timestamp||g.timestamp)} | ${new Date(g.gps_timestamp||g.timestamp).toLocaleDateString()}`;d.extend(h);e=!0;let ic={path:google.maps.SymbolPath.CIRCLE,fillColor:'#00b32d',fillOpacity:1,strokeWeight:2,strokeColor:'#fff',scale:7,labelOrigin:new google.maps.Point(0,-2+(offset*30))};mapMarkers[f]?(mapMarkers[f].setPosition(h),mapMarkers[f].setIcon(ic),mapMarkers[f].setLabel({text:i,className:"pulsing-dot driver-map-label"})):(mapMarkers[f]=new google.maps.Marker({position:h,map:mainMap,icon:ic,label:{text:i,className:"pulsing-dot driver-map-label"},title:f}))}e&&!mapBoundsInitialized&&(mainMap.fitBounds(d),mapBoundsInitialized=!0,google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.getZoom()>16&&mainMap.setZoom(16)))})}
 
 function viewDriverRoute(a,b){b&&b.stopPropagation();mapBoundsInitialized=!1;mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);currentDriverFilter=a;with(document){getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.add('driver-map-inline'); window.innerWidth>=1024&&getElementById('map-modal').classList.remove('fullscreen-map');if(!mainMap){mainMap=new google.maps.Map(getElementById("map"),{scrollwheel:!1,gestureHandling:"greedy",styles:[{"featureType":"all","elementType":"all","stylers":[{"invert_lightness":!0},{"saturation":10},{"lightness":30},{"gamma":0.5},{"hue":"#435158"}]}]});mainMap.addListener('click',()=>{mainMap.setOptions({scrollwheel:!0})});addEventListener('click',c=>{if(!c.target.closest('#map-modal')&&!c.target.closest('#map')&&!c.target.closest('#locate-btn')&&!c.target.closest('.driver-stat-row')){mainMap&&mainMap.setOptions({scrollwheel:!1})}})}}renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100)}
 
@@ -1442,9 +1477,9 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
             let card = createElement("div");
             card.className = "history-item scheduled-future";
             card.onclick = () => viewDetails(C);
-            card.style.borderLeft = "4px solid #8a2be2";
+            card.style.borderLeft = "4px solid #ff0";
             card.style.opacity = "0.7";
-            card.innerHTML = `<div style="font-size:12px; color:#8a2be2;">⏰ SCHEDULED: ${new Date(D.scheduled_time).toLocaleString()}</div><div>${D.name || D.delivery_name}</div>`;
+            card.innerHTML = `<div style="font-size:12px; color:#ff0;">⏰ SCHEDULED: ${new Date(D.scheduled_time).toLocaleString()}</div><div>${D.name || D.delivery_name}</div>`;
             h.appendChild(card);
             return;
         } else {
@@ -1452,8 +1487,8 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
             let card = createElement("div");
             card.className = "history-item";
             card.onclick = () => viewDetails(C);
-            card.style.borderLeft = "4px solid #8a2be2";
-            card.innerHTML = `<div style="font-size:12px; color:#8a2be2;">SCHEDULED: ${new Date(D.scheduled_time).toLocaleString()}</div><div>${D.name || D.delivery_name}</div>`;
+            card.style.borderLeft = "4px solid #ff0";
+            card.innerHTML = `<div style="font-size:12px; color:#ff0;">SCHEDULED: ${new Date(D.scheduled_time).toLocaleString()}</div><div>${D.name || D.delivery_name}</div>`;
             scheduledList.appendChild(card);
             return;
         }
