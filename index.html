@@ -350,22 +350,23 @@ header button[onclick="openDriverManager()"] {
 }
 /* Recurring toggle button - updated */
 .recurring-toggle-btn {
-    width: 50%;
-    height: 48px;
-    background: transparent;
-    border: 2px solid #facc15; /* yellow */
+    width: 100%;
+    height: auto;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #facc15;
+    color: var(--text);
     font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
-    padding: 0 10px;
+    padding: 12px 16px;
     box-sizing: border-box;
-    margin: 0 auto;
+    margin: 0;
 }
 .recurring-toggle-btn.active {
-    background: #facc15;
-    color: black;
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
 }
 body.light-mode .recurring-toggle-btn {
     border-color: black;
@@ -375,6 +376,21 @@ body.light-mode .recurring-toggle-btn.active {
     background: black;
     color: white;
     border-color: black;
+}
+/* Placeholder for datetime-local */
+.datetime-placeholder {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    pointer-events: none;
+    z-index: 1;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 32px);
 }
 /* Spinner for login button */
 .spinner {
@@ -690,7 +706,7 @@ function toggleDispatchForm() {
 <div id=zone-schedule-view>
 <div class="flex jb ac mb-15">
 <h2 class="modal-h2 m-0">DRIVER SCHEDULES</h2>
-<button class="btn-zone" id="open-map-editor-btn" style="font-size:12px;padding:14px;" onclick="showZoneMap()">OPEN MAP EDITOR</button>
+<button class="btn-zone" id="open-map-editor-btn" style="font-size:12px;padding:14px;" onclick="showZoneMap()">EDIT ZONES</button>
 </div>
 <div class=zone-roster id=zone-roster style="max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
 </div>
@@ -1642,7 +1658,7 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
     I.ondragover=J=>{J.preventDefault();I.classList.add('drag-over-glow');};
     I.ondragleave=J=>{I.classList.remove('drag-over-glow');};
     I.ondrop=J=>{J.preventDefault();I.classList.remove('drag-over-glow');let K=J.dataTransfer.getData("text/plain");if(K)assignJob(K,F);};
-    I.onclick=()=>{if(currentDriverFilter===F)clearDriverFilter();else filterByDriver(F);};
+    I.onclick=()=>{if(currentDriverFilter===F)clearDriverFilter(); else filterByDriver(F);};
     let J=(G>0||H>0)?(driverLocationsData[F]?.total_duration||""):"";
     I.innerHTML = `<div class="ds-name" style="color:${getDriverColor(F)}; font-size:0.9rem; display:flex; align-items:center; justify-content:space-between; width:100%;">${F}<span class="job-count" style="color:white; background:transparent; padding:2px 8px; font-size:0.8rem;">${G+H}</span></div>`;
     e.appendChild(I)});getElementById("stat-pending").innerText=u+x;getElementById("stat-assigned").innerText=v;getElementById("stat-note").innerText=w;getElementById("note-box").style.display=w>0?"block":"none";getElementById("pending-box").className="stat-box"+((u+x)>0?" unassigned-glow":"");['pickups','transit','depot','deliveries','dnd','scheduled'].forEach(F=>{let G=getElementById('list-'+F);if(G){let H=G.children.length,I=getElementById('badge-'+F);if(I){I.innerText=H;if(H>0)I.classList.add('badge-active');else I.classList.remove('badge-active')}G.style.display=catState[F]?'block':'none';let J=getElementById('btn-'+F);if(J){if(G.querySelector('.new-card')&&!catState[F])J.classList.add('new-btn');else J.classList.remove('new-btn');if(F==='dnd'){if(H===0)J.classList.add('dnd-empty-btn');else J.classList.remove('dnd-empty-btn')}}}});isFirstLoad=!1}}
@@ -1698,7 +1714,7 @@ ${i}
 </div>`});b+=`<div class=zone-driver-row>
 <div class=zone-driver-header>
 <div class=zone-driver-name style="color:${d}">${c}</div>
-<button class=btn-zone-add onclick="addZone('${c}')">+ ADD ZONE</button>
+<button class=btn-zone-add onclick="addZone('${c}')">+ Schedule</button>
 </div>
 ${f}
 </div>`});getElementById('zone-roster').innerHTML=b;
@@ -1840,6 +1856,28 @@ function searchLocation() {
     });
 }
 function setPickerLocation(){if(!pickerMap)return;let a=pickerMap.getCenter(),b=a.lat().toFixed(5),c=a.lng().toFixed(5),d=`${b}, ${c}`;with(document){const t={pickup:'f-pickup',drop:'f-drop-address'};t[currentLocationTarget]&&(getElementById(t[currentLocationTarget]).value=d);getElementById('location-picker-modal').style.display='none';body.style.overflow=''}}
+// Placeholder for datetime-local input
+function setupScheduledPlaceholder() {
+    var input = document.getElementById('f-scheduled-time');
+    if (!input) return;
+    var wrap = input.closest('.input-wrap');
+    if (!wrap) return;
+    var placeholder = wrap.querySelector('.datetime-placeholder');
+    if (!placeholder) {
+        placeholder = document.createElement('span');
+        placeholder.className = 'datetime-placeholder';
+        placeholder.innerHTML = '📅 Schedule time';
+        wrap.appendChild(placeholder);
+    }
+    function updatePlaceholder() {
+        placeholder.style.display = input.value ? 'none' : 'block';
+    }
+    input.addEventListener('input', updatePlaceholder);
+    input.addEventListener('change', updatePlaceholder);
+    input.addEventListener('blur', updatePlaceholder);
+    updatePlaceholder();
+}
+setupScheduledPlaceholder();
 </script>
 <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel=stylesheet>
 <script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>
