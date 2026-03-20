@@ -368,14 +368,16 @@ header button[onclick="openDriverManager()"] {
     color: #000;
     border-color: var(--accent);
 }
+/* Light mode overrides for recurring toggle button */
 body.light-mode .recurring-toggle-btn {
-    border-color: black;
-    color: black;
+    background: var(--input-bg) !important;
+    color: #000 !important;
+    border-color: black !important;
 }
 body.light-mode .recurring-toggle-btn.active {
-    background: black;
-    color: white;
-    border-color: black;
+    background: black !important;
+    color: white !important;
+    border-color: black !important;
 }
 /* Placeholder for datetime-local */
 .datetime-placeholder {
@@ -1876,6 +1878,13 @@ function setupScheduledPlaceholder() {
     input.addEventListener('change', updatePlaceholder);
     input.addEventListener('blur', updatePlaceholder);
     updatePlaceholder();
+
+    // Add reset button listeners to update placeholder after form reset
+    document.querySelectorAll('.suggestion-reset').forEach(btn => {
+        btn.addEventListener('click', function() {
+            setTimeout(updatePlaceholder, 50);
+        });
+    });
 }
 setupScheduledPlaceholder();
 </script>
