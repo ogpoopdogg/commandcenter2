@@ -349,49 +349,42 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* ----- FINAL FIX: Recurring button styled ONLY by ID (highest specificity) ----- */
+/* ----- FINAL FIX: Recurring button styled like schedule input ----- */
 #f-recurring-btn {
     width: 100%;
-    padding: 14px 16px;
-    background: rgba(59, 130, 246, 0.15) !important;
-    color: #3b82f6 !important;
-    font-weight: 700 !important;
-    border: 1px solid #3b82f6 !important;
-    border-radius: 8px !important;
-    text-transform: uppercase !important;
-    font-size: 14px !important;
-    letter-spacing: 1px !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: var(--shadow-soft) !important;
-    cursor: pointer !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    margin: 0 !important;
-    display: inline-block !important;
-    line-height: normal !important;
-}
-#f-recurring-btn:hover {
-    background: rgba(59, 130, 246, 0.25) !important;
-    transform: translateY(-2px) !important;
-}
-#f-recurring-btn:active {
-    transform: translateY(1px) !important;
+    padding: 12px 16px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 1px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    margin: 0;
+    display: inline-block;
+    line-height: normal;
 }
 #f-recurring-btn.active {
-    background: #3b82f6 !important;
-    color: #000 !important;
-    border-color: #3b82f6 !important;
+    background: #3b82f6;
+    color: #000;
+    border-color: #3b82f6;
 }
 /* Light mode overrides – also by ID to guarantee no interference */
 body.light-mode #f-recurring-btn {
-    background: rgba(59, 130, 246, 0.15) !important;
-    color: #3b82f6 !important;
-    border: 1px solid #3b82f6 !important;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
 }
 body.light-mode #f-recurring-btn.active {
-    background: #3b82f6 !important;
-    color: #000 !important;
-    border-color: #3b82f6 !important;
+    background: #3b82f6;
+    color: #000;
+    border-color: #3b82f6;
 }
 /* ------------------------------------------------------------------------ */
 /* Placeholder for datetime-local */
@@ -433,6 +426,56 @@ body.light-mode #f-recurring-btn.active {
 .btn-needs-drawing {
   animation: pulse-yellow 1.5s infinite !important;
   border: 2px solid gold !important;
+}
+/* map legend styles */
+#map-legend {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 3002;
+    background: rgba(0,0,0,0.75);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    max-height: 80%;
+    overflow-y: auto;
+    max-width: 260px;
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: auto;
+    font-family: monospace;
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.legend-item:hover {
+    background: rgba(255,255,255,0.2);
+}
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 4px currentColor;
+}
+.legend-name {
+    font-weight: bold;
+    flex: 1;
+}
+.legend-time {
+    font-size: 10px;
+    opacity: 0.8;
+    white-space: nowrap;
 }
 </style>
 </head>
@@ -520,15 +563,12 @@ body.light-mode #f-recurring-btn.active {
     </div>
 </div>
 <!-- End new fields -->
-<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin:4px 0; width:100%;">
-    <select id=f-driver class=driver-select style="margin-bottom:0;border:1px solid var(--accent); width:auto; min-width:140px;">
+<div style="display:flex; align-items:center; gap:10px; margin:4px 0; width:100%;">
+    <select id=f-driver class=driver-select style="margin-bottom:0;border:1px solid var(--accent); flex:1;">
         <option value=Unassigned selected disabled hidden>Assign Driver</option>
         <option value=Unassigned>UNASSIGNED</option>
     </select>
-    <div style="display:flex; gap:10px;">
-        <button class="primary super-dispatch" style="flex:0 0 auto; white-space:nowrap;" onclick="createJob()">Dispatch</button>
-        <button id=voice-btn onclick="startVoiceEntry()" class=voice-icon>...</button>
-    </div>
+    <button class="primary super-dispatch" style="flex:1; white-space:nowrap;" onclick="createJob()">Dispatch</button>
 </div>
 </div>
 <script>
@@ -664,6 +704,7 @@ function toggleDispatchForm() {
 <div id=map-driver-head class="none abs" style="top:15px;right:60px;left:auto;z-index:3001;background:#000;border:1px solid #fff;padding:6px 12px;font-weight:700;font-size:16px;box-shadow:var(--shadow-soft);white-space:nowrap;"></div>
 <div id=route-list></div>
 <div id=map></div>
+<div id="map-legend" style="position: absolute; top: 10px; left: 10px; z-index: 3002; background: rgba(0,0,0,0.75); padding: 8px 12px; border-radius: 8px; font-size: 12px; max-height: 80%; overflow-y: auto; max-width: 260px; backdrop-filter: blur(6px); display: flex; flex-direction: column; gap: 6px; pointer-events: auto; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);"></div>
 </div>
 <button id=toggle-archive-btn class="primary w-100 mt-15" onclick="toggleArchive()" style="border:1px solid var(--border);">SHOW ARCHIVE</button>
 <div id=archive-section class=mt-30 style="padding:15px;border:1px solid rgba(255,255,255,0.1);box-shadow:var(--shadow-soft);transition:opacity 0.3s;display:none;">
@@ -786,7 +827,7 @@ function ensureMainMap() {
   }
 }
 
-window.assignJob=function(a,b){if(a&&b){let j=rawJobs[a],upd={assigned_to:b,last_edit_by:currentUser};if(j){let o=j.other_info||"",h=j.job_history||"",chk=(o+" "+h).toLowerCase();if(chk.includes("dnd")||chk.includes("dnp")){/* Deduce state: DNP implies pickup, otherwise fallback to existing status */let isPickup=chk.includes("dnp")||j.status==="pending_pickup";upd.other_info=o.replace(/dnd/gi,"").replace(/dnp/gi,"").trim();/* Cleanse history of DND/DNP to prevent renderData trapping */upd.job_history=(h?h.replace(/dnd/gi,"FAILED").replace(/dnp/gi,"FAILED")+'\n':'')+`[FAILED JOB REASSIGNED to ${b} by ${currentUser}]: ${o.replace(/dnd/gi,"").replace(/dnp/gi,"").trim()}`;upd.status=isPickup?'pending_pickup':'pending_delivery'}}db.ref('jobs').child(a).update(upd)}};
+window.assignJob=function(a,b){if(a&&b){let j=rawJobs[a],upd={assigned_to:b,last_edit_by:currentUser};if(j){let o=j.other_info||"",h=j.job_history||"",chk=(o+" "+h).toLowerCase();if(chk.includes("dnd")||chk.includes("dnp")){let isPickup=chk.includes("dnp")||j.status==="pending_pickup";upd.other_info=o.replace(/dnd/gi,"").replace(/dnp/gi,"").trim();upd.job_history=(h?h.replace(/dnd/gi,"FAILED").replace(/dnp/gi,"FAILED")+'\n':'')+`[FAILED JOB REASSIGNED to ${b} by ${currentUser}]: ${o.replace(/dnd/gi,"").replace(/dnp/gi,"").trim()}`;upd.status=isPickup?'pending_pickup':'pending_delivery'}}db.ref('jobs').child(a).update(upd)}};
 
 function toggleArchive(){with(document){let a=getElementById('archive-section'),b=getElementById('toggle-archive-btn');a.style.display==='none'?(a.style.display='block',b.innerText='HIDE ARCHIVE'):(a.style.display='none',b.innerText='SHOW ARCHIVE')}}
 
@@ -929,11 +970,21 @@ function openMap(a){with(document){
     for(let f in c){
       let g=c[f],h={lat:g.lat,lng:g.lng},k=h.lat.toFixed(3)+'_'+h.lng.toFixed(3);
       let offset=used[k]||0;used[k]=offset+1;
-      let i=`${f}\n${formatTime12(g.gps_timestamp||g.timestamp)} | ${new Date(g.gps_timestamp||g.timestamp).toLocaleDateString()}`;
       d.extend(h);e=!0;
-      let ic={path:google.maps.SymbolPath.CIRCLE,fillColor:'#00b32d',fillOpacity:1,strokeWeight:2,strokeColor:'#fff',scale:7,labelOrigin:new google.maps.Point(0,-2+(offset*30))};
-      mapMarkers[f]?(mapMarkers[f].setPosition(h),mapMarkers[f].setIcon(ic),mapMarkers[f].setLabel({text:i,className:"pulsing-dot driver-map-label"})):(mapMarkers[f]=new google.maps.Marker({position:h,map:mainMap,icon:ic,label:{text:i,className:"pulsing-dot driver-map-label"},title:f}))
+      let driverColor = getDriverColor(f);
+      let labelText = "●";
+      let labelObj = {
+        text: labelText,
+        className: "pulsing-dot driver-map-label",
+        color: driverColor,
+        fontSize: "20px",
+        fontWeight: "bold"
+      };
+      mapMarkers[f] ? (mapMarkers[f].setPosition(h), mapMarkers[f].setLabel(labelObj)) : (mapMarkers[f] = new google.maps.Marker({
+        position: h, map: mainMap, icon: null, label: labelObj, title: f, zIndex: 1000
+      }));
     }
+    updateMapLegend();
     e&&!mapBoundsInitialized&&(mainMap.fitBounds(d),mapBoundsInitialized=!0,google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.getZoom()>16&&mainMap.setZoom(16)))
   })
 }}
@@ -1132,7 +1183,7 @@ window.innerWidth>=1024&&openMap(!0);with(document){getElementById('login-overla
       <div class=dev-item>
         <div class=dev-hdr>${g.user} - <span style="color:orange;">${g.app??'Database'}</span> - ${g.date}</div>
         <div>${g.text}</div>
-      </div>`});e.scrollTop=e.scrollHeight});db.ref('drivers').on('value',d=>{if(d.exists()){let e=d.val()??[];customDrivers=[];driverColors={};e.forEach(f=>{if(typeof f==='string'){customDrivers.push(f)}else if(f&&f.name){customDrivers.push(f.name);f.color&&(driverColors[f.name]=f.color)}})}else{customDrivers=[]}updateAllDriverDropdowns();if(getElementById('zone-modal').style.display==='block'){if(getElementById('zone-schedule-view').style.display!=='none')renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()}!isFirstLoad&&renderData()});db.ref("address_lookup").on("value",d=>addressData=d.val()??{});let e=Date.now()-(604800000);db.ref("jobs").orderByChild("timestamp").startAt(e).on("value",d=>{rawJobs=d.val()??{};renderData()});db.ref("driver_locations").on("value",d=>{driverLocationsData=d.val()??{};renderData()});db.ref("driver_zones").on("value",d=>{driverZones=d.val()??{};renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()});
+      </div>`});e.scrollTop=e.scrollHeight});db.ref('drivers').on('value',d=>{if(d.exists()){let e=d.val()??[];customDrivers=[];driverColors={};e.forEach(f=>{if(typeof f==='string'){customDrivers.push(f)}else if(f&&f.name){customDrivers.push(f.name);f.color&&(driverColors[f.name]=f.color)}})}else{customDrivers=[]}updateAllDriverDropdowns();if(getElementById('zone-modal').style.display==='block'){if(getElementById('zone-schedule-view').style.display!=='none')renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()}!isFirstLoad&&renderData();updateMapLegend();updateDriverMarkerColors()});db.ref("address_lookup").on("value",d=>addressData=d.val()??{});let e=Date.now()-(604800000);db.ref("jobs").orderByChild("timestamp").startAt(e).on("value",d=>{rawJobs=d.val()??{};renderData()});db.ref("driver_locations").on("value",d=>{driverLocationsData=d.val()??{};renderData();updateMapLegend();updateDriverMarkerColors()});db.ref("driver_zones").on("value",d=>{driverZones=d.val()??{};renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()});
 // Periodic reschedule check every hour
 setInterval(() => {
     if (rawJobs) {
@@ -1163,15 +1214,13 @@ function renderDriverManagerList(){with(document){let a=getElementById('driver-l
             </div>
         </div>`}).join('')}}
 
-function addDriver(){with(document){let a=getElementById('new-driver-name').value.trim();if(a&&!customDrivers.includes(a)){customDrivers.push(a);driverColors[a]=baseColors[customDrivers.length%baseColors.length];let b=customDrivers.map(c=>({name:c,color:driverColors[c]||getDriverColor(c)}));db.ref('drivers').set(b);getElementById('new-driver-name').value='';renderDriverManagerList();updateAllDriverDropdowns()}}}
+function addDriver(){with(document){let a=getElementById('new-driver-name').value.trim();if(a&&!customDrivers.includes(a)){customDrivers.push(a);driverColors[a]=baseColors[customDrivers.length%baseColors.length];let b=customDrivers.map(c=>({name:c,color:driverColors[c]||getDriverColor(c)}));db.ref('drivers').set(b);getElementById('new-driver-name').value='';renderDriverManagerList();updateAllDriverDropdowns();updateMapLegend();updateDriverMarkerColors()}}}
 
-function saveDriverEdit(a){with(document){let b=getElementById(`edit-drv-${a}`).value.trim(),c=getElementById(`edit-color-${a}`).value,d=customDrivers[a];if(b){b!==d&&(delete driverColors[d],customDrivers[a]=b);driverColors[b]=c;let e=customDrivers.map(f=>({name:f,color:driverColors[f]||getDriverColor(f)}));db.ref('drivers').set(e).then(()=>{renderDriverManagerList();updateAllDriverDropdowns();renderData()})}}}
+function saveDriverEdit(a){with(document){let b=getElementById(`edit-drv-${a}`).value.trim(),c=getElementById(`edit-color-${a}`).value,d=customDrivers[a];if(b){b!==d&&(delete driverColors[d],customDrivers[a]=b);driverColors[b]=c;let e=customDrivers.map(f=>({name:f,color:driverColors[f]||getDriverColor(f)}));db.ref('drivers').set(e).then(()=>{renderDriverManagerList();updateAllDriverDropdowns();renderData();updateMapLegend();updateDriverMarkerColors()})}}}
 
-function deleteDriver(a){if(confirm("Remove driver?")){let b=customDrivers[a];customDrivers.splice(a,1);delete driverColors[b];let c=customDrivers.map(d=>({name:d,color:driverColors[d]||getDriverColor(d)}));db.ref('drivers').set(c).then(()=>{renderDriverManagerList();updateAllDriverDropdowns()})}}
+function deleteDriver(a){if(confirm("Remove driver?")){let b=customDrivers[a];customDrivers.splice(a,1);delete driverColors[b];let c=customDrivers.map(d=>({name:d,color:driverColors[d]||getDriverColor(d)}));db.ref('drivers').set(c).then(()=>{renderDriverManagerList();updateAllDriverDropdowns();updateMapLegend();updateDriverMarkerColors()})}}
 
-function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});const btn = getElementById('f-recurring-btn'); if(btn) btn.classList.remove('active'); getElementById('recurring-options').style.display='none';}}
-
-function startVoiceEntry(){with(document){let a=window.SpeechRecognition||window.webkitSpeechRecognition;if(!a)return alert("Voice API not supported");let b=new a();b.lang='en-US';b.start();getElementById('mic-icon').classList.add('voice-active');b.onresult=c=>{let d=c.results[0][0].transcript.toLowerCase();if(d.trim()==="dispatch"){createJob();return}let e={'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10};Object.keys(e).forEach(f=>d=d.replace(new RegExp(`\\b${f}\\b`,'g'),e[f]));customDrivers.forEach(f=>{let g=d.match(new RegExp(`\\bfor\\s+(${f.toLowerCase()})\\b`));g&&(getElementById('f-driver').value=f)})};b.onend=()=>getElementById('mic-icon').classList.remove('voice-active')}}
+function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});const btn = document.getElementById('f-recurring-btn'); if(btn) btn.classList.remove('active'); document.getElementById('recurring-options').style.display='none';}}
 
 function handleNameInput(a){showSuggestions(a,'suggestions',b=>`<div class=suggestion-item onclick="selectClient('${b}')">${b}</div>`)}
 function selectClient(a){fillForm(a,'f-name','f-pickup','f-city','f-customer-email-p','f-customer-phone-p','suggestions','city-suggestions-p')}
@@ -1328,35 +1377,11 @@ function toggleRecurringButton() {
     const opts = document.getElementById('recurring-options');
     const btn = document.getElementById('f-recurring-btn');
     const isVisible = opts.style.display === 'block';
-
-    // Set the button style to match the Dispatch button (blue version)
-    btn.style.width = '100%';
-    btn.style.padding = '14px 16px';
-    btn.style.fontWeight = '700';
-    btn.style.textTransform = 'uppercase';
-    btn.style.fontSize = '14px';
-    btn.style.letterSpacing = '1px';
-    btn.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
-    btn.style.boxShadow = 'var(--shadow-soft)';
-    btn.style.cursor = 'pointer';
-    btn.style.borderRadius = '8px';
-    btn.style.textAlign = 'center';
-    btn.style.whiteSpace = 'nowrap';
-
     if (isVisible) {
-        // When collapsed, blue outline style
-        btn.style.background = 'rgba(59, 130, 246, 0.15)';
-        btn.style.color = '#3b82f6';
-        btn.style.border = '1px solid #3b82f6';
         btn.classList.remove('active');
     } else {
-        // When active, solid blue background, black text
-        btn.style.background = '#3b82f6';
-        btn.style.color = '#000';
-        btn.style.border = '1px solid #3b82f6';
         btn.classList.add('active');
     }
-
     opts.style.display = isVisible ? 'none' : 'block';
 }
 function toggleWeeklyDays() {
@@ -1907,6 +1932,50 @@ function setupScheduledPlaceholder() {
     updatePlaceholder();
 }
 setupScheduledPlaceholder();
+
+function updateMapLegend() {
+    const legendDiv = document.getElementById('map-legend');
+    if (!legendDiv) return;
+    let html = '';
+    for (let driver in driverLocationsData) {
+        const loc = driverLocationsData[driver];
+        if (!loc) continue;
+        const color = getDriverColor(driver);
+        const time = loc.gps_timestamp ? formatTime12(loc.gps_timestamp) : (loc.timestamp ? formatTime12(loc.timestamp) : 'unknown');
+        html += `<div class="legend-item" onclick="zoomToDriver('${driver}')">
+                    <span class="legend-dot" style="background-color: ${color}; box-shadow: 0 0 6px ${color};"></span>
+                    <span class="legend-name">${driver}</span>
+                    <span class="legend-time">${time}</span>
+                 </div>`;
+    }
+    legendDiv.innerHTML = html || '<div style="opacity:0.6;">No drivers online</div>';
+}
+
+function zoomToDriver(driver) {
+    const pos = driverLocationsData[driver];
+    if (pos && pos.lat && pos.lng && mainMap) {
+        mainMap.setCenter({ lat: pos.lat, lng: pos.lng });
+        mainMap.setZoom(15);
+    } else {
+        alert('Driver location not available');
+    }
+}
+
+function updateDriverMarkerColors() {
+    if (!mainMap || !mapMarkers) return;
+    for (let driver in mapMarkers) {
+        if (driverLocationsData[driver] && mapMarkers[driver]) {
+            const color = getDriverColor(driver);
+            mapMarkers[driver].setLabel({
+                text: "●",
+                className: "pulsing-dot driver-map-label",
+                color: color,
+                fontSize: "20px",
+                fontWeight: "bold"
+            });
+        }
+    }
+}
 </script>
 <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel=stylesheet>
 <script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>
