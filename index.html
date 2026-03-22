@@ -348,48 +348,51 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* ----- NEW STYLES FOR RECURRING BUTTON (like Dispatch but blue) ----- */
-.btn-recurring {
+/* ----- FINAL FIX: Recurring button styled ONLY by ID (highest specificity) ----- */
+#f-recurring-btn {
     width: 100%;
     padding: 14px 16px;
     background: rgba(59, 130, 246, 0.15) !important;
     color: #3b82f6 !important;
-    font-weight: 700;
+    font-weight: 700 !important;
     border: 1px solid #3b82f6 !important;
-    border-radius: 8px;
-    text-transform: uppercase;
-    font-size: 14px;
-    letter-spacing: 1px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-soft);
-    cursor: pointer;
-    text-align: center;
-    white-space: nowrap;
+    border-radius: 8px !important;
+    text-transform: uppercase !important;
+    font-size: 14px !important;
+    letter-spacing: 1px !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: var(--shadow-soft) !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    display: inline-block !important;
+    line-height: normal !important;
 }
-.btn-recurring:hover {
+#f-recurring-btn:hover {
     background: rgba(59, 130, 246, 0.25) !important;
-    transform: translateY(-2px);
+    transform: translateY(-2px) !important;
 }
-.btn-recurring:active {
-    transform: translateY(1px);
+#f-recurring-btn:active {
+    transform: translateY(1px) !important;
 }
-.btn-recurring.active {
+#f-recurring-btn.active {
     background: #3b82f6 !important;
     color: #000 !important;
     border-color: #3b82f6 !important;
 }
-/* Light mode override */
-body.light-mode .btn-recurring {
+/* Light mode overrides – also by ID to guarantee no interference */
+body.light-mode #f-recurring-btn {
     background: rgba(59, 130, 246, 0.15) !important;
     color: #3b82f6 !important;
     border: 1px solid #3b82f6 !important;
 }
-body.light-mode .btn-recurring.active {
+body.light-mode #f-recurring-btn.active {
     background: #3b82f6 !important;
     color: #000 !important;
     border-color: #3b82f6 !important;
 }
-/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 /* Placeholder for datetime-local */
 .datetime-placeholder {
     position: absolute;
@@ -489,7 +492,7 @@ body.light-mode .btn-recurring.active {
         <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
     </div>
     <div class="input-wrap f-1">
-        <button type="button" id="f-recurring-btn" class="btn-recurring" onclick="toggleRecurringButton()">Make Recurring</button>
+        <button type="button" id="f-recurring-btn" onclick="toggleRecurringButton()">Make Recurring</button>
     </div>
 </div>
 <div id="recurring-options" style="display:none; margin-bottom:8px;">
