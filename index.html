@@ -435,6 +435,82 @@ body.light-mode #f-recurring-btn.active {
   animation: pulse-yellow 1.5s infinite !important;
   border: 2px solid gold !important;
 }
+
+/* Dispatch form equal spacing & layout */
+#dispatch-form-content .input-wrap,
+#dispatch-form-content .flex-row,
+#dispatch-form-content .mode-switch-container,
+#dispatch-form-content .mb-6,
+#dispatch-form-content .mb-12,
+#dispatch-form-content .mb-15,
+#dispatch-form-content .flex.gap-10,
+#dispatch-form-content .flex.gap-6,
+#dispatch-form-content #recurring-options,
+#dispatch-form-content .mb-20 {
+  margin-bottom: 12px !important;
+}
+#dispatch-form-content .flex-row {
+  gap: 12px !important;
+}
+#dispatch-form-content .input-wrap input,
+#dispatch-form-content .input-wrap select,
+#dispatch-form-content .input-wrap textarea {
+  margin-bottom: 0;
+}
+.dispatch-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 0;
+  width: 100%;
+}
+@media (min-width: 1024px) {
+  .dispatch-action-bar > div:first-child,
+  .dispatch-action-bar > select {
+    flex: 1;
+  }
+  .dispatch-action-bar > div:first-child {
+    justify-content: flex-start;
+  }
+  .dispatch-action-bar #voice-btn {
+    display: none;
+  }
+}
+@media (max-width: 768px) {
+  .dispatch-action-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .dispatch-action-bar > select {
+    order: 1;
+    width: auto;
+    min-width: 110px;
+    flex: 1 0 auto;
+    margin-right: 0;
+  }
+  .dispatch-action-bar > div:first-child {
+    order: 2;
+    display: flex;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+  .dispatch-action-bar #voice-btn {
+    display: inline-flex;
+  }
+  #toggle-dispatch-btn {
+    overflow: visible;
+    margin-right: 0;
+    padding: 0 6px;
+    box-sizing: border-box;
+  }
+  #f-driver {
+    width: auto;
+    min-width: 110px;
+    max-width: 140px;
+  }
+}
 </style>
 </head>
 <body>
@@ -521,12 +597,12 @@ body.light-mode #f-recurring-btn.active {
     </div>
 </div>
 <!-- End new fields -->
-<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin:4px 0; width:100%;">
+<div class="dispatch-action-bar">
     <div style="display:flex; gap:10px;">
         <button class="primary super-dispatch" style="flex:0 0 auto; white-space:nowrap;" onclick="createJob()">Dispatch</button>
         <button id=voice-btn onclick="startVoiceEntry()" class=voice-icon><svg id=mic-icon viewBox="0 0 24 24" width=20 height=20 style="fill:#888;transition:0.3s;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
     </div>
-    <select id=f-driver class=driver-select style="margin-bottom:0;border:1px solid var(--accent); width:auto; min-width:140px;">
+    <select id=f-driver class=driver-select style="margin-bottom:0;border:1px solid var(--accent);">
         <option value=Unassigned selected disabled hidden>Assign Driver</option>
         <option value=Unassigned>UNASSIGNED</option>
     </select>
