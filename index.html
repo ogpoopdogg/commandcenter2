@@ -38,8 +38,8 @@ header { padding: 16px 24px; background: var(--header-bg); border-bottom: 1px so
 #toggle-dispatch-btn { background: #000; border: 1px solid var(--accent); color: var(--active-green); font-weight: 700; cursor: pointer; border-radius: 6px; padding: 0 2px; height: 30px; font-size: 10px; text-transform: uppercase; margin-left: 0; white-space: nowrap; box-shadow: var(--shadow-soft); transition: transform 0.2s; }
 #toggle-dispatch-btn:active { transform: scale(0.98); }
 .route-btn { border: 1px solid var(--accent); padding: 8px 16px; font-size: 12px; white-space: nowrap; width: auto !important; margin: 0 auto; display: inline-block; }
-#map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
-#map { width: 100%; height: 100%; }
+#map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; flex-direction: column; }
+#map { width: 100%; height: 100%; flex: 1; min-height: 0; }
 .close-map { position: fixed; top: 20px; right: 20px; z-index: 3005; background: #b71c1c; color: #fff; border: none; width: 140px; height: 40px; font-weight: 700; border-radius: 6px; cursor: pointer; box-shadow: var(--shadow-soft); display: flex; align-items: center; justify-content: center; }
 .driver-map-label { color: #00ff00 !important; font-weight: 700; text-shadow: 0 0 2px #000; }
 #route-list { position: absolute; top: 130px; left: 20px; width: 280px; max-height: calc(100% - 150px); overflow-y: auto; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 6px; padding: 15px; z-index: 3001; display: none; box-shadow: var(--shadow-soft); }
@@ -196,7 +196,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 #active-list-container { width: 100% !important; flex: none; }
 #archive-section { width: 100%; order: 4; }
 #toggle-archive-btn { order: 3; }
-#map-modal { display: block !important; position: relative !important; width: 100% !important; height: 80vh; z-index: 10; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; order: 2; }
+#map-modal { display: block !important; position: relative !important; width: 100% !important; height: 80vh; z-index: 10; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; order: 2; flex-direction: column; }
 .close-map { display: none !important; }
 #map-modal.fullscreen-map { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 9999 !important; border-radius: 0 !important; }
 #map-modal.fullscreen-map .close-map { display: flex !important; }
@@ -429,25 +429,25 @@ body.light-mode #f-recurring-btn.active {
 }
 /* map legend styles */
 #map-legend {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 3002;
-    background: rgba(0,0,0,0.75);
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
     padding: 8px 12px;
     border-radius: 8px;
     font-size: 12px;
-    max-height: 80%;
+    max-height: 200px;
     overflow-y: auto;
-    max-width: 260px;
-    backdrop-filter: blur(6px);
     display: flex;
     flex-direction: column;
     gap: 6px;
     pointer-events: auto;
     font-family: monospace;
     border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    margin: 8px 12px 12px 12px;
+    order: 2;
+    z-index: 3002;
 }
 .legend-item {
     display: flex;
@@ -704,7 +704,7 @@ function toggleDispatchForm() {
 <div id=map-driver-head class="none abs" style="top:15px;right:60px;left:auto;z-index:3001;background:#000;border:1px solid #fff;padding:6px 12px;font-weight:700;font-size:16px;box-shadow:var(--shadow-soft);white-space:nowrap;"></div>
 <div id=route-list></div>
 <div id=map></div>
-<div id="map-legend" style="position: absolute; top: 10px; left: 10px; z-index: 3002; background: rgba(0,0,0,0.75); padding: 8px 12px; border-radius: 8px; font-size: 12px; max-height: 80%; overflow-y: auto; max-width: 260px; backdrop-filter: blur(6px); display: flex; flex-direction: column; gap: 6px; pointer-events: auto; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);"></div>
+<div id="map-legend" style="position: relative; width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); padding: 8px 12px; border-radius: 8px; font-size: 12px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; pointer-events: auto; font-family: monospace; border: 1px solid rgba(255,255,255,0.2); margin: 8px 12px 12px 12px; order: 2; z-index: 3002;"></div>
 </div>
 <button id=toggle-archive-btn class="primary w-100 mt-15" onclick="toggleArchive()" style="border:1px solid var(--border);">SHOW ARCHIVE</button>
 <div id=archive-section class=mt-30 style="padding:15px;border:1px solid rgba(255,255,255,0.1);box-shadow:var(--shadow-soft);transition:opacity 0.3s;display:none;">
@@ -899,9 +899,9 @@ function initCommandNotifications(a){"Notification"in window&&Notification.reque
 localStorage.getItem('ec_theme')==='light'&&document.body.classList.add('light-mode');
 function toggleTheme(){document.body.classList.toggle('light-mode');localStorage.setItem('ec_theme',document.body.classList.contains('light-mode')?'light':'dark')}
 
-function filterByDriver(a){currentDriverFilter=a;renderData();with(document){getElementById('entry-panel').style.display='none';getElementById('driver-stats-panel').style.display='none';let ar=getElementById('archive-section');ar&&(ar.style.display='none');getElementById('active-search').style.display='none';getElementById('toggle-archive-btn').style.display='none';}viewDriverRoute(a);window.scrollTo({top:0,behavior:'smooth'})}
+function filterByDriver(a){currentDriverFilter=a;renderData();updateMapLegend();with(document){getElementById('entry-panel').style.display='none';getElementById('driver-stats-panel').style.display='none';let ar=getElementById('archive-section');ar&&(ar.style.display='none');getElementById('active-search').style.display='none';getElementById('toggle-archive-btn').style.display='none';}viewDriverRoute(a);window.scrollTo({top:0,behavior:'smooth'})}
 
-function clearDriverFilter(){currentDriverFilter=null;with(document){getElementById('entry-panel').style.display='block';getElementById('driver-stats-panel').style.display='grid';let a=getElementById('archive-section');a&&(a.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');let s=getElementById("selected-driver-label");s&&(s.style.display="none");document.getElementById('reset-driver-view-btn').style.display = 'none';getElementById('active-search').style.display = '';getElementById('toggle-archive-btn').style.display = '';}closeMap();renderData()}
+function clearDriverFilter(){currentDriverFilter=null;with(document){getElementById('entry-panel').style.display='block';getElementById('driver-stats-panel').style.display='grid';let a=getElementById('archive-section');a&&(a.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');let s=getElementById("selected-driver-label");s&&(s.style.display="none");document.getElementById('reset-driver-view-btn').style.display = 'none';getElementById('active-search').style.display = '';getElementById('toggle-archive-btn').style.display = '';}closeMap();renderData();updateMapLegend();}
 
 function unloadActiveDriverAtDepot(){if(!currentDriverFilter)return;if(!confirm("Move all 'In Transit' packages for "+currentDriverFilter+" to Depot?"))return;let a={},b=0;Object.keys(rawJobs).forEach(c=>{let d=rawJobs[c];if(d.status==='in_transit'&&d.assigned_to===currentDriverFilter){b++;a[`jobs/${c}/status`]='pending_delivery';a[`jobs/${c}/assigned_to`]='Unassigned';a[`jobs/${c}/job_history`]=(d.job_history?d.job_history+'\n':'')+`Arrived at Depot (Pick-up by ${currentDriverFilter})`}});if(b===0)return alert("No 'In Transit' jobs found for "+currentDriverFilter);db.ref().update(a).then(()=>{alert("Unloaded "+b+" jobs to Depot.");clearDriverFilter()}).catch(c=>alert("Error: "+c.message))}
 
@@ -958,7 +958,7 @@ function openMap(a){with(document){
     sl&&(sl.style.display="none");
     renderData()
   }
-  getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.remove('driver-map-inline'); window.innerWidth>=1024&&!a&&getElementById('map-modal').classList.add('fullscreen-map');
+  getElementById('map-modal').style.display='flex'; getElementById('map-modal').classList.remove('driver-map-inline'); window.innerWidth>=1024&&!a&&getElementById('map-modal').classList.add('fullscreen-map');
   getElementById('route-time-badge').style.display='none';
   setTimeout(()=>{mainMap&&google.maps.event.trigger(mainMap,"resize")},100);
   for(let b in mapMarkers)mapMarkers[b]&&mapMarkers[b].setMap(null);
@@ -991,8 +991,9 @@ function openMap(a){with(document){
 
 function viewDriverRoute(a,b){b&&b.stopPropagation();mapBoundsInitialized=!1;mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);currentDriverFilter=a;with(document){
   ensureMainMap();
-  getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.add('driver-map-inline'); window.innerWidth>=1024&&getElementById('map-modal').classList.remove('fullscreen-map');
-  renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100)
+  getElementById('map-modal').style.display='flex'; getElementById('map-modal').classList.add('driver-map-inline'); window.innerWidth>=1024&&getElementById('map-modal').classList.remove('fullscreen-map');
+  renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100);
+  updateMapLegend();
 }}
 
 function closeMap(){mapBoundsInitialized=!1;with(document){if(window.innerWidth>=1024){getElementById('map-modal').classList.remove('fullscreen-map');openMap(!0)}else{getElementById('map-modal').style.display='none';getElementById('map-driver-head').style.display='none';mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);activePolyline&&(activePolyline.setMap(null),activePolyline=null);for(let a in mapMarkers)mapMarkers[a]&&mapMarkers[a].setMap(null);mapMarkers={};document.getElementById('reset-driver-view-btn').style.display = 'none';}} document.getElementById('map-modal').classList.remove('driver-map-inline'); }
@@ -1933,19 +1934,36 @@ function setupScheduledPlaceholder() {
 }
 setupScheduledPlaceholder();
 
+function formatDateYMD(timestamp) {
+    if (!timestamp) return '';
+    let d = new Date(timestamp);
+    if (isNaN(d.getTime())) return '';
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return `${d.getFullYear()} ${months[d.getMonth()]} ${d.getDate()}`;
+}
+
 function updateMapLegend() {
     const legendDiv = document.getElementById('map-legend');
     if (!legendDiv) return;
+    if (currentDriverFilter !== null) {
+        legendDiv.style.display = 'none';
+        return;
+    } else {
+        legendDiv.style.display = 'flex';
+    }
     let html = '';
     for (let driver in driverLocationsData) {
         const loc = driverLocationsData[driver];
         if (!loc) continue;
         const color = getDriverColor(driver);
-        const time = loc.gps_timestamp ? formatTime12(loc.gps_timestamp) : (loc.timestamp ? formatTime12(loc.timestamp) : 'unknown');
+        const rawTimestamp = loc.gps_timestamp || loc.timestamp;
+        const datePart = formatDateYMD(rawTimestamp);
+        const timePart = formatTime12(rawTimestamp);
+        const fullDateTime = datePart ? `${datePart} ${timePart}` : timePart;
         html += `<div class="legend-item" onclick="zoomToDriver('${driver}')">
                     <span class="legend-dot" style="background-color: ${color}; box-shadow: 0 0 6px ${color};"></span>
                     <span class="legend-name">${driver}</span>
-                    <span class="legend-time">${time}</span>
+                    <span class="legend-time">${fullDateTime}</span>
                  </div>`;
     }
     legendDiv.innerHTML = html || '<div style="opacity:0.6;">No drivers online</div>';
