@@ -348,7 +348,7 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* Recurring toggle button - updated */
+/* Recurring toggle button - updated with !important overrides */
 .recurring-toggle-btn {
     width: 100%;
     height: auto;
@@ -378,27 +378,31 @@ body.light-mode .recurring-toggle-btn.active {
     color: white;
     border-color: black;
 }
-/* Additional overrides to match input styling exactly */
+/* Additional overrides to match input styling exactly - with !important to force */
 #f-recurring-btn.recurring-toggle-btn {
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    color: var(--text);
+    background: var(--input-bg) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    color: var(--text) !important;
+    padding: 12px 16px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
 }
 #f-recurring-btn.recurring-toggle-btn.active {
-    background: var(--accent);
-    color: #000;
-    border-color: var(--accent);
+    background: var(--accent) !important;
+    color: #000 !important;
+    border-color: var(--accent) !important;
 }
 body.light-mode #f-recurring-btn.recurring-toggle-btn {
-    border-color: black;
-    color: black;
+    border-color: black !important;
+    color: black !important;
 }
 body.light-mode #f-recurring-btn.recurring-toggle-btn.active {
-    background: black;
-    color: white;
-    border-color: black;
+    background: black !important;
+    color: white !important;
+    border-color: black !important;
 }
 /* Placeholder for datetime-local */
 .datetime-placeholder {
@@ -556,6 +560,8 @@ function toggleDispatchForm() {
         if (a.style.display === 'block') btn.classList.add('dispatch-active');
         else btn.classList.remove('dispatch-active');
     }
+    // ensure placeholder is re-evaluated after form toggle
+    setTimeout(function(){ setupScheduledPlaceholder(); }, 50);
 }
 </script>
 <div class="stats-bar mt-15" style="background:transparent;border:none;">
@@ -1019,7 +1025,10 @@ function resetDriverView() {
 
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
 
-function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}}
+function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}
+    // after mode change, reattach placeholder to ensure it's present
+    setTimeout(function(){ setupScheduledPlaceholder(); }, 10);
+}
 setMode('pickup');
 
 // NEW: function to check scheduled jobs and activate them if due
@@ -1909,6 +1918,10 @@ function setupScheduledPlaceholder() {
     function onBlur() {
         updatePlaceholder();
     }
+    input.removeEventListener('focus', onFocus);
+    input.removeEventListener('blur', onBlur);
+    input.removeEventListener('input', updatePlaceholder);
+    input.removeEventListener('change', updatePlaceholder);
     input.addEventListener('focus', onFocus);
     input.addEventListener('blur', onBlur);
     input.addEventListener('input', updatePlaceholder);
