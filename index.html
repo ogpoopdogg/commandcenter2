@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang=en>
 <head>
@@ -23,7 +24,7 @@ body.light-mode {
 body.light-mode * { color: #000 !important; }
 body.light-mode .history-item div[style*="color:gold"], body.light-mode .history-item div[style*="color:#00ff00"], body.light-mode .history-item div[style*="color:#aaa"], body.light-mode .history-item span[style*="color:#555"], body.light-mode .history-item span[style*="color:#888"] { color: #000 !important; }
 body.light-mode .btn-save, body.light-mode .btn-zone-add, body.light-mode .mode-btn.active-mode, body.light-mode .primary, body.light-mode .login-submit { background: #fff !important; color: #000 !important; border: 2px solid #00b32d !important; }
-body.light-mode button { background: #fff !important; color: #000 !important; border: 1px solid #ccc !important; }
+body.light-mode button:not(.recurring-toggle-btn) { background: #fff !important; color: #000 !important; border: 1px solid #ccc !important; }
 body.light-mode #toggle-dispatch-btn { background: #fff !important; color: #000 !important; border: 1px solid #000 !important; }
 body.light-mode #selected-driver-label, body.light-mode #route-time-badge, body.light-mode #map-driver-head, body.light-mode #route-list { background: #fff !important; color: #000 !important; text-shadow: none !important; border-color: #ccc !important; }
 body.light-mode .driver-map-label { color: #00661a !important; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff !important; }
@@ -473,7 +474,7 @@ body.light-mode .recurring-toggle-btn.active {
 <!-- Begin new scheduled/recurring fields (moved above driver select) -->
 <div class="flex gap-10 mb-6">
     <div class="input-wrap f-1">
-        <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
+        <input type="datetime-local" id="f-scheduled-time" class="glow-field">
     </div>
     <div class="input-wrap f-1">
         <button type="button" id="f-recurring-btn" class="recurring-toggle-btn" onclick="toggleRecurringButton()">Make Recurring</button>
@@ -1913,3 +1914,4 @@ setupScheduledPlaceholder();
 </script>
 </body>
 </html>
+```
