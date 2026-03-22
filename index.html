@@ -496,7 +496,7 @@ body.light-mode #f-recurring-btn.recurring-toggle-btn.active {
 <!-- Begin new scheduled/recurring fields (moved above driver select) -->
 <div class="flex gap-10 mb-6">
     <div class="input-wrap f-1">
-        <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
+        <input type="datetime-local" id="f-scheduled-time" class="glow-field">
     </div>
     <div class="input-wrap f-1">
         <button type="button" id="f-recurring-btn" class="recurring-toggle-btn" onclick="toggleRecurringButton()">Make Recurring</button>
@@ -1186,7 +1186,15 @@ function saveDriverEdit(a){with(document){let b=getElementById(`edit-drv-${a}`).
 
 function deleteDriver(a){if(confirm("Remove driver?")){let b=customDrivers[a];customDrivers.splice(a,1);delete driverColors[b];let c=customDrivers.map(d=>({name:d,color:driverColors[d]||getDriverColor(d)}));db.ref('drivers').set(c).then(()=>{renderDriverManagerList();updateAllDriverDropdowns()})}}
 
-function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});const btn = getElementById('f-recurring-btn'); if(btn) btn.classList.remove('active'); getElementById('recurring-options').style.display='none';}}
+function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});const btn = getElementById('f-recurring-btn'); if(btn) btn.classList.remove('active'); getElementById('recurring-options').style.display='none';
+    // manually update datetime placeholder visibility
+    let dtInput = getElementById('f-scheduled-time');
+    if(dtInput){
+        let wrap = dtInput.closest('.input-wrap');
+        let placeholderSpan = wrap ? wrap.querySelector('.datetime-placeholder') : null;
+        if(placeholderSpan) placeholderSpan.style.display = dtInput.value ? 'none' : 'block';
+    }
+}}
 
 function startVoiceEntry(){with(document){let a=window.SpeechRecognition||window.webkitSpeechRecognition;if(!a)return alert("Voice API not supported");let b=new a();b.lang='en-US';b.start();getElementById('mic-icon').classList.add('voice-active');b.onresult=c=>{let d=c.results[0][0].transcript.toLowerCase();if(d.trim()==="dispatch"){createJob();return}let e={'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10};Object.keys(e).forEach(f=>d=d.replace(new RegExp(`\\b${f}\\b`,'g'),e[f]));customDrivers.forEach(f=>{let g=d.match(new RegExp(`\\bfor\\s+(${f.toLowerCase()})\\b`));g&&(getElementById('f-driver').value=f)})};b.onend=()=>getElementById('mic-icon').classList.remove('voice-active')}}
 
