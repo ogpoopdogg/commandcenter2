@@ -348,36 +348,7 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* Recurring toggle button - updated */
-.recurring-toggle-btn {
-    width: 100%;
-    height: auto;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-weight: 700;
-    text-transform: uppercase;
-    cursor: pointer;
-    padding: 12px 16px;
-    box-sizing: border-box;
-    margin: 0;
-}
-.recurring-toggle-btn.active {
-    background: var(--accent);
-    color: #000;
-    border-color: var(--accent);
-}
-body.light-mode .recurring-toggle-btn {
-    border-color: black;
-    color: black;
-}
-body.light-mode .recurring-toggle-btn.active {
-    background: black;
-    color: white;
-    border-color: black;
-}
-/* Make recurring button look like dispatch button with blue (higher specificity) */
+/* Recurring toggle button - updated - high specificity to ensure no override */
 body #f-recurring-btn {
     background: rgba(59, 130, 246, 0.15) !important;
     color: #3b82f6 !important;
@@ -386,11 +357,35 @@ body #f-recurring-btn {
     text-shadow: none;
     letter-spacing: 2px;
     padding: 14px 16px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
 }
 body #f-recurring-btn.active {
     background: #3b82f6 !important;
     color: #000 !important;
     border-color: #3b82f6 !important;
+}
+/* Light mode override for recurring button */
+body.light-mode #f-recurring-btn {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #3b82f6 !important;
+    border: 1px solid #3b82f6 !important;
+}
+body.light-mode #f-recurring-btn.active {
+    background: #3b82f6 !important;
+    color: #000 !important;
+    border-color: #3b82f6 !important;
+}
+/* Ensure no other rules interfere */
+.recurring-toggle-btn {
+    /* This class is kept for potential future use, but ID rules override */
+    all: unset;
 }
 /* Placeholder for datetime-local */
 .datetime-placeholder {
