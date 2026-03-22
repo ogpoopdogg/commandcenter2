@@ -348,45 +348,48 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* Recurring toggle button - updated - high specificity to ensure no override */
-body #f-recurring-btn {
+/* ----- NEW STYLES FOR RECURRING BUTTON (like Dispatch but blue) ----- */
+.btn-recurring {
+    width: 100%;
+    padding: 14px 16px;
     background: rgba(59, 130, 246, 0.15) !important;
     color: #3b82f6 !important;
+    font-weight: 700;
     border: 1px solid #3b82f6 !important;
-    box-shadow: var(--shadow-soft) !important;
-    text-shadow: none;
-    letter-spacing: 2px;
-    padding: 14px 16px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    width: 100% !important;
-    height: auto !important;
-    margin: 0 !important;
+    border-radius: 8px;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 1px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
 }
-body #f-recurring-btn.active {
+.btn-recurring:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+    transform: translateY(-2px);
+}
+.btn-recurring:active {
+    transform: translateY(1px);
+}
+.btn-recurring.active {
     background: #3b82f6 !important;
     color: #000 !important;
     border-color: #3b82f6 !important;
 }
-/* Light mode override for recurring button */
-body.light-mode #f-recurring-btn {
+/* Light mode override */
+body.light-mode .btn-recurring {
     background: rgba(59, 130, 246, 0.15) !important;
     color: #3b82f6 !important;
     border: 1px solid #3b82f6 !important;
 }
-body.light-mode #f-recurring-btn.active {
+body.light-mode .btn-recurring.active {
     background: #3b82f6 !important;
     color: #000 !important;
     border-color: #3b82f6 !important;
 }
-/* Ensure no other rules interfere */
-.recurring-toggle-btn {
-    /* This class is kept for potential future use, but ID rules override */
-    all: unset;
-}
+/* ------------------------------------------------------------------ */
 /* Placeholder for datetime-local */
 .datetime-placeholder {
     position: absolute;
@@ -486,7 +489,7 @@ body.light-mode #f-recurring-btn.active {
         <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
     </div>
     <div class="input-wrap f-1">
-        <button type="button" id="f-recurring-btn" class="recurring-toggle-btn" onclick="toggleRecurringButton()">Make Recurring</button>
+        <button type="button" id="f-recurring-btn" class="btn-recurring" onclick="toggleRecurringButton()">Make Recurring</button>
     </div>
 </div>
 <div id="recurring-options" style="display:none; margin-bottom:8px;">
