@@ -1323,17 +1323,40 @@ function checkZonesAndSchedule(job, lat, lng, jobId) {
 }
 // --- New auto‑schedule functions (end) ---
 
-// New helper functions for recurring schedules
 function toggleRecurringButton() {
     const opts = document.getElementById('recurring-options');
     const btn = document.getElementById('f-recurring-btn');
     const isVisible = opts.style.display === 'block';
-    opts.style.display = isVisible ? 'none' : 'block';
-    btn.classList.toggle('active', !isVisible);
-    // If showing, ensure weekly days visibility based on current frequency
-    if (!isVisible) {
-        toggleWeeklyDays();
+
+    // Set the button style to match the Dispatch button (blue version)
+    btn.style.width = '100%';
+    btn.style.padding = '14px 16px';
+    btn.style.fontWeight = '700';
+    btn.style.textTransform = 'uppercase';
+    btn.style.fontSize = '14px';
+    btn.style.letterSpacing = '1px';
+    btn.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+    btn.style.boxShadow = 'var(--shadow-soft)';
+    btn.style.cursor = 'pointer';
+    btn.style.borderRadius = '8px';
+    btn.style.textAlign = 'center';
+    btn.style.whiteSpace = 'nowrap';
+
+    if (isVisible) {
+        // When collapsed, blue outline style
+        btn.style.background = 'rgba(59, 130, 246, 0.15)';
+        btn.style.color = '#3b82f6';
+        btn.style.border = '1px solid #3b82f6';
+        btn.classList.remove('active');
+    } else {
+        // When active, solid blue background, black text
+        btn.style.background = '#3b82f6';
+        btn.style.color = '#000';
+        btn.style.border = '1px solid #3b82f6';
+        btn.classList.add('active');
     }
+
+    opts.style.display = isVisible ? 'none' : 'block';
 }
 function toggleWeeklyDays() {
     const freq = document.getElementById('f-recur-frequency').value;
