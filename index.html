@@ -348,7 +348,7 @@ header button[onclick="openDriverManager()"] {
 .job-count {
     flex-shrink: 0;
 }
-/* Recurring toggle button - updated with !important overrides */
+/* Recurring toggle button - updated */
 .recurring-toggle-btn {
     width: 100%;
     height: auto;
@@ -362,7 +362,6 @@ header button[onclick="openDriverManager()"] {
     padding: 12px 16px;
     box-sizing: border-box;
     margin: 0;
-    font-size: 14px;
 }
 .recurring-toggle-btn.active {
     background: var(--accent);
@@ -378,31 +377,20 @@ body.light-mode .recurring-toggle-btn.active {
     color: white;
     border-color: black;
 }
-/* Additional overrides to match input styling exactly - with !important to force */
-#f-recurring-btn.recurring-toggle-btn {
-    background: var(--input-bg) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    color: var(--text) !important;
-    padding: 12px 16px !important;
-    width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
+/* Make recurring button look like dispatch button with blue */
+#f-recurring-btn {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #3b82f6 !important;
+    border: 1px solid #3b82f6 !important;
+    box-shadow: var(--shadow-soft) !important;
+    text-shadow: none;
+    letter-spacing: 2px;
+    padding: 14px 16px !important;
 }
-#f-recurring-btn.recurring-toggle-btn.active {
-    background: var(--accent) !important;
+#f-recurring-btn.active {
+    background: #3b82f6 !important;
     color: #000 !important;
-    border-color: var(--accent) !important;
-}
-body.light-mode #f-recurring-btn.recurring-toggle-btn {
-    border-color: black !important;
-    color: black !important;
-}
-body.light-mode #f-recurring-btn.recurring-toggle-btn.active {
-    background: black !important;
-    color: white !important;
-    border-color: black !important;
+    border-color: #3b82f6 !important;
 }
 /* Placeholder for datetime-local */
 .datetime-placeholder {
@@ -500,7 +488,7 @@ body.light-mode #f-recurring-btn.recurring-toggle-btn.active {
 <!-- Begin new scheduled/recurring fields (moved above driver select) -->
 <div class="flex gap-10 mb-6">
     <div class="input-wrap f-1">
-        <input type="datetime-local" id="f-scheduled-time" class="glow-field">
+        <input type="datetime-local" id="f-scheduled-time" class="glow-field" placeholder="Scheduled Time (optional)">
     </div>
     <div class="input-wrap f-1">
         <button type="button" id="f-recurring-btn" class="recurring-toggle-btn" onclick="toggleRecurringButton()">Make Recurring</button>
@@ -560,26 +548,9 @@ function toggleDispatchForm() {
         if (a.style.display === 'block') btn.classList.add('dispatch-active');
         else btn.classList.remove('dispatch-active');
     }
-    // ensure placeholder is re-evaluated after form toggle
-    setTimeout(function(){ setupScheduledPlaceholder(); }, 50);
 }
 </script>
 <div class="stats-bar mt-15" style="background:transparent;border:none;">
-<div id=pending-box class="stat-box pointer" onclick="requestNotifyPermission(); document.getElementById('unassigned-immediate-list').scrollIntoView({behavior:'smooth', block:'start'});">
-<span class=stat-label>Pending</span>
-<div id=stat-pending class=stat-number>0</div>
-</div>
-<div class=stat-box>
-<button onclick="openZoneManager()" class=route-btn style="background:var(--header-bg);color:var(--accent);">ZONE MGR</button>
-</div>
-<!-- New Recurring Schedules button -->
-<div class=stat-box>
-<button onclick="openRecurringSchedules()" class=route-btn style="background:var(--header-bg);color:#ff0;">RECURRING</button>
-</div>
-<div id=assigned-box class=stat-box>
-<span class=stat-label>Assigned</span>
-<div id=stat-assigned class=stat-number>0</div>
-</div>
 <div id=note-box class="stat-box none"><span class=stat-label>Note</span><div id=stat-note class=stat-number>0</div></div>
 </div>
 </div>
@@ -763,6 +734,10 @@ function toggleDispatchForm() {
 <div id=driver-manager-modal class=modal onclick="event.target===this && (this.style.display='none')">
 <div class=modal-content>
 <h2 class=modal-h2>Manage Drivers</h2>
+<div class="flex gap-10 mb-15">
+<button class="route-btn" onclick="openZoneManager()" style="background:var(--header-bg);color:var(--accent);">Zone Manager</button>
+<button class="route-btn" onclick="openRecurringSchedules()" style="background:var(--header-bg);color:#ff0;">Recurring Schedules</button>
+</div>
 <div id=driver-list-container class="flex col gap-10 mb-15"></div>
 <div class="flex gap-10">
 <input id=new-driver-name class=glow-field placeholder="New Driver Name">
@@ -1025,10 +1000,7 @@ function resetDriverView() {
 
 function requestNotifyPermission(){"Notification"in window&&Notification.requestPermission()}
 
-function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}
-    // after mode change, reattach placeholder to ensure it's present
-    setTimeout(function(){ setupScheduledPlaceholder(); }, 10);
-}
+function setMode(a){with(document){currentMode=a;let b=getElementById('top-input-section'),c=getElementById('bottom-input-section'),d=getElementById('group-pickup'),e=getElementById('group-drop'),f=getElementById('btn-mode-pickup'),g=getElementById('btn-mode-delivery');a==='pickup'?(b.appendChild(d),c.appendChild(e),f.classList.add('active-mode'),g.classList.remove('active-mode','delivery-mode')):(b.appendChild(e),c.appendChild(d),f.classList.remove('active-mode'),g.classList.add('active-mode','delivery-mode'))}}
 setMode('pickup');
 
 // NEW: function to check scheduled jobs and activate them if due
@@ -1195,15 +1167,7 @@ function saveDriverEdit(a){with(document){let b=getElementById(`edit-drv-${a}`).
 
 function deleteDriver(a){if(confirm("Remove driver?")){let b=customDrivers[a];customDrivers.splice(a,1);delete driverColors[b];let c=customDrivers.map(d=>({name:d,color:driverColors[d]||getDriverColor(d)}));db.ref('drivers').set(c).then(()=>{renderDriverManagerList();updateAllDriverDropdowns()})}}
 
-function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});const btn = getElementById('f-recurring-btn'); if(btn) btn.classList.remove('active'); getElementById('recurring-options').style.display='none';
-    // manually update datetime placeholder visibility
-    let dtInput = getElementById('f-scheduled-time');
-    if(dtInput){
-        let wrap = dtInput.closest('.input-wrap');
-        let placeholderSpan = wrap ? wrap.querySelector('.datetime-placeholder') : null;
-        if(placeholderSpan) placeholderSpan.style.display = dtInput.value ? 'none' : 'block';
-    }
-}}
+function resetFormFields(){with(document){['f-city','f-pickup','f-drop-name','f-drop-address','f-drop-city','f-po','f-info','f-name','f-pkg-details','f-customer-email-p','f-customer-email-d','f-customer-phone-p','f-customer-phone-d','f-scheduled-time'].forEach(a=>{let b=getElementById(a);b&&(b.value="")});const btn = getElementById('f-recurring-btn'); if(btn) btn.classList.remove('active'); getElementById('recurring-options').style.display='none';}}
 
 function startVoiceEntry(){with(document){let a=window.SpeechRecognition||window.webkitSpeechRecognition;if(!a)return alert("Voice API not supported");let b=new a();b.lang='en-US';b.start();getElementById('mic-icon').classList.add('voice-active');b.onresult=c=>{let d=c.results[0][0].transcript.toLowerCase();if(d.trim()==="dispatch"){createJob();return}let e={'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10};Object.keys(e).forEach(f=>d=d.replace(new RegExp(`\\b${f}\\b`,'g'),e[f]));customDrivers.forEach(f=>{let g=d.match(new RegExp(`\\bfor\\s+(${f.toLowerCase()})\\b`));g&&(getElementById('f-driver').value=f)})};b.onend=()=>getElementById('mic-icon').classList.remove('voice-active')}}
 
@@ -1701,7 +1665,7 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
     I.onclick=()=>{if(currentDriverFilter===F)clearDriverFilter(); else filterByDriver(F);};
     let J=(G>0||H>0)?(driverLocationsData[F]?.total_duration||""):"";
     I.innerHTML = `<div class="ds-name" style="color:${getDriverColor(F)}; font-size:0.9rem; display:flex; align-items:center; justify-content:space-between; width:100%;">${F}<span class="job-count" style="color:white; background:transparent; padding:2px 8px; font-size:0.8rem;">${G+H}</span></div>`;
-    e.appendChild(I)});getElementById("stat-pending").innerText=u+x;getElementById("stat-assigned").innerText=v;getElementById("stat-note").innerText=w;getElementById("note-box").style.display=w>0?"block":"none";getElementById("pending-box").className="stat-box"+((u+x)>0?" unassigned-glow":"");['pickups','transit','depot','deliveries','dnd','scheduled'].forEach(F=>{let G=getElementById('list-'+F);if(G){let H=G.children.length,I=getElementById('badge-'+F);if(I){I.innerText=H;if(H>0)I.classList.add('badge-active');else I.classList.remove('badge-active')}G.style.display=catState[F]?'block':'none';let J=getElementById('btn-'+F);if(J){if(G.querySelector('.new-card')&&!catState[F])J.classList.add('new-btn');else J.classList.remove('new-btn');if(F==='dnd'){if(H===0)J.classList.add('dnd-empty-btn');else J.classList.remove('dnd-empty-btn')}}}});isFirstLoad=!1}}
+    e.appendChild(I)});getElementById("stat-note").innerText=w;getElementById("note-box").style.display=w>0?"block":"none";['pickups','transit','depot','deliveries','dnd','scheduled'].forEach(F=>{let G=getElementById('list-'+F);if(G){let H=G.children.length,I=getElementById('badge-'+F);if(I){I.innerText=H;if(H>0)I.classList.add('badge-active');else I.classList.remove('badge-active')}G.style.display=catState[F]?'block':'none';let J=getElementById('btn-'+F);if(J){if(G.querySelector('.new-card')&&!catState[F])J.classList.add('new-btn');else J.classList.remove('new-btn');if(F==='dnd'){if(H===0)J.classList.add('dnd-empty-btn');else J.classList.remove('dnd-empty-btn')}}}});isFirstLoad=!1}}
 
 function openZoneManager(){with(document){getElementById('zone-modal').style.display='block';showZoneSchedule()}}
 
@@ -1906,26 +1870,15 @@ function setupScheduledPlaceholder() {
     if (!placeholder) {
         placeholder = document.createElement('span');
         placeholder.className = 'datetime-placeholder';
-        placeholder.innerHTML = '📅 Schedule time';
+        placeholder.innerHTML = '';
         wrap.appendChild(placeholder);
     }
     function updatePlaceholder() {
         placeholder.style.display = input.value ? 'none' : 'block';
     }
-    function onFocus() {
-        placeholder.style.display = 'none';
-    }
-    function onBlur() {
-        updatePlaceholder();
-    }
-    input.removeEventListener('focus', onFocus);
-    input.removeEventListener('blur', onBlur);
-    input.removeEventListener('input', updatePlaceholder);
-    input.removeEventListener('change', updatePlaceholder);
-    input.addEventListener('focus', onFocus);
-    input.addEventListener('blur', onBlur);
     input.addEventListener('input', updatePlaceholder);
     input.addEventListener('change', updatePlaceholder);
+    input.addEventListener('blur', updatePlaceholder);
     updatePlaceholder();
 }
 setupScheduledPlaceholder();
