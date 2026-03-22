@@ -377,8 +377,8 @@ body.light-mode .recurring-toggle-btn.active {
     color: white;
     border-color: black;
 }
-/* Make recurring button look like dispatch button with blue */
-#f-recurring-btn {
+/* Make recurring button look like dispatch button with blue (higher specificity) */
+body #f-recurring-btn {
     background: rgba(59, 130, 246, 0.15) !important;
     color: #3b82f6 !important;
     border: 1px solid #3b82f6 !important;
@@ -387,7 +387,7 @@ body.light-mode .recurring-toggle-btn.active {
     letter-spacing: 2px;
     padding: 14px 16px !important;
 }
-#f-recurring-btn.active {
+body #f-recurring-btn.active {
     background: #3b82f6 !important;
     color: #000 !important;
     border-color: #3b82f6 !important;
