@@ -174,7 +174,7 @@ button.primary.super-dispatch:hover { background: rgba(0, 179, 45, 0.2) !importa
 .zone-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--border); }
 .zone-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .btn-zone-del { background: transparent; color: #b71c1c; border: 1px solid #b71c1c; padding: 6px 10px; font-size: 9px; cursor: pointer; text-transform: uppercase; border-radius: 3px; font-weight: 700; }
-.btn-zone { padding: 10px 14px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+.btn-zone { padding: 10px 14px; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text); cursor: pointer; font-size: 10px; border-radius: 4px; font-weight: 700; }
 .btn-zone:hover { background: #333; border-color: var(--accent); }
 .btn-zone.active-draw { background: var(--accent); color: #000; }
 .day-row { display: flex; gap: 4px; margin-bottom: 8px; }
@@ -561,6 +561,10 @@ body.light-mode #f-recurring-btn.active {
         <label style="flex:1; display:flex; flex-direction:column;">Start: <input type="date" id="f-recur-start" class="glow-field" style="width:100%;"></label>
         <label style="flex:1; display:flex; flex-direction:column;">End: <input type="date" id="f-recur-end" class="glow-field" style="width:100%;"></label>
     </div>
+    <!-- Time selector added -->
+    <div class="flex gap-10 mb-6">
+        <label style="flex:1; display:flex; flex-direction:column;">Time: <input type="time" id="f-recur-time" class="glow-field" style="width:100%;"></label>
+    </div>
 </div>
 <!-- End new fields -->
 <div style="display:flex; align-items:center; gap:10px; margin:4px 0; width:100%;">
@@ -797,6 +801,12 @@ function toggleDispatchForm() {
 <button class="btn-cancel w-100 mt-15" onclick="document.getElementById('recurring-modal').style.display='none'">CLOSE</button>
 </div>
 </div>
+<!-- Recurring Edit Modal -->
+<div id="recurring-edit-modal" class="modal" onclick="event.target===this && (this.style.display='none')">
+<div class="modal-content" style="max-width:800px; width:95%;">
+    <div id="recurring-edit-form-container"></div>
+</div>
+</div>
 <button id=install-btn>Install App</button>
 <script src="//www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="//www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -831,7 +841,7 @@ window.assignJob=function(a,b){if(a&&b){let j=rawJobs[a],upd={assigned_to:b,last
 
 function toggleArchive(){with(document){let a=getElementById('archive-section'),b=getElementById('toggle-archive-btn');a.style.display==='none'?(a.style.display='block',b.innerText='HIDE ARCHIVE'):(a.style.display='none',b.innerText='SHOW ARCHIVE')}}
 
-document.addEventListener('keydown',a=>{if(a.key==='Escape'){closeMap();with(document){['detailsModal','zone-modal','driver-manager-modal','location-picker-modal','recurring-modal'].forEach(b=>{let c=getElementById(b);c&&(c.style.display='none')});body.style.overflow=''}}else if(a.key==='Enter'){let b=a.target.tagName.toLowerCase();if(b==='textarea'||b==='button')return;with(document){let c=getElementById('detailsModal');if(c&&(c.style.display==='block'||c.style.display==='flex')){a.preventDefault();a.target.blur();return}if(getElementById('login-overlay').style.display!=='none'){attemptLogin();return}}let d=a.target.closest('#entry-panel')||a.target.closest('#group-pickup')||a.target.closest('#group-drop');d&&(a.preventDefault(),createJob())}});
+document.addEventListener('keydown',a=>{if(a.key==='Escape'){closeMap();with(document){['detailsModal','zone-modal','driver-manager-modal','location-picker-modal','recurring-modal','recurring-edit-modal'].forEach(b=>{let c=getElementById(b);c&&(c.style.display='none')});body.style.overflow=''}}else if(a.key==='Enter'){let b=a.target.tagName.toLowerCase();if(b==='textarea'||b==='button')return;with(document){let c=getElementById('detailsModal');if(c&&(c.style.display==='block'||c.style.display==='flex')){a.preventDefault();a.target.blur();return}if(getElementById('login-overlay').style.display!=='none'){attemptLogin();return}}let d=a.target.closest('#entry-panel')||a.target.closest('#group-pickup')||a.target.closest('#group-drop');d&&(a.preventDefault(),createJob())}});
 
 function toggleCat(cat) {
   const count = parseInt(document.getElementById('badge-' + cat).innerText) || 0;
@@ -1400,7 +1410,6 @@ function openRecurringSchedules() {
 }
 function renderRecurringSchedules() {
     const container = document.getElementById('recurring-list-container');
-    // For simplicity, we'll just fetch once and display a list. In a real app you'd listen.
     db.ref('recurring_schedules').once('value', snap => {
         const schedules = snap.val() || {};
         let html = '';
@@ -1408,15 +1417,18 @@ function renderRecurringSchedules() {
             let s = schedules[id];
             let next = s.next_generation ? new Date(s.next_generation).toLocaleString() : 'N/A';
             let status = s.active ? 'Active' : 'Inactive';
+            let pickupName = s.details?.name || 'No pickup';
+            let deliveryName = s.details?.delivery_name || 'No delivery';
+            let statusColor = s.active ? '#0f0' : '#f00';
             html += `
             <div style="background:var(--input-bg); padding:10px; border:1px solid var(--border); border-radius:4px;">
-                <div><strong>${s.details?.name || 'No name'}</strong> (${status})</div>
+                <div><strong>${pickupName}</strong> → <strong>${deliveryName}</strong> <span style="color:${statusColor};">(${status})</span></div>
                 <div>Next: ${next}</div>
-                <div>Pattern: ${s.pattern?.type || '?'} every ${s.pattern?.interval || 1}</div>
+                <div>Pattern: ${s.pattern?.type || '?'} every ${s.pattern?.interval || 1} ${s.pattern?.time ? `at ${s.pattern.time}` : ''}</div>
                 <div style="display:flex; gap:8px; margin-top:8px;">
                     <button class="btn-zone" onclick="editRecurring('${id}')">Edit</button>
                     <button class="btn-zone" onclick="toggleRecurringActive('${id}', ${!s.active})">${s.active ? 'Deactivate' : 'Activate'}</button>
-                    <button class="btn-zone" onclick="viewJobsFromRecurring('${id}')">View Jobs</button>
+                    <button class="btn-zone" onclick="deleteRecurring('${id}')">Delete</button>
                 </div>
             </div>`;
         }
@@ -1426,18 +1438,154 @@ function renderRecurringSchedules() {
 function toggleRecurringActive(id, active) {
     db.ref(`recurring_schedules/${id}/active`).set(active).then(() => renderRecurringSchedules());
 }
-function editRecurring(id) {
-    // For simplicity, just open a prompt for now; full edit would be more complex.
-    alert('Edit functionality would open a form with recurrence details.');
+function deleteRecurring(id) {
+    if(confirm('Are you sure you want to delete this recurring schedule? This action cannot be undone.')) {
+        db.ref(`recurring_schedules/${id}`).remove().then(() => renderRecurringSchedules());
+    }
 }
-function viewJobsFromRecurring(id) {
-    // Filter the main board to show jobs with this recurring_id
-    // We can implement by setting a filter or just highlighting.
-    // For now, we'll close modal and set a temporary filter.
-    document.getElementById('recurring-modal').style.display = 'none';
-    // We'll create a simple filter: we can add a temporary global filter variable.
-    // For simplicity, we'll just alert.
-    alert('Filter by recurring_id: ' + id);
+function editRecurring(id) {
+    db.ref(`recurring_schedules/${id}`).once('value', snap => {
+        const s = snap.val();
+        if (!s) return;
+        // Build edit form in recurring-edit-modal
+        const container = document.getElementById('recurring-edit-form-container');
+        const pattern = s.pattern || {};
+        const details = s.details || {};
+        const startDate = s.start_date ? new Date(s.start_date).toISOString().slice(0,10) : '';
+        const endDate = s.end_date ? new Date(s.end_date).toISOString().slice(0,10) : '';
+        const time = pattern.time || '';
+        const frequency = pattern.type || 'daily';
+        const interval = pattern.interval || 1;
+        const weeklyDays = pattern.days || [];
+        // Build driver options
+        let driverOptions = '<option value="Unassigned">Unassigned</option>';
+        customDrivers.forEach(d => { driverOptions += `<option value="${d}" ${details.assigned_to === d ? 'selected' : ''}>${d}</option>`; });
+        const weeklyChecked = (day) => weeklyDays.includes(day) ? 'checked' : '';
+        const html = `
+        <div class="flex jb ac mb-20">
+            <h2 class="modal-h2 m-0">EDIT RECURRING SCHEDULE</h2>
+            <button class="btn-cancel" onclick="document.getElementById('recurring-edit-modal').style.display='none'">CANCEL</button>
+        </div>
+        <div id="group-pickup-edit">
+            <div class="input-wrap mb-12"><input type="text" id="edit-name" value="${escapeHtml(details.name || '')}" placeholder="Pickup Business/Contact Name"></div>
+            <div class="flex-row"><div class="input-wrap f-2"><input id="edit-pickup" value="${escapeHtml(details.pickup_location || '')}" placeholder="Pickup Address"></div><div class="input-wrap f-1"><input id="edit-city-p" value="${escapeHtml(details.pickup_city || '')}" placeholder="City"></div></div>
+            <div class="flex-row"><div class="input-wrap f-1-5"><input id="edit-email-p" value="${escapeHtml(details.p_email || '')}" placeholder="Email"></div><div class="input-wrap f-1"><input id="edit-phone-p" value="${escapeHtml(details.p_phone || '')}" placeholder="Phone #" oninput="formatPhone(this)"></div></div>
+        </div>
+        <div class="input-wrap mb-12"><input id="edit-pkg" value="${escapeHtml(details.package_details || '')}" placeholder="Packages/Items/Dimensions"></div>
+        <div class="input-wrap mb-12"><input id="edit-po" value="${escapeHtml(details.po_number || '')}" placeholder="PO / Reference"></div>
+        <div class="input-wrap mb-12"><textarea id="edit-note" placeholder="Driver Notes">${escapeHtml(details.other_info || '')}</textarea></div>
+        <div id="group-drop-edit">
+            <div class="input-wrap mb-12"><input id="edit-drop-name" value="${escapeHtml(details.delivery_name || '')}" placeholder="Delivery Contact/Business Name"></div>
+            <div class="flex-row"><div class="input-wrap f-2"><input id="edit-drop" value="${escapeHtml(details.destination || '')}" placeholder="Delivery Address"></div><div class="input-wrap f-1"><input id="edit-city-d" value="${escapeHtml(details.delivery_city || '')}" placeholder="City"></div></div>
+            <div class="flex-row"><div class="input-wrap f-1-5"><input id="edit-email-d" value="${escapeHtml(details.d_email || '')}" placeholder="Email"></div><div class="input-wrap f-1"><input id="edit-phone-d" value="${escapeHtml(details.d_phone || '')}" placeholder="Phone #" oninput="formatPhone(this)"></div></div>
+        </div>
+        <select id="edit-driver" class="driver-select mb-12">${driverOptions}</select>
+        <div style="margin-bottom:12px;">
+            <div class="flex gap-10 mb-6">
+                <select id="edit-recur-frequency" class="driver-select" style="flex:1;" onchange="toggleWeeklyDaysEdit()">
+                    <option value="daily" ${frequency==='daily'?'selected':''}>Daily</option>
+                    <option value="weekly" ${frequency==='weekly'?'selected':''}>Weekly</option>
+                    <option value="monthly" ${frequency==='monthly'?'selected':''}>Monthly</option>
+                </select>
+                <input type="number" id="edit-recur-interval" value="${interval}" min="1" style="flex:1; min-width:60px;" placeholder="Interval">
+            </div>
+            <div id="edit-weekly-days" style="display:${frequency==='weekly'?'flex':'none'};" class="flex wrap gap-6 mb-6">
+                <label><input type="checkbox" value="Mon" ${weeklyChecked('Mon')}> Mon</label>
+                <label><input type="checkbox" value="Tue" ${weeklyChecked('Tue')}> Tue</label>
+                <label><input type="checkbox" value="Wed" ${weeklyChecked('Wed')}> Wed</label>
+                <label><input type="checkbox" value="Thu" ${weeklyChecked('Thu')}> Thu</label>
+                <label><input type="checkbox" value="Fri" ${weeklyChecked('Fri')}> Fri</label>
+                <label><input type="checkbox" value="Sat" ${weeklyChecked('Sat')}> Sat</label>
+                <label><input type="checkbox" value="Sun" ${weeklyChecked('Sun')}> Sun</label>
+            </div>
+            <div class="flex gap-10 mb-6">
+                <label style="flex:1; display:flex; flex-direction:column;">Start: <input type="date" id="edit-recur-start" class="glow-field" value="${startDate}" style="width:100%;"></label>
+                <label style="flex:1; display:flex; flex-direction:column;">End: <input type="date" id="edit-recur-end" class="glow-field" value="${endDate}" style="width:100%;"></label>
+            </div>
+            <div class="flex gap-10 mb-6">
+                <label style="flex:1; display:flex; flex-direction:column;">Time: <input type="time" id="edit-recur-time" class="glow-field" value="${time}" style="width:100%;"></label>
+            </div>
+        </div>
+        <div class="edit-btn-group"><button onclick="saveRecurringEdit('${id}')" class="btn-save">Save edits</button></div>
+        `;
+        container.innerHTML = html;
+        document.getElementById('recurring-edit-modal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    });
+}
+function toggleWeeklyDaysEdit() {
+    const freq = document.getElementById('edit-recur-frequency').value;
+    document.getElementById('edit-weekly-days').style.display = freq === 'weekly' ? 'flex' : 'none';
+}
+function saveRecurringEdit(id) {
+    const pickupName = document.getElementById('edit-name').value;
+    const pickupAddr = document.getElementById('edit-pickup').value;
+    const pickupCity = document.getElementById('edit-city-p').value;
+    const pickupEmail = document.getElementById('edit-email-p').value;
+    const pickupPhone = document.getElementById('edit-phone-p').value;
+    const deliveryName = document.getElementById('edit-drop-name').value;
+    const deliveryAddr = document.getElementById('edit-drop').value;
+    const deliveryCity = document.getElementById('edit-city-d').value;
+    const deliveryEmail = document.getElementById('edit-email-d').value;
+    const deliveryPhone = document.getElementById('edit-phone-d').value;
+    const pkg = document.getElementById('edit-pkg').value;
+    const po = document.getElementById('edit-po').value;
+    const notes = document.getElementById('edit-note').value;
+    const driver = document.getElementById('edit-driver').value;
+    const freq = document.getElementById('edit-recur-frequency').value;
+    const interval = parseInt(document.getElementById('edit-recur-interval').value) || 1;
+    const start = document.getElementById('edit-recur-start').value;
+    const end = document.getElementById('edit-recur-end').value;
+    const time = document.getElementById('edit-recur-time').value;
+    let days = [];
+    if (freq === 'weekly') {
+        document.querySelectorAll('#edit-weekly-days input:checked').forEach(cb => days.push(cb.value));
+    }
+    let pattern = { type: freq, interval: interval };
+    if (days.length) pattern.days = days;
+    if (time) pattern.time = time;
+    let startDate = start ? new Date(start).getTime() : Date.now();
+    let endDate = end ? new Date(end).getTime() : null;
+    let details = {
+        name: pickupName,
+        pickup_location: pickupAddr,
+        pickup_city: pickupCity,
+        p_email: pickupEmail,
+        p_phone: pickupPhone,
+        delivery_name: deliveryName,
+        destination: deliveryAddr,
+        delivery_city: deliveryCity,
+        d_email: deliveryEmail,
+        d_phone: deliveryPhone,
+        package_details: pkg,
+        po_number: po,
+        other_info: notes,
+        assigned_to: driver
+    };
+    let updates = {
+        details: details,
+        pattern: pattern,
+        start_date: startDate,
+        end_date: endDate,
+        active: true,
+        last_edited: firebase.database.ServerValue.TIMESTAMP
+    };
+    db.ref(`recurring_schedules/${id}`).update(updates).then(() => {
+        document.getElementById('recurring-edit-modal').style.display = 'none';
+        document.body.style.overflow = '';
+        renderRecurringSchedules();
+    }).catch(err => alert('Error: ' + err.message));
+}
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+        return c;
+    });
 }
 function computeNextGeneration(current, pattern) {
     let next = new Date(current);
@@ -1446,13 +1594,10 @@ function computeNextGeneration(current, pattern) {
     if (type === 'daily') {
         next.setDate(next.getDate() + interval);
     } else if (type === 'weekly') {
-        // Find next day from pattern.days (array of day names)
         let days = pattern.days || [];
         if (days.length === 0) {
-            // default to interval weeks
             next.setDate(next.getDate() + interval * 7);
         } else {
-            // simplistic: find next day in same week, else next week
             const dayMap = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
             let currentDay = next.getDay();
             let targetDays = days.map(d => dayMap[d]).sort((a,b)=>a-b);
@@ -1465,16 +1610,22 @@ function computeNextGeneration(current, pattern) {
                 }
             }
             if (!found) {
-                // next week first day
                 next.setDate(next.getDate() + (7 - currentDay + targetDays[0]));
             }
-            // apply interval weeks
             if (interval > 1) {
                 next.setDate(next.getDate() + (interval-1)*7);
             }
         }
     } else if (type === 'monthly') {
         next.setMonth(next.getMonth() + interval);
+    }
+    // set the desired time from pattern.time
+    let timeStr = pattern.time || '09:00';
+    let [hour, minute] = timeStr.split(':').map(Number);
+    if (!isNaN(hour) && !isNaN(minute)) {
+        next.setHours(hour, minute, 0, 0);
+    } else {
+        next.setHours(9, 0, 0, 0);
     }
     return next.getTime();
 }
@@ -1487,7 +1638,6 @@ function checkAndGenerateRecurringJobs() {
             let s = schedules[id];
             if (!s.active) continue;
             if (s.next_generation && s.next_generation <= now) {
-                // Generate a new job key
                 const newJobKey = db.ref('jobs').push().key;
                 let jobDetails = s.details || {};
                 let job = {
@@ -1534,12 +1684,14 @@ function createRecurringSchedule() {
         let interval = parseInt(getElementById('f-recur-interval').value) || 1;
         let start = getElementById('f-recur-start').value;
         let end = getElementById('f-recur-end').value;
+        let time = getElementById('f-recur-time').value;
         let days = [];
         if (freq === 'weekly') {
             document.querySelectorAll('#weekly-days input:checked').forEach(cb => days.push(cb.value));
         }
         let pattern = { type: freq, interval: interval };
         if (days.length) pattern.days = days;
+        if (time) pattern.time = time;
         let startDate = start ? new Date(start).getTime() : Date.now();
         let endDate = end ? new Date(end).getTime() : null;
         let details = {
@@ -1558,13 +1710,28 @@ function createRecurringSchedule() {
             other_info: notes,
             assigned_to: driver
         };
+        // compute first next_generation with the chosen time
+        let firstGen = new Date(startDate);
+        let [hour, minute] = time ? time.split(':').map(Number) : [9,0];
+        if (!isNaN(hour) && !isNaN(minute)) firstGen.setHours(hour, minute, 0, 0);
+        else firstGen.setHours(9,0,0,0);
+        if (firstGen.getTime() < Date.now()) {
+            // find next occurrence
+            let temp = firstGen.getTime();
+            let nextGen = temp;
+            let maxLoop = 60;
+            while (nextGen < Date.now() && maxLoop-- > 0) {
+                temp = computeNextGeneration(temp, pattern);
+                nextGen = temp;
+            }
+            firstGen = new Date(nextGen);
+        }
         let schedule = {
-            customer_uid: null, // not captured
             details: details,
             pattern: pattern,
             start_date: startDate,
             end_date: endDate,
-            next_generation: startDate,
+            next_generation: firstGen.getTime(),
             active: true,
             created_at: firebase.database.ServerValue.TIMESTAMP
         };
