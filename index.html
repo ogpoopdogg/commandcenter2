@@ -1926,7 +1926,8 @@ function setupScheduledPlaceholder() {
     if (!placeholder) {
         placeholder = document.createElement('span');
         placeholder.className = 'datetime-placeholder';
-        placeholder.innerHTML = '📅 Schedule';
+      placeholder.style.fontWeight = 'bold';        
+      placeholder.innerHTML = '📅 Schedule';
         wrap.appendChild(placeholder);
     }
     function updatePlaceholder() {
