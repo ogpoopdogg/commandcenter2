@@ -41,7 +41,7 @@ header { padding: 16px 24px; background: var(--header-bg); border-bottom: 1px so
 #map-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: #000; }
 #map { width: 100%; height: 100%; }
 .close-map { position: fixed; top: 20px; right: 20px; z-index: 3005; background: #b71c1c; color: #fff; border: none; width: 140px; height: 40px; font-weight: 700; border-radius: 6px; cursor: pointer; box-shadow: var(--shadow-soft); display: flex; align-items: center; justify-content: center; }
-.driver-map-label { color: #00ff00 !important; font-weight: 700; text-shadow: 0 0 2px #000; }
+.driver-map-label { text-shadow: 0 0 8px currentColor; font-weight: bold; }
 #route-list { position: absolute; top: 130px; left: 20px; width: 280px; max-height: calc(100% - 150px); overflow-y: auto; background: rgba(0,0,0,0.9); border: 1px solid #333; border-radius: 6px; padding: 15px; z-index: 3001; display: none; box-shadow: var(--shadow-soft); }
 #install-btn { display: none; background: var(--pro-blue); color: #fff; border: none; padding: 14px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase; position: absolute; right: 15px; bottom: 15px; z-index: 1002; }
 .glow-field { border: 1px solid var(--border); transition: border-color 0.3s; }
@@ -430,7 +430,7 @@ body.light-mode #f-recurring-btn.active {
 /* map legend styles */
 #map-legend {
     position: absolute;
-    top: 10px;
+    top: 60px;
     left: 10px;
     z-index: 3002;
     background: rgba(0,0,0,0.75);
@@ -704,7 +704,7 @@ function toggleDispatchForm() {
 <div id=map-driver-head class="none abs" style="top:15px;right:60px;left:auto;z-index:3001;background:#000;border:1px solid #fff;padding:6px 12px;font-weight:700;font-size:16px;box-shadow:var(--shadow-soft);white-space:nowrap;"></div>
 <div id=route-list></div>
 <div id=map></div>
-<div id="map-legend" style="position: absolute; top: 10px; left: 10px; z-index: 3002; background: rgba(0,0,0,0.75); padding: 8px 12px; border-radius: 8px; font-size: 12px; max-height: 80%; overflow-y: auto; max-width: 260px; backdrop-filter: blur(6px); display: flex; flex-direction: column; gap: 6px; pointer-events: auto; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);"></div>
+<div id="map-legend" style="position: absolute; top: 60px; left: 10px; z-index: 3002; background: rgba(0,0,0,0.75); padding: 8px 12px; border-radius: 8px; font-size: 12px; max-height: 80%; overflow-y: auto; max-width: 260px; backdrop-filter: blur(6px); display: flex; flex-direction: column; gap: 6px; pointer-events: auto; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);"></div>
 </div>
 <button id=toggle-archive-btn class="primary w-100 mt-15" onclick="toggleArchive()" style="border:1px solid var(--border);">SHOW ARCHIVE</button>
 <div id=archive-section class=mt-30 style="padding:15px;border:1px solid rgba(255,255,255,0.1);box-shadow:var(--shadow-soft);transition:opacity 0.3s;display:none;">
@@ -956,7 +956,9 @@ function openMap(a){with(document){
     ar&&(ar.style.display=getElementById('toggle-archive-btn').innerText.includes('HIDE')?'block':'none');
     let sl=getElementById("selected-driver-label");
     sl&&(sl.style.display="none");
-    renderData()
+    renderData();
+    // Show legend when main map is active
+    document.getElementById('map-legend').style.display = 'flex';
   }
   getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.remove('driver-map-inline'); window.innerWidth>=1024&&!a&&getElementById('map-modal').classList.add('fullscreen-map');
   getElementById('route-time-badge').style.display='none';
@@ -987,12 +989,16 @@ function openMap(a){with(document){
     updateMapLegend();
     e&&!mapBoundsInitialized&&(mainMap.fitBounds(d),mapBoundsInitialized=!0,google.maps.event.addListenerOnce(mainMap,'idle',()=>mainMap.getZoom()>16&&mainMap.setZoom(16)))
   })
+  // Ensure legend is visible if no driver filter
+  if(currentDriverFilter===null) document.getElementById('map-legend').style.display = 'flex';
 }}
 
 function viewDriverRoute(a,b){b&&b.stopPropagation();mapBoundsInitialized=!1;mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);currentDriverFilter=a;with(document){
   ensureMainMap();
   getElementById('map-modal').style.display='block'; getElementById('map-modal').classList.add('driver-map-inline'); window.innerWidth>=1024&&getElementById('map-modal').classList.remove('fullscreen-map');
-  renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100)
+  renderData();setTimeout(()=>google.maps.event.trigger(mainMap,"resize"),100);
+  // Hide legend in driver view
+  document.getElementById('map-legend').style.display = 'none';
 }}
 
 function closeMap(){mapBoundsInitialized=!1;with(document){if(window.innerWidth>=1024){getElementById('map-modal').classList.remove('fullscreen-map');openMap(!0)}else{getElementById('map-modal').style.display='none';getElementById('map-driver-head').style.display='none';mapAllListener&&(db.ref('driver_locations').off('value',mapAllListener),mapAllListener=null);activePolyline&&(activePolyline.setMap(null),activePolyline=null);for(let a in mapMarkers)mapMarkers[a]&&mapMarkers[a].setMap(null);mapMarkers={};document.getElementById('reset-driver-view-btn').style.display = 'none';}} document.getElementById('map-modal').classList.remove('driver-map-inline'); }
@@ -1941,11 +1947,19 @@ function updateMapLegend() {
         const loc = driverLocationsData[driver];
         if (!loc) continue;
         const color = getDriverColor(driver);
-        const time = loc.gps_timestamp ? formatTime12(loc.gps_timestamp) : (loc.timestamp ? formatTime12(loc.timestamp) : 'unknown');
+        let timestamp = loc.gps_timestamp ? loc.gps_timestamp : (loc.timestamp ? loc.timestamp : null);
+        let timeStr = timestamp ? formatTime12(timestamp) : 'unknown';
+        let dateStr = '';
+        if (timestamp) {
+            let d = new Date(timestamp);
+            if (!isNaN(d.getTime())) {
+                dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+        }
         html += `<div class="legend-item" onclick="zoomToDriver('${driver}')">
                     <span class="legend-dot" style="background-color: ${color}; box-shadow: 0 0 6px ${color};"></span>
                     <span class="legend-name">${driver}</span>
-                    <span class="legend-time">${time}</span>
+                    <span class="legend-time">${timeStr} ${dateStr ? dateStr : ''}</span>
                  </div>`;
     }
     legendDiv.innerHTML = html || '<div style="opacity:0.6;">No drivers online</div>';
