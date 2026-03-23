@@ -782,7 +782,7 @@ function toggleDispatchForm() {
 <div class=modal-content>
 <h2 class=modal-h2>Settings</h2>
 <div class="flex gap-10 mb-15">
-<button class="route-btn" onclick="openZoneManager()" style="background:var(--header-bg);color:var(--accent);">Zone Manager</button>
+<button class="route-btn" onclick="openZoneManager()" style="background:var(--header-bg);color:var(--accent);">Driver Schedules</button>
 <button class="route-btn" onclick="openRecurringSchedules()" style="background:var(--header-bg);color:#ff0;">Recurring Schedules</button>
 </div>
 <div id=driver-list-container class="flex col gap-10 mb-15"></div>
@@ -1201,18 +1201,7 @@ window.innerWidth>=1024&&openMap(!0);with(document){getElementById('login-overla
         <div>${g.text}</div>
       </div>`});e.scrollTop=e.scrollHeight});db.ref('drivers').on('value',d=>{if(d.exists()){let e=d.val()??[];customDrivers=[];driverColors={};e.forEach(f=>{if(typeof f==='string'){customDrivers.push(f)}else if(f&&f.name){customDrivers.push(f.name);f.color&&(driverColors[f.name]=f.color)}})}else{customDrivers=[]}updateAllDriverDropdowns();if(getElementById('zone-modal').style.display==='block'){if(getElementById('zone-schedule-view').style.display!=='none')renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()}!isFirstLoad&&renderData();updateMapLegend();updateDriverMarkerColors()});db.ref("address_lookup").on("value",d=>addressData=d.val()??{});let e=Date.now()-(604800000);db.ref("jobs").orderByChild("timestamp").startAt(e).on("value",d=>{rawJobs=d.val()??{};renderData()});db.ref("driver_locations").on("value",d=>{driverLocationsData=d.val()??{};renderData();updateMapLegend();updateDriverMarkerColors()});db.ref("driver_zones").on("value",d=>{driverZones=d.val()??{};renderZoneRoster();if(getElementById('zone-map-view').style.display!=='none')renderZoneMapInterface()});
 // Periodic reschedule check every hour
-setInterval(() => {
-    if (rawJobs) {
-        Object.keys(rawJobs).forEach(jobId => {
-            let job = rawJobs[jobId];
-            if (job.status !== 'completed') {
-                autoScheduleJob(jobId);
-            }
-        });
-    }
-}, 60 * 60 * 1000);
 // NEW: per‑minute check for scheduled jobs
-setInterval(checkScheduledJobs, 60 * 1000);
 }}else{alert("ACCESS DENIED");firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex'}}).catch(err=>{console.error(err);alert("Error checking role: "+err.message);firebase.auth().signOut();document.getElementById('login-overlay').style.display='flex';})}else{document.getElementById('login-overlay').style.display='flex';}});
 function updateAllDriverDropdowns(){with(document){let a=b=>{let c=b?'<option value=Unassigned selected disabled hidden>Assign Driver</option><option value=Unassigned>UNASSIGNED</option>':'';customDrivers.forEach(d=>c+=`<option value="${d}">${d}</option>`);return c},b=getElementById('f-driver').value;getElementById('f-driver').innerHTML=a(!0);if(customDrivers.includes(b)||b==='Unassigned')getElementById('f-driver').value=b;let c=getElementById('af-driver').value;getElementById('af-driver').innerHTML='<option value="">All</option><option value=Unassigned>Unassigned</option>'+customDrivers.map(d=>`<option value="${d}">${d}</option>`).join('');getElementById('af-driver').value=c}}
 
@@ -1841,8 +1830,6 @@ function deleteJob(a){
 }
 
 function renderData(){with(document){
-    // Generate recurring jobs first
-    checkAndGenerateRecurringJobs();
     let l=getElementById('filter-chk-pickups')?.checked!==!1,m=getElementById('filter-chk-deliveries')?.checked!==!1,n=getElementById('filter-chk-transit')?.checked!==!1,p=getElementById('af-driver')?.value,q=getElementById('af-name')?.value.toLowerCase(),r=getElementById('af-city')?.value.toLowerCase(),s=getElementById('af-manual-search')?.value.toLowerCase(),t={},u=0,v=0,w=0,x=0,y=0,dndAlertCount=0,z={},driversWithNotes={},scheduledCount=0; // added scheduledCount
 let curHasJobs=currentDriverFilter?Object.values(rawJobs).some(j=>j.assigned_to===currentDriverFilter&&(j.status==='pending_pickup'||j.status==='pending_delivery'||j.status==='in_transit')):!1;if(currentDriverFilter&&driverLocationsData[currentDriverFilter]&&!curHasJobs){driverLocationsData[currentDriverFilter].route_order=[];driverLocationsData[currentDriverFilter].route_string="";driverLocationsData[currentDriverFilter].total_duration="";driverLocationsData[currentDriverFilter].active_route="";}if(currentDriverFilter&&driverLocationsData[currentDriverFilter]){let A=driverLocationsData[currentDriverFilter];if(A.route_order&&Array.isArray(A.route_order))A.route_order.forEach((B,C)=>t[B]=C+1);else if(A.route_string)A.route_string.split(' | ').forEach(B=>{let C=B.indexOf('. ');if(C>-1)t[B.substring(C+2).trim()]=+(B.substring(0,C))})}
 let a=getElementById("list-pickups"),b=getElementById("list-deliveries"),c=getElementById("list-transit"),d=getElementById("list-depot"),e=getElementById("driver-stats-panel"),f=getElementById("list-archive"),g=getElementById("list-dnd"),h=getElementById("unassigned-immediate-list"),scheduledList=getElementById("list-scheduled");
@@ -1954,7 +1941,7 @@ if(mapEditorBtn){
   }
 }}}
 
-function renderZoneMapInterface(){if(!zoneMap)return;for(let a in zonePolygons){if(Array.isArray(zonePolygons[a]))zonePolygons[a].forEach(b=>b.setMap(null))}zonePolygons={};customDrivers.forEach((a)=>{let b=getDriverColor(a),c=driverZones[a]||{};zonePolygons[a]=[];Object.values(c).forEach(d=>{if(d.paths){d.paths.forEach(e=>{let f=new google.maps.Polygon({paths:e,map:zoneMap,fillColor:b,fillOpacity:0.3,strokeColor:b,strokeWeight:2});zonePolygons[a].push(f)})}})});let a='';customDrivers.forEach((b)=>{let c=getDriverColor(b);a+=`<button class=zone-driver-btn onclick="selectDriverForMap('${b}', '${c}')" style="color:${c}">${b}</button>`});document.getElementById('zone-driver-grid').innerHTML=a}
+function renderZoneMapInterface(){if(!zoneMap)return;for(let a in zonePolygons){if(Array.isArray(zonePolygons[a]))zonePolygons[a].forEach(b=>b.setMap(null))}zonePolygons={};customDrivers.forEach((a)=>{let b=getDriverColor(a),c=driverZones[a]||{};zonePolygons[a]=[];Object.values(c).forEach(d=>{if(d.paths){d.paths.forEach(e=>{let f=new google.maps.Polygon({paths:e,map:zoneMap,fillColor:b,fillOpacity:0.3,strokeColor:b,strokeWeight:2});zonePolygons[a].push(f)})})}});let a='';customDrivers.forEach((b)=>{let c=getDriverColor(b);a+=`<button class=zone-driver-btn onclick="selectDriverForMap('${b}', '${c}')" style="color:${c}">${b}</button>`});document.getElementById('zone-driver-grid').innerHTML=a}
 
 function selectDriverForMap(a,b){with(document){let c=getElementById('active-driver-zone-panel'),d=driverZones[a]||{},e=Object.keys(d);if(e.length===0){c.innerHTML=`<div style="text-align:center;color:#777;font-size:12px;">No zones created for ${a}. Go to Schedule view to add one.</div>`}else{let f=`<div style="font-weight:700;color:${b};text-transform:uppercase;margin-bottom:8px;">${a} ZONES</div>`;e.forEach(g=>{let h=d[g];f+=`
 <div class=active-zone-row>
