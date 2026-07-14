@@ -2730,7 +2730,7 @@ function initZoneMap(){with(document){
   zoneMap=new google.maps.Map(getElementById("zone-map"),{center:{lat:49.8425,lng:-99.9497},zoom:12,gestureHandling:"greedy",styles:mapStyles});
   drawingManager=new google.maps.drawing.DrawingManager({drawingControl:!1,polygonOptions:{editable:!0}});
   drawingManager.setMap(zoneMap);
-  google.maps.event.addListener(drawingManager,'overlaycomplete',function(a){if(a.type==='polygon'&&activeDrawingDriver&&activeDrawingZoneId){let b=a.overlay,c=b.getPath(),d=!1;for(let e in zonePolygons){if(e===activeDrawingDriver)continue;let f=zonePolygons[e];for(let g=0;g<f.length;g++){let h=f[g];for(let i=0;i<c.getLength();i++){if(google.maps.geometry.poly.containsLocation(c.getAt(i),h))d=!0}let j=h.getPath();for(let i=0;i<j.getLength();i++){if(google.maps.geometry.poly.containsLocation(j.getAt(i),b))d=!0}}}if(d){alert("Overlaps another driver's boundary! Please re-draw without overlapping.");a.overlay.setMap(null);return}let e=c.getArray().map(f=>({lat:f.lat(),lng:f.lng()})),f=[];let g=driverZones[activeDrawingDriver]&&driverZones[activeDrawingDriver][activeDrawingZoneId];if(g&&g.paths)f=g.paths;f.push(e);db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(f);a.overlay.setMap(null);drawingManager.setDrawingMode(null);activeDrawingDriver=null;activeDrawingZoneId=null;getElementById('active-driver-zone-panel').style.display='none';renderZoneMapInterface()}});
+  google.maps.event.addListener(drawingManager,'overlaycomplete',function(a){if(a.type==='polygon'&&activeDrawingDriver&&activeDrawingZoneId){let b=a.overlay,c=b.getPath(),d=!1;for(let e in zonePolygons){if(e===activeDrawingDriver)continue;let f=zonePolygons[e];for(let g=0;g<f.length;g++){let h=f[g];for(let i=0;i<c.getLength();i++){if(google.maps.geometry.poly.containsLocation(c.getAt(i),h))d=!0}let j=h.getPath();for(let i=0;i<j.getLength();i++){if(google.maps.geometry.poly.containsLocation(j.getAt(i),b))d=!0}}}if(d){alert("Overlaps another driver's boundary! Please re-draw without overlapping.");a.overlay.setMap(null);return}let e=c.getArray().map(f=>({lat:f.lat(),lng:f.lng()})),f=[];let g=driverZones[activeDrawingDriver]&&driverZones[activeDrawingDriver][activeDrawingZoneId];if(g&&g.paths)f=g.paths;f.push(e);db.ref(`driver_zones/${activeDrawingDriver}/${activeDrawingZoneId}/paths`).set(f);a.overlay.setMap(null);drawingManager.setDrawingMode(null);activeDrawingDriver=null;activeDrawingZoneId=null;clearDrawHighlight();getElementById('active-driver-zone-panel').style.display='none';renderZoneMapInterface()}});
   let searchBtn = document.getElementById('zone-search-btn');
   let searchBar = document.getElementById('zone-search-bar');
   if(searchBtn && searchBar){
@@ -2786,7 +2786,7 @@ function selectDriverForMap(a,b){with(document){let c=getElementById('active-dri
 <div class=active-zone-row>
 <div class=active-zone-label>${h.label||'Unnamed Zone'}</div>
 <div style="display:flex;gap:5px;">
-<button class=btn-zone onclick="drawZoneFor('${a}', '${g}', '${b}')">DRAW</button>
+<button class="btn-zone draw-zone-btn" data-driver="${a}" data-zone="${g}" onclick="drawZoneFor('${a}', '${g}', '${b}')">DRAW</button>
 <button class=btn-zone onclick="clearZoneFor('${a}', '${g}')">CLEAR</button>
 </div>
 </div>`});c.innerHTML=f}c.style.display='block'}}
@@ -2794,34 +2794,53 @@ function addZone(a){let b=db.ref('driver_zones/'+a).push();b.set({label:'New Zon
 function deleteZone(a,b){if(confirm('Delete this zone?')){db.ref(`driver_zones/${a}/${b}`).remove()}}
 function toggleDay(a,b,c){let d=driverZones[a][b]||{},e=d.days||[];if(e.includes(c))e=e.filter(f=>f!==c);else e.push(c);db.ref(`driver_zones/${a}/${b}/days`).set(e)}
 function saveZone(a,b,c,d){db.ref(`driver_zones/${a}/${b}/${c}`).set(d)}
-// FIX: Updated drawZoneFor to ensure drawing manager is properly set and polygon visible
+// Helper to clear draw highlight
+function clearDrawHighlight() {
+    document.querySelectorAll('.draw-zone-btn').forEach(btn => btn.classList.remove('active-draw'));
+}
+// FIX: Updated drawZoneFor to properly engage polygon drawing with visual feedback
 function drawZoneFor(a,b,c){
     if (!zoneMap) { alert('Map not initialized. Please open the zone map first.'); return; }
-    // Ensure drawingManager is attached to the map
+    // Clear any previous drawing mode and highlights
+    drawingManager.setDrawingMode(null);
+    clearDrawHighlight();
+    // Ensure drawing manager is attached to the map
     drawingManager.setMap(zoneMap);
-    // Trigger a resize to ensure map is ready
+    // Trigger resize to ensure map is ready
     google.maps.event.trigger(zoneMap, 'resize');
     // Set polygon options with visible stroke and fill
     drawingManager.setOptions({
         polygonOptions: {
             fillColor: c,
             fillOpacity: 0.3,
-            strokeWeight: 2,
+            strokeWeight: 3,
             strokeColor: c,
             editable: true,
             clickable: true,
             zIndex: 100
         }
     });
-    // Set drawing mode
-    drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    // Set drawing mode to polygon after a short delay to let map settle
+    setTimeout(() => {
+        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    }, 100);
     activeDrawingDriver = a;
     activeDrawingZoneId = b;
-    // Notify user
+    // Highlight the clicked button
+    let btns = document.querySelectorAll(`.draw-zone-btn[data-driver="${a}"][data-zone="${b}"]`);
+    btns.forEach(btn => btn.classList.add('active-draw'));
     let zoneLabel = driverZones[a]?.[b]?.label || 'Unnamed Zone';
     document.getElementById('active-driver-zone-panel').innerHTML = 
-        `<div style="color:${c}; font-weight:700; text-align:center; padding:8px;">Drawing zone: ${zoneLabel} (click map to start polygon)</div>`;
+        `<div style="color:${c}; font-weight:700; text-align:center; padding:8px;">✏️ Drawing zone: ${zoneLabel} (click map to start polygon)</div>
+         <div style="text-align:center; padding:4px;"><button class="btn-zone" onclick="cancelDrawing()" style="color:#ff8c00;">Cancel</button></div>`;
     document.getElementById('active-driver-zone-panel').style.display = 'block';
+}
+function cancelDrawing() {
+    drawingManager.setDrawingMode(null);
+    clearDrawHighlight();
+    activeDrawingDriver = null;
+    activeDrawingZoneId = null;
+    document.getElementById('active-driver-zone-panel').style.display = 'none';
 }
 function clearZoneFor(a,b){if(confirm('Clear map area for this zone?')){db.ref(`driver_zones/${a}/${b}/paths`).remove();setTimeout(()=>selectDriverForMap(a,getDriverColor(a)),200)}}
 async function requestWakeLock(){try{if('wakeLock'in navigator){wakeLock=await navigator.wakeLock.request('screen')}}catch(a){}}
