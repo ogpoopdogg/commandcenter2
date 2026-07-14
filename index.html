@@ -477,6 +477,206 @@ body.light-mode #f-recurring-btn.active {
     opacity: 0.8;
     white-space: nowrap;
 }
+/* Smart Dispatch panel styles */
+.smart-dispatch-panel {
+    padding: 15px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+.smart-dispatch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.smart-dispatch-header .title {
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.smart-dispatch-header .badge {
+    background: var(--accent);
+    color: #000;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 12px;
+}
+.dispatch-job-card {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 12px 15px;
+    border-left: 4px solid #555;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+}
+.dispatch-job-card.assigned {
+    border-left-color: var(--active-green);
+    animation: pulse-green-btn 1s ease-out;
+    opacity: 1;
+    transform: scale(1);
+}
+.dispatch-job-card.assigned.fade-out {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.5s, transform 0.5s;
+    max-height: 0;
+    padding: 0 15px;
+    margin: 0;
+    overflow: hidden;
+}
+.dispatch-job-card .job-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+.dispatch-job-card .job-name {
+    font-weight: 600;
+    color: var(--text);
+}
+.dispatch-job-card .job-location {
+    font-size: 11px;
+    color: #aaa;
+}
+.dispatch-job-card .suggestion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--input-bg);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.dispatch-job-card .suggestion .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dispatch-job-card .suggestion .rationale {
+    font-weight: 400;
+    color: #aaa;
+    font-size: 11px;
+    margin-left: 4px;
+}
+.dispatch-job-card .assign-btn {
+    background: var(--active-green);
+    color: #000;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.dispatch-job-card .assign-btn:hover {
+    background: #16a34a;
+}
+.dispatch-job-card .assign-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+/* Toast */
+#toast-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    width: 100%;
+    pointer-events: none;
+}
+.toast {
+    background: var(--modal-bg);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-soft);
+    pointer-events: auto;
+    color: var(--text);
+    font-size: 14px;
+    animation: slideIn 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.toast .toast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.toast .toast-body {
+    font-weight: 400;
+}
+.toast .toast-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.toast .toast-actions button {
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+.toast .toast-actions .undo-btn {
+    background: #b71c1c;
+    border-color: #b71c1c;
+    color: #fff;
+}
+.toast .toast-actions .undo-all-btn {
+    background: #ff8c00;
+    border-color: #ff8c00;
+    color: #000;
+}
+.toast .toast-actions .expand-btn {
+    background: transparent;
+    border: 1px solid #666;
+}
+.toast .toast-details {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.toast .toast-details .detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+.toast .toast-details .detail-item .undo-individual {
+    background: #b71c1c;
+    border: none;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -668,7 +868,17 @@ function toggleDispatchForm() {
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-deliveries checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> Deliveries</label>
 <label class="flex ac gap-10 pointer"><input type=checkbox id=filter-chk-transit checked onchange="renderData()" style="width:auto;margin:0;padding:0;"> In Transit</label>
 </div>
-<div id=unassigned-immediate-list style="padding:15px;display:flex;flex-direction:column;gap:10px;width:100%;box-sizing:border-box;"></div>
+<!-- Smart Dispatch Panel -->
+<div id="smart-dispatch-panel" class="smart-dispatch-panel">
+  <div class="smart-dispatch-header">
+    <div class="title">
+      <span>🚀 SMART DISPATCH</span>
+      <span id="dispatch-badge" class="badge">0</span>
+    </div>
+    <button id="assign-all-optimized-btn" class="primary" style="width:auto; padding:8px 16px; font-size:12px; background:var(--active-green); color:#000; border:1px solid var(--active-green);">Assign All Optimized</button>
+  </div>
+  <div id="unassigned-immediate-list" style="display:flex;flex-direction:column;gap:10px;width:100%;box-sizing:border-box;"></div>
+</div>
 <div class=archive-column>
 <button id=btn-pickups class=cat-btn style="color:var(--archive-orange);" onclick="toggleCat('pickups')"><span>Pickups</span><span id=badge-pickups class=cat-badge>0</span></button>
 <div id=list-pickups></div>
@@ -808,6 +1018,8 @@ function toggleDispatchForm() {
 </div>
 </div>
 <button id=install-btn>Install App</button>
+<!-- Toast Container -->
+<div id="toast-container"></div>
 <script src="//www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="//www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="//www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1777,7 +1989,8 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
         if(I.status==='pending_pickup')G.push({...I,t:'pickup',id:H});
         else if(I.status==='pending_delivery')G.push({...I,t:'drop',id:H})
     }
-});let H=new google.maps.Geocoder(),I=new Set();G.forEach((J,K)=>{let L=`${J.t==='pickup'?J.pickup_location:J.destination}, ${J.city||''}`,M=J.t==='pickup'?J.name:J.delivery_name,N=t[J.id]||t[`${M} ${J.t==='pickup'?J.pickup_location:J.destination}`],O="";if(!I.has(M)){O=N?`${N}. ${M}`:M;I.add(M)}let P=`job_${K}`;mapMarkers[P]&&mapMarkers[P].setMap(null);let Q=R=>mapMarkers[P]=new google.maps.Marker({map:mainMap,position:R,label:O?{text:O,color:"#00b32d",fontWeight:"bold",fontSize:"12px",className:"driver-map-label"}:null,icon:{path:google.maps.SymbolPath.CIRCLE,scale:5,fillColor:'red',fillOpacity:1,strokeWeight:1,strokeColor:'white',labelOrigin:new google.maps.Point(0,K%2===0?-15:15)}});if(J.lat&&J.lng)Q({lat:parseFloat(J.lat),lng:parseFloat(J.lng)});else H.geocode({'address':L},(R,S)=>{if(S==='OK')Q(R[0].geometry.location)})});if(!mapBoundsInitialized){let J=new google.maps.LatLngBounds();F.forEach(K=>J.extend(K));mainMap.fitBounds(J);mapBoundsInitialized=!0}}else if(!activePolyline)mainMap.setCenter(E)}}let A=getElementById('f-driver').options;for(let B=0;B<A.length;B++)if(!['Unassigned','Assign Driver'].includes(A[B].value))z[A[B].value]={p:0,d:0};let B=Object.entries(rawJobs);if(currentDriverFilter)B.sort((C,D)=>(t[C[0]]||999)-(t[D[0]]||999));else B.reverse();B.forEach(([C,D])=>{
+});let H=new google.maps.Geocoder(),I=new Set();G.forEach((J,K)=>{let L=`${J.t==='pickup'?J.pickup_location:J.destination}, ${J.city||''}`,M=J.t==='pickup'?J.name:J.delivery_name,N=t[J.id]||t[`${M} ${J.t==='pickup'?J.pickup_location:J.destination}`],O="";if(!I.has(M)){O=N?`${N}. ${M}`:M;I.add(M)}let P=`job_${K}`;mapMarkers[P]&&mapMarkers[P].setMap(null);let Q=R=>mapMarkers[P]=new google.maps.Marker({map:mainMap,position:R,label:O?{text:O,color:"#00b32d",fontWeight:"bold",fontSize:"12px",className:"driver-map-label"}:null,icon:{path:google.maps.SymbolPath.CIRCLE,scale:5,fillColor:'red',fillOpacity:1,strokeWeight:1,strokeColor:'white',labelOrigin:new google.maps.Point(0,K%2===0?-15:15)}});if(J.lat&&J.lng)Q({lat:parseFloat(J.lat),lng:parseFloat(J.lng)});else H.geocode({'address':L},(R,S)=>{if(S==='OK')Q(R[0].geometry.location)})});if(!mapBoundsInitialized){let J=new google.maps.LatLngBounds();F.forEach(K=>J.extend(K));mainMap.fitBounds(J);mapBoundsInitialized=!0}}else if(!activePolyline)mainMap.setCenter(E)}}let A=getElementById('f-driver').options;for(let B=0;B<A.length;B++)if(!['Unassigned','Assign Driver'].includes(A[B].value))z[A[B].value]={p:0,d:0};let B=Object.entries(rawJobs);if(currentDriverFilter)B.sort((C,D)=>(t[C[0]]||999)-(t[D[0]]||999));else B.reverse();let unassignedJobs = []; // collect unassigned jobs for smart dispatch
+B.forEach(([C,D])=>{
     if (D.scheduled_time && D.scheduled_time > Date.now() && D.status !== 'completed') {
         if (currentDriverFilter && D.assigned_to === currentDriverFilter) {
             let card = createElement("div");
@@ -1799,7 +2012,91 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
             return;
         }
     }
-    if(currentDriverFilter&&D.assigned_to!==currentDriverFilter)return;let E=((D.other_info||"")+" "+(D.job_history||"")+" "+(D.status||"")).toLowerCase(),F=E.includes("dnd")||E.includes("dnp"),G=(D.pickup_city||"")+" "+(D.delivery_city||"")+" "+(D.city||""),H=C+'_'+D.status,I=!1;!seenJobs[H]&&(seenJobs[H]=!0,!isFirstLoad&&(I=!0));if(D.driver_edited_note&&D.status!=='completed'&&!F){w++;if(D.assigned_to&&D.assigned_to!=='Unassigned')driversWithNotes[D.assigned_to]=!0;}if(D.status==='completed'){if(new Date(D.completed_at||D.timestamp).toDateString()!==new Date().toDateString())return;if(p&&D.assigned_to!==p)return;if(q&&!(D.name.toLowerCase().includes(q)||D.delivery_name.toLowerCase().includes(q)))return;if(r&&!G.toLowerCase().includes(r))return;if(s&&!(JSON.stringify(D).toLowerCase().includes(s)))return;let J=createElement("div");J.className="history-item";J.onclick=()=>viewDetails(C);J.setAttribute("draggable","true");J.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };Object.assign(J.style,{cursor:"pointer",borderLeft:"4px solid #333",opacity:"0.7"});J.innerHTML=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:5px;"><span style="font-weight:400;color:#555;text-decoration:line-through;font-size:11px;">${D.assigned_to||'Unassigned'}</span><span style="font-size:16px;color:#00b32d;font-weight:400;text-align:center;">DONE</span><span style="font-size:10px;color:#888;text-align:right;font-weight:400;">${formatTime12(D.completed_at||D.timestamp)}</span></div><div style="font-size:11px;color:gold;font-weight:300;margin-bottom:10px;white-space:normal;word-wrap:break-word;line-height:1.4;">P: ${D.name||'-'} | ${D.pickup_city||D.city||'-'}</div><div style="font-size:11px;color:#00ff00;font-weight:300;white-space:normal;word-wrap:break-word;line-height:1.4;">D: ${D.delivery_name||'-'} | ${D.delivery_city||D.city||'-'}</div>`;f.appendChild(J);return}let J=D.assigned_to,K=!J||J==='Unassigned';if(D.status==='in_transit'){v++;if(z[J])z[J].d++;let L=createElement("div");L.className="history-item"+(I?' new-card':'')+(D.driver_edited_note?' note-unread-card':'');L.onclick=()=>viewDetails(C);L.setAttribute("draggable","true");L.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };L.style.cursor="pointer";L.style.borderLeft="none";L.style.background="transparent";let M=getDriverColor(D.assigned_to),N=currentDriverFilter?`<span style="color:#0099cc;font-weight:700;">IN TRANSIT</span>`:`<span style="color:${M};font-weight:700;">${D.assigned_to}</span>`,O=t[C]||t[`${D.delivery_name} ${D.destination}`],P=O?`<span style="color:#0099cc;font-weight:700;margin-right:6px;">${O}.</span>`:'',Q=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=5 y1=12 x2=19 y2=12></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;L.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${P}${N}<span style="color:gold;">${D.name||'-'}</span>${Q}<span style="color:#00ff00;">${D.delivery_name||'-'}</span></div>`;if(currentDriverFilter){if(n)h.appendChild(L)}else c.appendChild(L);return}let L=E.includes("dnp")?'pickup':(E.includes("dnd")?'delivery':(D.status==='pending_pickup'?'pickup':'delivery')),M=L==='delivery'&&(K||D.status==='at_depot')&&!F;if(M)y++;if(F){x++;!(window.reviewedDND&&window.reviewedDND[C])&&dndAlertCount++;let N=createElement("div");N.className="history-item dnd-card"+(I?' new-card':'');N.setAttribute("draggable","true");N.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };Object.assign(N.style,{background:"rgba(255,0,0,0.2)",border:"2px solid red",animation:"pulse-red-btn 2s infinite ease-in-out",cursor:"pointer",borderRadius:"4px"});N.onclick=()=>viewDetails(C);let O=getDriverColor(J),P=currentDriverFilter?`<span style="color:red;font-weight:700;">FAILED</span>`:((!K)?`<span style="color:${O};font-weight:700;">${J}</span>`:`<span style="color:red;font-weight:700;">FAILED</span>`),Q=t[C]||t[`${L==='pickup'?D.name:D.delivery_name} ${L==='pickup'?D.pickup_location:D.destination}`],R=Q?`<span style="color:${L==='pickup'?'gold':'#00b32d'};font-weight:700;margin-right:6px;">${Q}.</span>`:'',S=L==='pickup'?`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=5 y1=12 x2=19 y2=12></line><polyline points="12 5 19 12 12 19"></polyline></svg>`:`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=19 y1=12 x2=5 y2=12></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,T=L==='pickup'?`<span style="color:gold;">${D.name||'-'}</span>${S}<span style="color:#00ff00;">${D.delivery_name||'-'}</span>`:`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:gold;">${D.name||'-'}</span>`;N.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${R}${P}${T}</div>`;if(currentDriverFilter){if(L==='pickup'&&l)h.appendChild(N);else if(L==='delivery'&&m)h.appendChild(N)}else g.appendChild(N);if(z[J])L==='pickup'?z[J].p++:z[J].d++;return}if(K&&!M)u++;else{if(!M)v++;if(z[J])L==='pickup'?z[J].p++:z[J].d++}let N=createElement("div");N.className="history-item"+(L==='pickup'&&K?' urgent-pickup':'')+(I?' new-card':'')+(D.driver_edited_note?' note-unread-card':'');N.onclick=()=>viewDetails(C);N.style.cursor="pointer";N.style.borderLeft="none";N.style.background="transparent";N.setAttribute("draggable","true");N.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };let O=getDriverColor(D.assigned_to),P=D.assigned_to?`<span style="color:${O};font-weight:700;">${D.assigned_to}</span>`:`<span style="color:#cc5200;font-weight:700;">UNASSIGNED</span>`;if(M)P=`<span style="color:#00BFFF;font-weight:700;">AT DEPOT</span>`;else if(currentDriverFilter)P=`<span style="color:${O};font-weight:700;">${L==='pickup'?'PICKUP':'DELIVERY'}</span>`;let Q=t[C]||t[`${L==='pickup'?D.name:D.delivery_name} ${L==='pickup'?D.pickup_location:D.destination}`],R=Q?`<span style="color:${L==='pickup'?'gold':'#00b32d'};font-weight:700;margin-right:6px;">${Q}.</span>`:'',S=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=5 y1=12 x2=19 y2=12></line><polyline points="12 5 19 12 12 19"></polyline></svg>`,T=`<span style="color:gold;">${D.name||'-'}</span>${S}<span style="color:#00ff00;">${D.delivery_name||'-'}</span>`;if(L==='delivery'||M){S=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=19 y1=12 x2=5 y2=12></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;T=`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:gold;">${D.name||'-'}</span>`}N.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${R}${P}${T}</div>`;if(currentDriverFilter){let U=!1;if(!M&&L==='pickup'&&l)U=!0;else if(!M&&L==='delivery'&&m)U=!0;if(U)h.appendChild(N)}else if(M){d.appendChild(N)}else if(K&&!F){N.classList.add("unassigned-job-card");h.appendChild(N)}else{(L==='pickup'?a:b).appendChild(N)}});let C=getElementById('header-alert'),D=getElementById('header-unassigned'),E=getElementById('header-depot'),H_NOTE=getElementById('header-note');if(dndAlertCount>0){C.style.display='block';C.innerText=dndAlertCount+" DND/DNP";}else{C.style.display='none';}if(x>0){getElementById('archive-all-dnd-btn').style.display='block'}else{getElementById('archive-all-dnd-btn').style.display='none'}D.style.display=u>0?'block':'none';D.innerText=u+" UNASSIGNED";E.style.display=y>0?'block':'none';E.innerText=y+" AT DEPOT";H_NOTE.style.display=w>0?'block':'none';H_NOTE.innerText="⚠️ "+w+" NEW NOTE"+(w>1?"S":"");Object.keys(z).forEach(F=>{let G=z[F].p,H=z[F].d,I=createElement("div");
+    if(currentDriverFilter&&D.assigned_to!==currentDriverFilter)return;let E=((D.other_info||"")+" "+(D.job_history||"")+" "+(D.status||"")).toLowerCase(),F=E.includes("dnd")||E.includes("dnp"),G=(D.pickup_city||"")+" "+(D.delivery_city||"")+" "+(D.city||""),H=C+'_'+D.status,I=!1;!seenJobs[H]&&(seenJobs[H]=!0,!isFirstLoad&&(I=!0));if(D.driver_edited_note&&D.status!=='completed'&&!F){w++;if(D.assigned_to&&D.assigned_to!=='Unassigned')driversWithNotes[D.assigned_to]=!0;}
+    if(D.status==='completed'){if(new Date(D.completed_at||D.timestamp).toDateString()!==new Date().toDateString())return;if(p&&D.assigned_to!==p)return;if(q&&!(D.name.toLowerCase().includes(q)||D.delivery_name.toLowerCase().includes(q)))return;if(r&&!G.toLowerCase().includes(r))return;if(s&&!(JSON.stringify(D).toLowerCase().includes(s)))return;let J=createElement("div");J.className="history-item";J.onclick=()=>viewDetails(C);J.setAttribute("draggable","true");J.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };Object.assign(J.style,{cursor:"pointer",borderLeft:"4px solid #333",opacity:"0.7"});J.innerHTML=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:5px;"><span style="font-weight:400;color:#555;text-decoration:line-through;font-size:11px;">${D.assigned_to||'Unassigned'}</span><span style="font-size:16px;color:#00b32d;font-weight:400;text-align:center;">DONE</span><span style="font-size:10px;color:#888;text-align:right;font-weight:400;">${formatTime12(D.completed_at||D.timestamp)}</span></div><div style="font-size:11px;color:gold;font-weight:300;margin-bottom:10px;white-space:normal;word-wrap:break-word;line-height:1.4;">P: ${D.name||'-'} | ${D.pickup_city||D.city||'-'}</div><div style="font-size:11px;color:#00ff00;font-weight:300;white-space:normal;word-wrap:break-word;line-height:1.4;">D: ${D.delivery_name||'-'} | ${D.delivery_city||D.city||'-'}</div>`;f.appendChild(J);return}let J=D.assigned_to,K=!J||J==='Unassigned';if(D.status==='in_transit'){v++;if(z[J])z[J].d++;let L=createElement("div");L.className="history-item"+(I?' new-card':'')+(D.driver_edited_note?' note-unread-card':'');L.onclick=()=>viewDetails(C);L.setAttribute("draggable","true");L.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };L.style.cursor="pointer";L.style.borderLeft="none";L.style.background="transparent";let M=getDriverColor(D.assigned_to),N=currentDriverFilter?`<span style="color:#0099cc;font-weight:700;">IN TRANSIT</span>`:`<span style="color:${M};font-weight:700;">${D.assigned_to}</span>`,O=t[C]||t[`${D.delivery_name} ${D.destination}`],P=O?`<span style="color:#0099cc;font-weight:700;margin-right:6px;">${O}.</span>`:'',Q=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=5 y1=12 x2=19 y2=12></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;L.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${P}${N}<span style="color:gold;">${D.name||'-'}</span>${Q}<span style="color:#00ff00;">${D.delivery_name||'-'}</span></div>`;if(currentDriverFilter){if(n)h.appendChild(L)}else c.appendChild(L);return}let L=E.includes("dnp")?'pickup':(E.includes("dnd")?'delivery':(D.status==='pending_pickup'?'pickup':'delivery')),M=L==='delivery'&&(K||D.status==='at_depot')&&!F;if(M)y++;if(F){x++;!(window.reviewedDND&&window.reviewedDND[C])&&dndAlertCount++;let N=createElement("div");N.className="history-item dnd-card"+(I?' new-card':'');N.setAttribute("draggable","true");N.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };Object.assign(N.style,{background:"rgba(255,0,0,0.2)",border:"2px solid red",animation:"pulse-red-btn 2s infinite ease-in-out",cursor:"pointer",borderRadius:"4px"});N.onclick=()=>viewDetails(C);let O=getDriverColor(J),P=currentDriverFilter?`<span style="color:red;font-weight:700;">FAILED</span>`:((!K)?`<span style="color:${O};font-weight:700;">${J}</span>`:`<span style="color:red;font-weight:700;">FAILED</span>`),Q=t[C]||t[`${L==='pickup'?D.name:D.delivery_name} ${L==='pickup'?D.pickup_location:D.destination}`],R=Q?`<span style="color:${L==='pickup'?'gold':'#00b32d'};font-weight:700;margin-right:6px;">${Q}.</span>`:'',S=L==='pickup'?`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=5 y1=12 x2=19 y2=12></line><polyline points="12 5 19 12 12 19"></polyline></svg>`:`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=19 y1=12 x2=5 y2=12></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,T=L==='pickup'?`<span style="color:gold;">${D.name||'-'}</span>${S}<span style="color:#00ff00;">${D.delivery_name||'-'}</span>`:`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:gold;">${D.name||'-'}</span>`;N.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${R}${P}${T}</div>`;if(currentDriverFilter){if(L==='pickup'&&l)h.appendChild(N);else if(L==='delivery'&&m)h.appendChild(N)}else g.appendChild(N);if(z[J])L==='pickup'?z[J].p++:z[J].d++;return}if(K&&!F){ // unassigned and not failed
+    if (!currentDriverFilter) {
+        // collect for smart dispatch panel
+        unassignedJobs.push({id: C, job: D});
+        // do not append to h here; will be rendered later
+        return;
+    } else {
+        // if filtering by driver, keep existing behavior (show in h)
+        let N=createElement("div");
+        N.className="history-item"+(L==='pickup'&&K?' urgent-pickup':'')+(I?' new-card':'')+(D.driver_edited_note?' note-unread-card':'');
+        N.onclick=()=>viewDetails(C);
+        N.style.cursor="pointer";
+        N.style.borderLeft="none";
+        N.style.background="transparent";
+        N.setAttribute("draggable","true");
+        N.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };
+        let O=getDriverColor(D.assigned_to),P=D.assigned_to?`<span style="color:${O};font-weight:700;">${D.assigned_to}</span>`:`<span style="color:#cc5200;font-weight:700;">UNASSIGNED</span>`;
+        if(M)P=`<span style="color:#00BFFF;font-weight:700;">AT DEPOT</span>`;
+        else if(currentDriverFilter)P=`<span style="color:${O};font-weight:700;">${L==='pickup'?'PICKUP':'DELIVERY'}</span>`;
+        let Q=t[C]||t[`${L==='pickup'?D.name:D.delivery_name} ${L==='pickup'?D.pickup_location:D.destination}`],R=Q?`<span style="color:${L==='pickup'?'gold':'#00b32d'};font-weight:700;margin-right:6px;">${Q}.</span>`:'',S=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=5 y1=12 x2=19 y2=12></line><polyline points="12 5 19 12 12 19"></polyline></svg>`,T=`<span style="color:gold;">${D.name||'-'}</span>${S}<span style="color:#00ff00;">${D.delivery_name||'-'}</span>`;
+        if(L==='delivery'||M){S=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=19 y1=12 x2=5 y2=12></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;T=`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:gold;">${D.name||'-'}</span>`}
+        N.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${R}${P}${T}</div>`;
+        let U=!1; if(!M&&L==='pickup'&&l)U=!0; else if(!M&&L==='delivery'&&m)U=!0; if(U)h.appendChild(N);
+        return;
+    }
+}else{ // assigned or other
+    if(K && !F) { // should have been handled above, but just in case
+        // skip to avoid duplication
+        return;
+    }
+    if(M){ // depot jobs
+        v++; if(z[J])z[J].d++;
+        let N=createElement("div");
+        N.className="history-item"+(I?' new-card':'')+(D.driver_edited_note?' note-unread-card':'');
+        N.onclick=()=>viewDetails(C);
+        N.style.cursor="pointer";
+        N.style.borderLeft="none";
+        N.style.background="transparent";
+        N.setAttribute("draggable","true");
+        N.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };
+        let O=getDriverColor(D.assigned_to),P=D.assigned_to?`<span style="color:${O};font-weight:700;">${D.assigned_to}</span>`:`<span style="color:#cc5200;font-weight:700;">UNASSIGNED</span>`;
+        P=`<span style="color:#00BFFF;font-weight:700;">AT DEPOT</span>`;
+        let Q=t[C]||t[`${D.delivery_name} ${D.destination}`],R=Q?`<span style="color:#00b32d;font-weight:700;margin-right:6px;">${Q}.</span>`:'';
+        let S=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=19 y1=12 x2=5 y2=12></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;
+        let T=`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:gold;">${D.name||'-'}</span>`;
+        N.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${R}${P}${T}</div>`;
+        if(!currentDriverFilter) d.appendChild(N);
+        else h.appendChild(N);
+        return;
+    }
+    // assigned jobs (not unassigned, not failed, not depot)
+    if(!K && !F) { 
+        if(L==='pickup') { u++; if(z[J])z[J].p++; }
+        else { v++; if(z[J])z[J].d++; }
+        let N=createElement("div");
+        N.className="history-item"+(I?' new-card':'')+(D.driver_edited_note?' note-unread-card':'');
+        N.onclick=()=>viewDetails(C);
+        N.style.cursor="pointer";
+        N.style.borderLeft="none";
+        N.style.background="transparent";
+        N.setAttribute("draggable","true");
+        N.ondragstart=O => { O.dataTransfer.setData("text/plain", C); if (currentDriverFilter) setTimeout(clearDriverFilter, 0); };
+        let O=getDriverColor(D.assigned_to),P=D.assigned_to?`<span style="color:${O};font-weight:700;">${D.assigned_to}</span>`:`<span style="color:#cc5200;font-weight:700;">UNASSIGNED</span>`;
+        if(currentDriverFilter)P=`<span style="color:${O};font-weight:700;">${L==='pickup'?'PICKUP':'DELIVERY'}</span>`;
+        let Q=t[C]||t[`${L==='pickup'?D.name:D.delivery_name} ${L==='pickup'?D.pickup_location:D.destination}`],R=Q?`<span style="color:${L==='pickup'?'gold':'#00b32d'};font-weight:700;margin-right:6px;">${Q}.</span>`:'',S=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=5 y1=12 x2=19 y2=12></line><polyline points="12 5 19 12 12 19"></polyline></svg>`,T=`<span style="color:gold;">${D.name||'-'}</span>${S}<span style="color:#00ff00;">${D.delivery_name||'-'}</span>`;
+        if(L==='delivery'){S=`<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=#fff stroke-width=2 stroke-linecap=round stroke-linejoin=round style="flex-shrink:0;margin:0 4px;"><line x1=19 y1=12 x2=5 y2=12></line><polyline points="12 19 5 12 12 5"></polyline></svg>`;T=`<span style="color:#00ff00;">${D.delivery_name||'-'}</span>${S}<span style="color:gold;">${D.name||'-'}</span>`}
+        N.innerHTML=`<div style="display:flex;align-items:center;gap:8px;width:100%;font-size:13px;white-space:normal;word-wrap:break-word;line-height:1.4;">${R}${P}${T}</div>`;
+        if(!currentDriverFilter) (L==='pickup'?a:b).appendChild(N);
+        else {
+            let U=!1; if(L==='pickup'&&l)U=!0; else if(L==='delivery'&&m)U=!0; if(U)h.appendChild(N);
+        }
+        return;
+    }
+}}); // end of forEach
+
+// After loop, render smart dispatch if not filtered
+if (!currentDriverFilter) {
+    renderSmartDispatch(unassignedJobs);
+} else {
+    // if filtering, we don't show smart dispatch panel; hide it?
+    document.getElementById('smart-dispatch-panel').style.display = 'none';
+}
+
+let C=getElementById('header-alert'),D=getElementById('header-unassigned'),E=getElementById('header-depot'),H_NOTE=getElementById('header-note');if(dndAlertCount>0){C.style.display='block';C.innerText=dndAlertCount+" DND/DNP";}else{C.style.display='none';}if(x>0){getElementById('archive-all-dnd-btn').style.display='block'}else{getElementById('archive-all-dnd-btn').style.display='none'}D.style.display=u>0?'block':'none';D.innerText=u+" UNASSIGNED";E.style.display=y>0?'block':'none';E.innerText=y+" AT DEPOT";H_NOTE.style.display=w>0?'block':'none';H_NOTE.innerText="⚠️ "+w+" NEW NOTE"+(w>1?"S":"");Object.keys(z).forEach(F=>{let G=z[F].p,H=z[F].d,I=createElement("div");
     I.className="driver-stat-row pointer"+(driversWithNotes[F]?" driver-has-note":"");
     if (driverLocationsData[F] && driverLocationsData[F].shift_active) {
         I.style.border = "2px solid green";
@@ -1811,6 +2108,621 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
     let J=(G>0||H>0)?(driverLocationsData[F]?.total_duration||""):"";
     I.innerHTML = `<div class="ds-name" style="color:${getDriverColor(F)}; font-size:0.9rem; display:flex; align-items:center; justify-content:space-between; width:100%;">${F}<span class="job-count" style="color:white; background:transparent; padding:2px 8px; font-size:0.8rem;">${G+H}</span></div>`;
     e.appendChild(I)});getElementById("stat-note").innerText=w;getElementById("note-box").style.display=w>0?"block":"none";['pickups','transit','depot','deliveries','dnd','scheduled'].forEach(F=>{let G=getElementById('list-'+F);if(G){let H=G.children.length,I=getElementById('badge-'+F);if(I){I.innerText=H;if(H>0)I.classList.add('badge-active');else I.classList.remove('badge-active')}G.style.display=catState[F]?'block':'none';let J=getElementById('btn-'+F);if(J){if(G.querySelector('.new-card')&&!catState[F])J.classList.add('new-btn');else J.classList.remove('new-btn');if(F==='dnd'){if(H===0)J.classList.add('dnd-empty-btn');else J.classList.remove('dnd-empty-btn')}}}});isFirstLoad=!1}}
+
+// ===== Smart Dispatch Functions =====
+let geocodeCache = {};
+function getJobCoords(job, callback) {
+    if (job.lat && job.lng) {
+        callback({ lat: parseFloat(job.lat), lng: parseFloat(job.lng) });
+        return;
+    }
+    let address = '';
+    if (job.status === 'pending_pickup' || !job.status) {
+        address = job.pickup_location ? job.pickup_location + (job.pickup_city ? ', ' + job.pickup_city : '') : '';
+    } else if (job.status === 'pending_delivery' || job.status === 'in_transit') {
+        address = job.destination ? job.destination + (job.delivery_city ? ', ' + job.delivery_city : '') : '';
+    } else {
+        address = job.destination || job.pickup_location || '';
+    }
+    if (!address) { callback(null); return; }
+    if (geocodeCache[address]) {
+        callback(geocodeCache[address]);
+        return;
+    }
+    let geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+            let loc = results[0].geometry.location;
+            let coords = { lat: loc.lat(), lng: loc.lng() };
+            geocodeCache[address] = coords;
+            callback(coords);
+        } else {
+            callback(null);
+        }
+    });
+}
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+function getDriverCentroid(driver) {
+    let zones = driverZones[driver];
+    if (!zones) return null;
+    let allPoints = [];
+    for (let zoneId in zones) {
+        let zone = zones[zoneId];
+        if (zone.paths) {
+            for (let path of zone.paths) {
+                for (let p of path) {
+                    allPoints.push({ lat: p.lat, lng: p.lng });
+                }
+            }
+        }
+    }
+    if (allPoints.length === 0) return null;
+    let sumLat = allPoints.reduce((a,b) => a + b.lat, 0);
+    let sumLng = allPoints.reduce((a,b) => a + b.lng, 0);
+    return { lat: sumLat / allPoints.length, lng: sumLng / allPoints.length };
+}
+function getWorkload(driver) {
+    let count = 0;
+    for (let id in rawJobs) {
+        let job = rawJobs[id];
+        if (job.assigned_to === driver && job.status !== 'completed') {
+            if (job.status === 'pending_pickup' || job.status === 'pending_delivery') {
+                // exclude future scheduled
+                if (job.scheduled_time && job.scheduled_time > Date.now()) continue;
+                count++;
+            }
+        }
+    }
+    return count;
+}
+function getBestDriverForJob(jobId, job) {
+    return new Promise((resolve) => {
+        getJobCoords(job, (coords) => {
+            if (!coords) { resolve(null); return; }
+            let eligibleDrivers = [];
+            let point = new google.maps.LatLng(coords.lat, coords.lng);
+            for (let driver of customDrivers) {
+                let zones = driverZones[driver];
+                if (!zones) continue;
+                let inside = false;
+                for (let zoneId in zones) {
+                    let zone = zones[zoneId];
+                    if (zone.paths) {
+                        for (let path of zone.paths) {
+                            let polygon = new google.maps.Polygon({ paths: path });
+                            if (google.maps.geometry.poly.containsLocation(point, polygon)) {
+                                inside = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (inside) break;
+                }
+                if (inside) {
+                    eligibleDrivers.push(driver);
+                }
+            }
+            if (eligibleDrivers.length === 0) { resolve(null); return; }
+            let best = null;
+            let bestScore = Infinity;
+            for (let driver of eligibleDrivers) {
+                let workload = getWorkload(driver);
+                let dist = Infinity;
+                if (driverLocationsData[driver] && driverLocationsData[driver].lat && driverLocationsData[driver].lng) {
+                    dist = haversineDistance(coords.lat, coords.lng, driverLocationsData[driver].lat, driverLocationsData[driver].lng);
+                } else {
+                    let centroid = getDriverCentroid(driver);
+                    if (centroid) {
+                        dist = haversineDistance(coords.lat, coords.lng, centroid.lat, centroid.lng);
+                    }
+                }
+                if (dist === Infinity) continue;
+                let score = (workload + 1) * 5 + dist;
+                if (score < bestScore) {
+                    bestScore = score;
+                    best = { driver, workload, distance: dist, score };
+                }
+            }
+            resolve(best);
+        });
+    });
+}
+function renderSmartDispatch(unassignedJobs) {
+    let panel = document.getElementById('smart-dispatch-panel');
+    if (!panel) return;
+    let list = document.getElementById('unassigned-immediate-list');
+    let badge = document.getElementById('dispatch-badge');
+    if (!list || !badge) return;
+    list.innerHTML = '';
+    let total = unassignedJobs.length;
+    badge.innerText = total;
+    panel.style.display = total > 0 ? 'block' : 'none';
+    if (total === 0) return;
+    // sort by urgency: overdue (red), upcoming within 2h (orange), later today (yellow), no schedule (gray)
+    let now = Date.now();
+    let jobsSorted = unassignedJobs.sort((a,b) => {
+        let aTime = a.job.scheduled_time || Infinity;
+        let bTime = b.job.scheduled_time || Infinity;
+        if (aTime === Infinity && bTime === Infinity) return 0;
+        if (aTime === Infinity) return 1;
+        if (bTime === Infinity) return -1;
+        return aTime - bTime;
+    });
+    let promises = jobsSorted.map(({id, job}) => {
+        return getBestDriverForJob(id, job).then(best => {
+            return { id, job, best };
+        });
+    });
+    Promise.all(promises).then(results => {
+        results.forEach(({id, job, best}) => {
+            let card = document.createElement('div');
+            card.className = 'dispatch-job-card';
+            let urgency = 'gray';
+            if (job.scheduled_time) {
+                let diff = job.scheduled_time - now;
+                if (diff < 0) urgency = 'red';
+                else if (diff < 2 * 60 * 60 * 1000) urgency = 'orange';
+                else if (diff < 24 * 60 * 60 * 1000) urgency = 'yellow';
+            }
+            card.style.borderLeftColor = urgency === 'red' ? 'red' : urgency === 'orange' ? 'orange' : urgency === 'yellow' ? '#ff0' : '#555';
+            let pickupName = job.name || '';
+            let deliveryName = job.delivery_name || '';
+            let pickupLoc = job.pickup_location || '';
+            let deliveryLoc = job.destination || '';
+            let suggestionHtml = '<span style="color:#888;">No eligible driver</span>';
+            let assignBtnHtml = '';
+            if (best) {
+                let color = getDriverColor(best.driver);
+                let rationale = `Balanced (${best.workload} jobs, ${best.distance.toFixed(1)} km)`;
+                suggestionHtml = `
+                    <span class="dot" style="background-color:${color};"></span>
+                    <span>${best.driver}</span>
+                    <span class="rationale">${rationale}</span>
+                `;
+                assignBtnHtml = `<button class="assign-btn" data-jobid="${id}" data-driver="${best.driver}">Assign to ${best.driver}</button>`;
+            }
+            let timeLabel = '';
+            if (job.scheduled_time) {
+                let d = new Date(job.scheduled_time);
+                timeLabel = d.toLocaleString();
+            }
+            let jobDisplay = '';
+            if (pickupName || deliveryName) {
+                jobDisplay = pickupName + (deliveryName ? ` → ${deliveryName}` : '');
+            } else {
+                jobDisplay = pickupLoc || deliveryLoc || 'Unnamed job';
+            }
+            card.innerHTML = `
+                <div class="job-main">
+                    <div>
+                        <div class="job-name">${jobDisplay}</div>
+                        <div class="job-location">${pickupLoc || deliveryLoc || ''} ${timeLabel ? '⏰ '+timeLabel : ''}</div>
+                    </div>
+                    <div class="suggestion">${suggestionHtml}</div>
+                </div>
+                <div style="display:flex; justify-content:flex-end;">${assignBtnHtml}</div>
+            `;
+            list.appendChild(card);
+            if (best) {
+                let btn = card.querySelector('.assign-btn');
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    let jobId = this.dataset.jobid;
+                    let driver = this.dataset.driver;
+                    assignSingleJob(jobId, driver);
+                });
+            }
+        });
+        // update badge again (total might have changed during rendering? but it's same)
+        badge.innerText = results.length;
+    });
+}
+let dispatchUndoStack = [];
+function pushUndo(action) {
+    dispatchUndoStack.push(action);
+}
+function assignSingleJob(jobId, driver) {
+    let job = rawJobs[jobId];
+    if (!job) return;
+    let previousDriver = job.assigned_to || 'Unassigned';
+    db.ref('jobs').child(jobId).update({ assigned_to: driver, last_edit_by: currentUser }).then(() => {
+        // push to undo stack
+        pushUndo({ type: 'single', jobs: [{ jobId, previousDriver }] });
+        showToast('single', `✅ Job assigned to ${driver}`, [{ jobId, previousDriver }]);
+        // animate card
+        let cards = document.querySelectorAll('.dispatch-job-card');
+        for (let c of cards) {
+            let btn = c.querySelector('.assign-btn');
+            if (btn && btn.dataset.jobid === jobId) {
+                c.classList.add('assigned');
+                setTimeout(() => {
+                    c.classList.add('fade-out');
+                    setTimeout(() => { c.style.display = 'none'; }, 500);
+                }, 600);
+                break;
+            }
+        }
+        // update badge count
+        let badge = document.getElementById('dispatch-badge');
+        if (badge) {
+            let count = parseInt(badge.innerText) || 0;
+            if (count > 0) badge.innerText = count - 1;
+        }
+    }).catch(err => alert('Error assigning job: ' + err.message));
+}
+function assignBulkOptimized() {
+    // collect all unassigned jobs currently in panel
+    let items = document.querySelectorAll('#unassigned-immediate-list .dispatch-job-card');
+    let jobIds = [];
+    items.forEach(card => {
+        let btn = card.querySelector('.assign-btn');
+        if (btn) {
+            jobIds.push(btn.dataset.jobid);
+        } else {
+            // no eligible driver, skip
+        }
+    });
+    if (jobIds.length === 0) {
+        alert('No eligible jobs to assign.');
+        return;
+    }
+    // show loading spinner on button
+    let btn = document.getElementById('assign-all-optimized-btn');
+    let origText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = '⏳ Assigning...';
+    // gather all job data, compute eligible drivers and costs
+    let now = Date.now();
+    let jobData = [];
+    let allDriversSet = new Set();
+    let promises = jobIds.map(jobId => {
+        let job = rawJobs[jobId];
+        if (!job) return Promise.resolve(null);
+        return new Promise((resolve) => {
+            getJobCoords(job, (coords) => {
+                if (!coords) { resolve(null); return; }
+                let point = new google.maps.LatLng(coords.lat, coords.lng);
+                let eligible = [];
+                for (let driver of customDrivers) {
+                    let zones = driverZones[driver];
+                    if (!zones) continue;
+                    let inside = false;
+                    for (let zoneId in zones) {
+                        let zone = zones[zoneId];
+                        if (zone.paths) {
+                            for (let path of zone.paths) {
+                                let polygon = new google.maps.Polygon({ paths: path });
+                                if (google.maps.geometry.poly.containsLocation(point, polygon)) {
+                                    inside = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (inside) break;
+                    }
+                    if (inside) {
+                        eligible.push(driver);
+                        allDriversSet.add(driver);
+                    }
+                }
+                if (eligible.length === 0) { resolve(null); return; }
+                let costs = {};
+                for (let driver of eligible) {
+                    let workload = getWorkload(driver);
+                    let dist = Infinity;
+                    if (driverLocationsData[driver] && driverLocationsData[driver].lat && driverLocationsData[driver].lng) {
+                        dist = haversineDistance(coords.lat, coords.lng, driverLocationsData[driver].lat, driverLocationsData[driver].lng);
+                    } else {
+                        let centroid = getDriverCentroid(driver);
+                        if (centroid) {
+                            dist = haversineDistance(coords.lat, coords.lng, centroid.lat, centroid.lng);
+                        }
+                    }
+                    if (dist === Infinity) continue;
+                    costs[driver] = (workload + 1) * 5 + dist;
+                }
+                resolve({ jobId, job, eligible: Object.keys(costs), costs });
+            });
+        });
+    });
+    Promise.all(promises).then(results => {
+        let validResults = results.filter(r => r !== null);
+        if (validResults.length === 0) {
+            btn.disabled = false;
+            btn.innerText = origText;
+            alert('No jobs have eligible drivers.');
+            return;
+        }
+        // Build matrix: rows = jobs, columns = drivers (allDriversSet)
+        let drivers = Array.from(allDriversSet);
+        if (drivers.length === 0) {
+            btn.disabled = false;
+            btn.innerText = origText;
+            alert('No eligible drivers.');
+            return;
+        }
+        // For each job, get cost for each driver, if not eligible use a large number (10000)
+        let matrix = [];
+        let jobList = [];
+        for (let res of validResults) {
+            let row = [];
+            for (let d of drivers) {
+                let cost = res.costs[d];
+                if (cost === undefined) cost = 10000;
+                row.push(cost);
+            }
+            matrix.push(row);
+            jobList.push(res.jobId);
+        }
+        // Hungarian algorithm (simplified for square matrix)
+        // If not square, we need to add dummy rows/cols.
+        let n = matrix.length;
+        let m = drivers.length;
+        let size = Math.max(n, m);
+        let costMatrix = [];
+        for (let i = 0; i < size; i++) {
+            costMatrix[i] = [];
+            for (let j = 0; j < size; j++) {
+                if (i < n && j < m) {
+                    costMatrix[i][j] = matrix[i][j];
+                } else {
+                    costMatrix[i][j] = 0;
+                }
+            }
+        }
+        // Hungarian algorithm (O(n^3))
+        function hungarian(cost) {
+            let n = cost.length;
+            let u = new Array(n+1).fill(0);
+            let v = new Array(n+1).fill(0);
+            let p = new Array(n+1).fill(0);
+            let way = new Array(n+1).fill(0);
+            for (let i=1; i<=n; i++) {
+                p[0] = i;
+                let j0 = 0;
+                let minv = new Array(n+1).fill(Infinity);
+                let used = new Array(n+1).fill(false);
+                do {
+                    used[j0] = true;
+                    let i0 = p[j0];
+                    let delta = Infinity;
+                    let j1 = 0;
+                    for (let j=1; j<=n; j++) {
+                        if (!used[j]) {
+                            let cur = cost[i0-1][j-1] - u[i0] - v[j];
+                            if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+                            if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+                        }
+                    }
+                    for (let j=0; j<=n; j++) {
+                        if (used[j]) { u[p[j]] += delta; v[j] -= delta; }
+                        else { minv[j] -= delta; }
+                    }
+                    j0 = j1;
+                } while (p[j0] != 0);
+                do {
+                    let j1 = way[j0];
+                    p[j0] = p[j1];
+                    j0 = j1;
+                } while (j0);
+            }
+            let assignment = new Array(n).fill(-1);
+            for (let j=1; j<=n; j++) {
+                if (p[j] != 0) {
+                    assignment[p[j]-1] = j-1;
+                }
+            }
+            return assignment;
+        }
+        let assignment = hungarian(costMatrix);
+        // Now assignment is an array of length size, where assignment[i] is column index for row i.
+        // Map to driver for each job
+        let assignedJobs = [];
+        let prevDrivers = {};
+        for (let i=0; i<n; i++) {
+            let col = assignment[i];
+            if (col < m) {
+                let driver = drivers[col];
+                let jobId = jobList[i];
+                let job = rawJobs[jobId];
+                if (job) {
+                    prevDrivers[jobId] = job.assigned_to || 'Unassigned';
+                    assignedJobs.push({ jobId, driver });
+                }
+            } else {
+                // not assigned
+            }
+        }
+        if (assignedJobs.length === 0) {
+            btn.disabled = false;
+            btn.innerText = origText;
+            alert('No jobs could be assigned optimally.');
+            return;
+        }
+        // Perform updates
+        let updates = {};
+        assignedJobs.forEach(({ jobId, driver }) => {
+            updates[`jobs/${jobId}/assigned_to`] = driver;
+            updates[`jobs/${jobId}/last_edit_by`] = currentUser;
+        });
+        db.ref().update(updates).then(() => {
+            // push undo
+            let undoEntry = { type: 'bulk', jobs: assignedJobs.map(({ jobId, driver }) => ({ jobId, previousDriver: prevDrivers[jobId] })) };
+            pushUndo(undoEntry);
+            // show toast
+            showToast('bulk', `✅ ${assignedJobs.length} jobs assigned optimally!`, assignedJobs.map(({ jobId, driver }) => ({ jobId, previousDriver: prevDrivers[jobId], driver })));
+            // animate cards
+            let cards = document.querySelectorAll('#unassigned-immediate-list .dispatch-job-card');
+            cards.forEach(card => {
+                let btn = card.querySelector('.assign-btn');
+                if (btn) {
+                    let jobId = btn.dataset.jobid;
+                    if (assignedJobs.some(a => a.jobId === jobId)) {
+                        card.classList.add('assigned');
+                        setTimeout(() => {
+                            card.classList.add('fade-out');
+                            setTimeout(() => { card.style.display = 'none'; }, 500);
+                        }, 600);
+                    }
+                }
+            });
+            // update badge count
+            let badge = document.getElementById('dispatch-badge');
+            let remaining = document.querySelectorAll('#unassigned-immediate-list .dispatch-job-card:not([style*="display:none"])').length;
+            if (badge) badge.innerText = remaining;
+            btn.disabled = false;
+            btn.innerText = origText;
+        }).catch(err => {
+            alert('Error assigning jobs: ' + err.message);
+            btn.disabled = false;
+            btn.innerText = origText;
+        });
+    });
+}
+function showToast(type, message, jobsArray) {
+    let container = document.getElementById('toast-container');
+    let toast = document.createElement('div');
+    toast.className = 'toast';
+    let isBulk = type === 'bulk';
+    let headerText = message;
+    let detailHtml = '';
+    if (isBulk) {
+        detailHtml = `<div class="toast-details" style="display:none;">
+            <div style="display:flex; justify-content:space-between; font-weight:600; padding:4px 0; border-bottom:1px solid #333;">
+                <span>Job</span><span>Driver</span><span>Undo</span>
+            </div>
+            ${jobsArray.map(({ jobId, previousDriver, driver }) => `
+                <div class="detail-item">
+                    <span>${rawJobs[jobId]?.name || jobId.slice(0,6)}</span>
+                    <span>${driver}</span>
+                    <button class="undo-individual" data-jobid="${jobId}" data-prev="${previousDriver}">↩️</button>
+                </div>
+            `).join('')}
+            <div style="margin-top:8px; text-align:right;">
+                <button class="undo-all-btn" data-bulk-index="${dispatchUndoStack.length-1}">UNDO ALL</button>
+            </div>
+        </div>`;
+    } else {
+        // single
+        detailHtml = `<div class="toast-details" style="display:none;">
+            <div class="detail-item">
+                <span>${rawJobs[jobsArray[0].jobId]?.name || jobsArray[0].jobId.slice(0,6)}</span>
+                <span>assigned to ${jobsArray[0].previousDriver}</span>
+                <button class="undo-individual" data-jobid="${jobsArray[0].jobId}" data-prev="${jobsArray[0].previousDriver}">↩️</button>
+            </div>
+        </div>`;
+    }
+    toast.innerHTML = `
+        <div class="toast-header">
+            <span>${headerText}</span>
+            <div>
+                ${isBulk ? `<button class="expand-btn">▼</button>` : ''}
+                <button class="undo-btn" onclick="undoLastAction()">UNDO</button>
+            </div>
+        </div>
+        <div class="toast-body">${isBulk ? `Tap arrow to see details` : ''}</div>
+        ${detailHtml}
+    `;
+    container.appendChild(toast);
+    // expand logic
+    if (isBulk) {
+        let expandBtn = toast.querySelector('.expand-btn');
+        let detailsDiv = toast.querySelector('.toast-details');
+        expandBtn.addEventListener('click', function() {
+            if (detailsDiv.style.display === 'none') {
+                detailsDiv.style.display = 'block';
+                this.innerText = '▲';
+            } else {
+                detailsDiv.style.display = 'none';
+                this.innerText = '▼';
+            }
+        });
+    }
+    // individual undo buttons
+    toast.querySelectorAll('.undo-individual').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            let jobId = this.dataset.jobid;
+            let prev = this.dataset.prev;
+            undoIndividualJob(jobId, prev);
+            // remove this toast after undo?
+            // we can just let it remain but mark undone.
+            this.innerText = '✅';
+            this.disabled = true;
+        });
+    });
+    // undo all button
+    let undoAllBtn = toast.querySelector('.undo-all-btn');
+    if (undoAllBtn) {
+        undoAllBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            let index = parseInt(this.dataset.bulkIndex);
+            let undoEntry = dispatchUndoStack[index];
+            if (undoEntry && undoEntry.type === 'bulk') {
+                let jobs = undoEntry.jobs;
+                let updates = {};
+                jobs.forEach(({ jobId, previousDriver }) => {
+                    updates[`jobs/${jobId}/assigned_to`] = previousDriver;
+                    updates[`jobs/${jobId}/last_edit_by`] = currentUser;
+                });
+                db.ref().update(updates).then(() => {
+                    // remove undo entry? we can keep but mark undone
+                    // remove toast
+                    toast.remove();
+                    // also remove from stack? maybe just leave
+                }).catch(err => alert('Error undoing: ' + err.message));
+            }
+        });
+    }
+    // auto-remove after 10 seconds
+    setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+    }, 10000);
+}
+function undoLastAction() {
+    if (dispatchUndoStack.length === 0) return;
+    let action = dispatchUndoStack.pop();
+    if (action.type === 'single') {
+        let { jobId, previousDriver } = action.jobs[0];
+        db.ref('jobs').child(jobId).update({ assigned_to: previousDriver, last_edit_by: currentUser }).then(() => {
+            // remove toast? we can just refresh display
+            renderData();
+        });
+    } else if (action.type === 'bulk') {
+        let updates = {};
+        action.jobs.forEach(({ jobId, previousDriver }) => {
+            updates[`jobs/${jobId}/assigned_to`] = previousDriver;
+            updates[`jobs/${jobId}/last_edit_by`] = currentUser;
+        });
+        db.ref().update(updates).then(() => {
+            renderData();
+        });
+    }
+}
+function undoIndividualJob(jobId, previousDriver) {
+    db.ref('jobs').child(jobId).update({ assigned_to: previousDriver, last_edit_by: currentUser }).then(() => {
+        // update UI by re-rendering? maybe just re-render
+        renderData();
+    }).catch(err => alert('Error undoing: ' + err.message));
+}
+// Event listener for "Assign All Optimized" button
+document.addEventListener('DOMContentLoaded', function() {
+    let btn = document.getElementById('assign-all-optimized-btn');
+    if (btn) {
+        btn.addEventListener('click', assignBulkOptimized);
+    }
+});
+// ===== End Smart Dispatch Functions =====
+
 function openZoneManager(){with(document){document.getElementById('driver-manager-modal').style.display='none'; getElementById('zone-modal').style.display='block';showZoneSchedule()}}
 function showZoneSchedule(){with(document){getElementById('zone-schedule-view').style.display='block';getElementById('zone-map-view').style.display='none';renderZoneRoster()}}
 function showZoneMap(){with(document){getElementById('zone-schedule-view').style.display='none';getElementById('zone-map-view').style.display='flex';if(!zoneMap)initZoneMap();else{google.maps.event.trigger(zoneMap,"resize");zoneMap.setCenter({lat:49.8425,lng:-99.9497})}renderZoneMapInterface()}}
