@@ -1813,7 +1813,9 @@ let i=getElementById('filter-reset-ui'),j=getElementById('driver-job-filters');i
     e.appendChild(I)});getElementById("stat-note").innerText=w;getElementById("note-box").style.display=w>0?"block":"none";['pickups','transit','depot','deliveries','dnd','scheduled'].forEach(F=>{let G=getElementById('list-'+F);if(G){let H=G.children.length,I=getElementById('badge-'+F);if(I){I.innerText=H;if(H>0)I.classList.add('badge-active');else I.classList.remove('badge-active')}G.style.display=catState[F]?'block':'none';let J=getElementById('btn-'+F);if(J){if(G.querySelector('.new-card')&&!catState[F])J.classList.add('new-btn');else J.classList.remove('new-btn');if(F==='dnd'){if(H===0)J.classList.add('dnd-empty-btn');else J.classList.remove('dnd-empty-btn')}}}});isFirstLoad=!1}}
 function openZoneManager(){with(document){document.getElementById('driver-manager-modal').style.display='none'; getElementById('zone-modal').style.display='block';showZoneSchedule()}}
 function showZoneSchedule(){with(document){getElementById('zone-schedule-view').style.display='block';getElementById('zone-map-view').style.display='none';renderZoneRoster()}}
-function showZoneMap(){with(document){getElementById('zone-schedule-view').style.display='none';getElementById('zone-map-view').style.display='flex';if(!zoneMap)initZoneMap();else{google.maps.event.trigger(zoneMap,"resize");zoneMap.setCenter({lat:49.8425,lng:-99.9497})}renderZoneMapInterface()}}
+function showZoneMap(){with(document){getElementById('zone-schedule-view').style.display='none';getElementById('zone-map-view').style.display='flex';if(!zoneMap)initZoneMap();else{google.maps.event.trigger(zoneMap,"resize");zoneMap.setCenter({lat:49.8425,lng:-99.9497})}renderZoneMapInterface(); // Ensure map resizes after display
+  setTimeout(function(){ if(zoneMap) google.maps.event.trigger(zoneMap, "resize"); }, 100);
+}}
 function initZoneMap(){with(document){
   zoneMap=new google.maps.Map(getElementById("zone-map"),{center:{lat:49.8425,lng:-99.9497},zoom:12,gestureHandling:"greedy",styles:mapStyles});
   drawingManager=new google.maps.drawing.DrawingManager({drawingControl:!1,polygonOptions:{editable:!0}});
@@ -1882,7 +1884,12 @@ function addZone(a){let b=db.ref('driver_zones/'+a).push();b.set({label:'New Zon
 function deleteZone(a,b){if(confirm('Delete this zone?')){db.ref(`driver_zones/${a}/${b}`).remove()}}
 function toggleDay(a,b,c){let d=driverZones[a][b]||{},e=d.days||[];if(e.includes(c))e=e.filter(f=>f!==c);else e.push(c);db.ref(`driver_zones/${a}/${b}/days`).set(e)}
 function saveZone(a,b,c,d){db.ref(`driver_zones/${a}/${b}/${c}`).set(d)}
-function drawZoneFor(a,b,c){let d=driverZones[a][b];if(!d.label||d.label==='New Zone'){let e=prompt("Enter a label for this Zone (e.g., Morning Run)",d.label||"");if(e)db.ref(`driver_zones/${a}/${b}/label`).set(e)}activeDrawingDriver=a;activeDrawingZoneId=b;drawingManager.setOptions({polygonOptions:{fillColor:c,fillOpacity:0.3,strokeWeight:2,strokeColor:c,editable:!0}});drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON)}
+function drawZoneFor(a,b,c){let d=driverZones[a][b];if(!d.label||d.label==='New Zone'){let e=prompt("Enter a label for this Zone (e.g., Morning Run)",d.label||"");if(e)db.ref(`driver_zones/${a}/${b}/label`).set(e)}activeDrawingDriver=a;activeDrawingZoneId=b;drawingManager.setOptions({polygonOptions:{fillColor:c,fillOpacity:0.3,strokeWeight:2,strokeColor:c,editable:!0}});
+  // Ensure drawing manager is active after a small delay to let map settle
+  setTimeout(function(){
+    drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+  }, 100);
+}
 function clearZoneFor(a,b){if(confirm('Clear map area for this zone?')){db.ref(`driver_zones/${a}/${b}/paths`).remove();setTimeout(()=>selectDriverForMap(a,getDriverColor(a)),200)}}
 async function requestWakeLock(){try{if('wakeLock'in navigator){wakeLock=await navigator.wakeLock.request('screen')}}catch(a){}}
 document.addEventListener('visibilitychange',()=>{wakeLock!==null&&document.visibilityState==='visible'&&requestWakeLock()});
