@@ -2794,7 +2794,35 @@ function addZone(a){let b=db.ref('driver_zones/'+a).push();b.set({label:'New Zon
 function deleteZone(a,b){if(confirm('Delete this zone?')){db.ref(`driver_zones/${a}/${b}`).remove()}}
 function toggleDay(a,b,c){let d=driverZones[a][b]||{},e=d.days||[];if(e.includes(c))e=e.filter(f=>f!==c);else e.push(c);db.ref(`driver_zones/${a}/${b}/days`).set(e)}
 function saveZone(a,b,c,d){db.ref(`driver_zones/${a}/${b}/${c}`).set(d)}
-function drawZoneFor(a,b,c){let d=driverZones[a][b];if(!d.label||d.label==='New Zone'){let e=prompt("Enter a label for this Zone (e.g., Morning Run)",d.label||"");if(e)db.ref(`driver_zones/${a}/${b}/label`).set(e)}activeDrawingDriver=a;activeDrawingZoneId=b;drawingManager.setOptions({polygonOptions:{fillColor:c,fillOpacity:0.3,strokeWeight:2,strokeColor:c,editable:!0}});drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON)}
+// FIX: Updated drawZoneFor to ensure drawing manager is properly set and polygon visible
+function drawZoneFor(a,b,c){
+    if (!zoneMap) { alert('Map not initialized. Please open the zone map first.'); return; }
+    // Ensure drawingManager is attached to the map
+    drawingManager.setMap(zoneMap);
+    // Trigger a resize to ensure map is ready
+    google.maps.event.trigger(zoneMap, 'resize');
+    // Set polygon options with visible stroke and fill
+    drawingManager.setOptions({
+        polygonOptions: {
+            fillColor: c,
+            fillOpacity: 0.3,
+            strokeWeight: 2,
+            strokeColor: c,
+            editable: true,
+            clickable: true,
+            zIndex: 100
+        }
+    });
+    // Set drawing mode
+    drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    activeDrawingDriver = a;
+    activeDrawingZoneId = b;
+    // Notify user
+    let zoneLabel = driverZones[a]?.[b]?.label || 'Unnamed Zone';
+    document.getElementById('active-driver-zone-panel').innerHTML = 
+        `<div style="color:${c}; font-weight:700; text-align:center; padding:8px;">Drawing zone: ${zoneLabel} (click map to start polygon)</div>`;
+    document.getElementById('active-driver-zone-panel').style.display = 'block';
+}
 function clearZoneFor(a,b){if(confirm('Clear map area for this zone?')){db.ref(`driver_zones/${a}/${b}/paths`).remove();setTimeout(()=>selectDriverForMap(a,getDriverColor(a)),200)}}
 async function requestWakeLock(){try{if('wakeLock'in navigator){wakeLock=await navigator.wakeLock.request('screen')}}catch(a){}}
 document.addEventListener('visibilitychange',()=>{wakeLock!==null&&document.visibilityState==='visible'&&requestWakeLock()});
